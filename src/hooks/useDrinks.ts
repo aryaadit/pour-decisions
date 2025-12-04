@@ -33,7 +33,7 @@ export function useDrinks() {
           rating: d.rating || 0,
           notes: d.notes || undefined,
           location: d.location || undefined,
-          price: d.price ? `$${d.price}` : undefined,
+          price: d.price || undefined,
           dateAdded: new Date(d.date_added),
           imageUrl: d.image_url || undefined,
         }))
@@ -49,7 +49,7 @@ export function useDrinks() {
   const addDrink = async (drink: Omit<Drink, 'id' | 'dateAdded'>) => {
     if (!user) return null;
 
-    const priceValue = drink.price?.replace(/[^0-9.]/g, '') || null;
+    const priceValue = drink.price?.trim() || null;
 
     const { data, error } = await supabase
       .from('drinks')
@@ -61,7 +61,7 @@ export function useDrinks() {
         rating: drink.rating,
         notes: drink.notes || null,
         location: drink.location || null,
-        price: priceValue ? parseFloat(priceValue) : null,
+        price: priceValue,
         image_url: drink.imageUrl || null,
       })
       .select()
@@ -80,7 +80,7 @@ export function useDrinks() {
       rating: data.rating || 0,
       notes: data.notes || undefined,
       location: data.location || undefined,
-      price: data.price ? `$${data.price}` : undefined,
+      price: data.price || undefined,
       dateAdded: new Date(data.date_added),
       imageUrl: data.image_url || undefined,
     };
@@ -90,7 +90,7 @@ export function useDrinks() {
   };
 
   const updateDrink = async (id: string, updates: Partial<Drink>) => {
-    const priceValue = updates.price?.replace(/[^0-9.]/g, '') || null;
+    const priceValue = updates.price?.trim() || null;
 
     const { error } = await supabase
       .from('drinks')
@@ -101,7 +101,7 @@ export function useDrinks() {
         rating: updates.rating,
         notes: updates.notes || null,
         location: updates.location || null,
-        price: priceValue ? parseFloat(priceValue) : null,
+        price: priceValue,
         image_url: updates.imageUrl || null,
       })
       .eq('id', id);
