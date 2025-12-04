@@ -118,7 +118,7 @@ export function DrinkDetailModal({
         {drink.price && (
           <span className="flex items-center gap-1.5">
             <DollarSign className="h-4 w-4" />
-            {drink.price}
+            {String(drink.price).replace(/^\$/, '')}
           </span>
         )}
         <span className="flex items-center gap-1.5">

@@ -54,7 +54,7 @@ export function DrinkListItem({ drink, onClick, style }: DrinkListItemProps) {
           </span>
           {drink.price && (
             <span className="text-xs text-muted-foreground">
-              ${drink.price}
+              {String(drink.price).startsWith('$') ? drink.price : `$${drink.price}`}
             </span>
           )}
         </div>
