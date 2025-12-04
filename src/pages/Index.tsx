@@ -243,6 +243,7 @@ const Index = () => {
         onOpenChange={handleDialogClose}
         onSave={handleSave}
         editDrink={editingDrink}
+        defaultType={selectedType || profile?.defaultDrinkType || 'whiskey'}
       />
     </div>
   );

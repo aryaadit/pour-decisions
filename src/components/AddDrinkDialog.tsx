@@ -43,11 +43,12 @@ interface AddDrinkDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (drink: Omit<Drink, 'id' | 'dateAdded'>) => void;
   editDrink?: Drink | null;
+  defaultType?: DrinkType;
 }
 
 const drinkTypes: DrinkType[] = ['whiskey', 'beer', 'wine', 'cocktail', 'other'];
 
-export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDrinkDialogProps) {
+export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultType = 'whiskey' }: AddDrinkDialogProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const { impact, notification, ImpactStyle, NotificationType } = useHaptics();
@@ -79,7 +80,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
 
   const resetForm = () => {
     setName('');
-    setType('whiskey');
+    setType(defaultType);
     setBrand('');
     setRating(3);
     setNotes('');
