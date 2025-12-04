@@ -1,4 +1,4 @@
-import { Drink } from '@/types/drink';
+import { Drink, drinkTypeIcons } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { DrinkTypeBadge } from './DrinkTypeBadge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,15 +25,32 @@ export function DrinkCard({ drink, onEdit, onDelete, style }: DrinkCardProps) {
       className="group bg-gradient-card border-border/50 shadow-card hover:border-primary/30 transition-all duration-300 hover:shadow-glow animate-fade-in overflow-hidden"
       style={style}
     >
-      <CardContent className="p-5">
+      {drink.imageUrl && (
+        <div className="relative h-40 overflow-hidden">
+          <img 
+            src={drink.imageUrl} 
+            alt={drink.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+        </div>
+      )}
+      <CardContent className={drink.imageUrl ? "p-5 pt-3" : "p-5"}>
         <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display text-lg font-semibold text-foreground truncate">
-              {drink.name}
-            </h3>
-            {drink.brand && (
-              <p className="text-sm text-muted-foreground truncate">{drink.brand}</p>
+          <div className="flex-1 min-w-0 flex items-start gap-3">
+            {!drink.imageUrl && (
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
+                {drinkTypeIcons[drink.type]}
+              </div>
             )}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display text-lg font-semibold text-foreground truncate">
+                {drink.name}
+              </h3>
+              {drink.brand && (
+                <p className="text-sm text-muted-foreground truncate">{drink.brand}</p>
+              )}
+            </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
