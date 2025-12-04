@@ -94,7 +94,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         setPrice(editDrink.price || '');
         setImageUrl(editDrink.imageUrl);
         // Expand details if any optional field has data
-        setDetailsOpen(!!(editDrink.brand || editDrink.notes || editDrink.location || editDrink.price || editDrink.imageUrl));
+        setDetailsOpen(!!(editDrink.brand || editDrink.notes || editDrink.location || editDrink.price));
       } else {
         setName('');
         setType(defaultType);
@@ -267,7 +267,71 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
       {/* Essential Fields */}
       <div className="space-y-2">
         <Label htmlFor="name">Name *</Label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* Photo Button */}
+          {imageUrl ? (
+            <div className="relative flex-shrink-0">
+              <img
+                src={imageUrl}
+                alt="Drink preview"
+                className="w-10 h-10 object-cover rounded-lg border border-border"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:bg-destructive/90"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : isNative ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  disabled={isUploading}
+                  className="w-10 h-10 flex-shrink-0 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4" />
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="bg-popover z-[60]">
+                <DropdownMenuItem onClick={handleTakePhoto}>
+                  <Camera className="w-4 h-4 mr-2" />
+                  Take Photo
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handlePickFromGallery}>
+                  <ImagePlus className="w-4 h-4 mr-2" />
+                  Choose from Gallery
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="w-10 h-10 flex-shrink-0 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
+            >
+              {isUploading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Camera className="w-4 h-4" />
+              )}
+            </button>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          
           <Input
             id="name"
             value={name}
@@ -359,7 +423,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${detailsOpen ? 'rotate-180' : ''}`} />
             <span>{detailsOpen ? 'Less details' : 'More details'}</span>
-            {!detailsOpen && (brand || notes || location || price || imageUrl) && (
+            {!detailsOpen && (brand || notes || location || price) && (
               <span className="text-xs text-primary">(has data)</span>
             )}
           </button>
@@ -386,80 +450,6 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
               rows={2}
               className="bg-secondary/50 resize-none"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Photo</Label>
-            <div className="flex items-center gap-3">
-              {imageUrl ? (
-                <div className="relative">
-                  <img
-                    src={imageUrl}
-                    alt="Drink preview"
-                    className="w-16 h-16 object-cover rounded-lg border border-border"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ) : isNative ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      disabled={isUploading}
-                      className="w-16 h-16 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
-                    >
-                      {isUploading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <>
-                          <Camera className="w-5 h-5" />
-                          <span className="text-xs">Add</span>
-                        </>
-                      )}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="bg-popover z-[60]">
-                    <DropdownMenuItem onClick={handleTakePhoto}>
-                      <Camera className="w-4 h-4 mr-2" />
-                      Take Photo
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handlePickFromGallery}>
-                      <ImagePlus className="w-4 h-4 mr-2" />
-                      Choose from Gallery
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="w-16 h-16 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
-                >
-                  {isUploading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Camera className="w-5 h-5" />
-                      <span className="text-xs">Add</span>
-                    </>
-                  )}
-                </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-            </div>
           </div>
 
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
