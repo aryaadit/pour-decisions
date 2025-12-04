@@ -3,7 +3,7 @@ import { Drink, drinkTypeIcons } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { DrinkTypeBadge } from './DrinkTypeBadge';
 import { format } from 'date-fns';
-import { MapPin, DollarSign, Calendar, X, Pencil, Trash2 } from 'lucide-react';
+import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,7 @@ export function DrinkDetailModal({
 }: DrinkDetailModalProps) {
   const isMobile = useIsMobile();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
 
   if (!drink) return null;
 
@@ -69,13 +70,20 @@ export function DrinkDetailModal({
     <div className="space-y-6">
       {/* Image */}
       {drink.imageUrl ? (
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowImagePreview(true)}
+          className="relative w-full aspect-video rounded-xl overflow-hidden group cursor-pointer"
+        >
           <img
             src={drink.imageUrl}
             alt={`Photo of ${drink.name}`}
             className="w-full h-full object-cover"
           />
-        </div>
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+            <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        </button>
       ) : (
         <div className="w-full aspect-video rounded-xl bg-primary/10 flex items-center justify-center">
           <span className="text-6xl">{drinkTypeIcons[drink.type]}</span>
@@ -163,6 +171,31 @@ export function DrinkDetailModal({
     </AlertDialog>
   );
 
+  const imagePreviewDialog = drink.imageUrl && (
+    <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Photo of {drink.name}</DialogTitle>
+        </DialogHeader>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-2 top-2 z-10 text-white hover:bg-white/20"
+          onClick={() => setShowImagePreview(false)}
+        >
+          <X className="h-5 w-5" />
+        </Button>
+        <div className="flex items-center justify-center p-4">
+          <img
+            src={drink.imageUrl}
+            alt={`Photo of ${drink.name}`}
+            className="max-w-full max-h-[85vh] object-contain rounded-lg"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   if (isMobile) {
     return (
       <>
@@ -177,6 +210,7 @@ export function DrinkDetailModal({
           </DrawerContent>
         </Drawer>
         {deleteConfirmDialog}
+        {imagePreviewDialog}
       </>
     );
   }
@@ -202,6 +236,7 @@ export function DrinkDetailModal({
         </DialogContent>
       </Dialog>
       {deleteConfirmDialog}
+      {imagePreviewDialog}
     </>
   );
 }
