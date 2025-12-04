@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { SwipeableCard } from './SwipeableCard';
 
 interface DrinkCardProps {
   drink: Drink;
@@ -21,10 +22,11 @@ interface DrinkCardProps {
 
 export function DrinkCard({ drink, onEdit, onDelete, style }: DrinkCardProps) {
   return (
-    <Card 
-      className="group bg-gradient-card border-border/50 shadow-card hover:border-primary/30 transition-all duration-300 hover:shadow-glow animate-fade-in overflow-hidden"
-      style={style}
-    >
+    <SwipeableCard onDelete={() => onDelete(drink.id)}>
+      <Card 
+        className="group bg-gradient-card border-border/50 shadow-card hover:border-primary/30 transition-all duration-300 hover:shadow-glow animate-fade-in overflow-hidden"
+        style={style}
+      >
       {drink.imageUrl && (
         <div className="relative h-40 overflow-hidden">
           <img 
@@ -109,5 +111,6 @@ export function DrinkCard({ drink, onEdit, onDelete, style }: DrinkCardProps) {
         </div>
       </CardContent>
     </Card>
+    </SwipeableCard>
   );
 }
