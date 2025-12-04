@@ -10,17 +10,10 @@ import { DrinkTypeFilter } from '@/components/DrinkTypeFilter';
 import { SearchBar } from '@/components/SearchBar';
 import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
+import { ProfileMenu } from '@/components/ProfileMenu';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Plus, GlassWater, LogOut, Loader2, Settings } from 'lucide-react';
+import { Plus, GlassWater, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 const Index = () => {
   const { user, isLoading: authLoading, signOut } = useAuth();
@@ -65,12 +58,6 @@ const Index = () => {
   const filteredDrinks = filterDrinks(selectedType ?? undefined, searchQuery);
   const hasFilters = !!selectedType || !!searchQuery;
 
-  const getInitials = () => {
-    if (profile?.displayName) {
-      return profile.displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return user?.email?.charAt(0).toUpperCase() || 'U';
-  };
 
   const handleSave = async (drinkData: Omit<Drink, 'id' | 'dateAdded'>) => {
     if (editingDrink) {
@@ -149,37 +136,12 @@ const Index = () => {
                 <span className="hidden sm:inline">Add Drink</span>
               </Button>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={profile?.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-primary/20 text-primary text-sm">
-                        {getInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium truncate">
-                      {profile?.displayName || user.email}
-                    </p>
-                    {profile?.displayName && (
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                    )}
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/settings')}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <ProfileMenu
+                avatarUrl={profile?.avatarUrl}
+                displayName={profile?.displayName}
+                email={user.email}
+                onSignOut={handleSignOut}
+              />
             </div>
           </div>
         </div>
