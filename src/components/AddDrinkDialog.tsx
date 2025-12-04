@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Drink, DrinkType, drinkTypeLabels, drinkTypeIcons } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Camera, X, Loader2 } from 'lucide-react';
 
 
 interface AddDrinkDialogProps {
@@ -30,6 +33,7 @@ interface AddDrinkDialogProps {
 const drinkTypes: DrinkType[] = ['whiskey', 'beer', 'wine', 'cocktail', 'other'];
 
 export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDrinkDialogProps) {
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [type, setType] = useState<DrinkType>('whiskey');
   const [brand, setBrand] = useState('');
@@ -37,6 +41,9 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
   const [notes, setNotes] = useState('');
   const [location, setLocation] = useState('');
   const [price, setPrice] = useState('');
+  const [imageUrl, setImageUrl] = useState<string | undefined>();
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editDrink) {
@@ -47,6 +54,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
       setNotes(editDrink.notes || '');
       setLocation(editDrink.location || '');
       setPrice(editDrink.price || '');
+      setImageUrl(editDrink.imageUrl);
     } else {
       resetForm();
     }
@@ -60,6 +68,38 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
     setNotes('');
     setLocation('');
     setPrice('');
+    setImageUrl(undefined);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setIsUploading(true);
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('drink-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Error uploading image:', uploadError);
+      setIsUploading(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('drink-images')
+      .getPublicUrl(filePath);
+
+    setImageUrl(publicUrl);
+    setIsUploading(false);
+  };
+
+  const removeImage = () => {
+    setImageUrl(undefined);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,6 +114,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
       notes: notes.trim() || undefined,
       location: location.trim() || undefined,
       price: price.trim() || undefined,
+      imageUrl,
     });
 
     resetForm();
@@ -151,6 +192,51 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink }: AddDri
               rows={3}
               className="bg-secondary/50 resize-none"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Photo</Label>
+            <div className="flex items-center gap-3">
+              {imageUrl ? (
+                <div className="relative">
+                  <img
+                    src={imageUrl}
+                    alt="Drink preview"
+                    className="w-20 h-20 object-cover rounded-lg border border-border"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="w-20 h-20 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Camera className="w-5 h-5" />
+                      <span className="text-xs">Add</span>
+                    </>
+                  )}
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

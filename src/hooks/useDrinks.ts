@@ -35,6 +35,7 @@ export function useDrinks() {
           location: d.location || undefined,
           price: d.price ? `$${d.price}` : undefined,
           dateAdded: new Date(d.date_added),
+          imageUrl: d.image_url || undefined,
         }))
       );
     }
@@ -61,6 +62,7 @@ export function useDrinks() {
         notes: drink.notes || null,
         location: drink.location || null,
         price: priceValue ? parseFloat(priceValue) : null,
+        image_url: drink.imageUrl || null,
       })
       .select()
       .single();
@@ -80,6 +82,7 @@ export function useDrinks() {
       location: data.location || undefined,
       price: data.price ? `$${data.price}` : undefined,
       dateAdded: new Date(data.date_added),
+      imageUrl: data.image_url || undefined,
     };
 
     setDrinks((prev) => [newDrink, ...prev]);
@@ -99,6 +102,7 @@ export function useDrinks() {
         notes: updates.notes || null,
         location: updates.location || null,
         price: priceValue ? parseFloat(priceValue) : null,
+        image_url: updates.imageUrl || null,
       })
       .eq('id', id);
 
