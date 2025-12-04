@@ -48,6 +48,7 @@
 
     --gradient-warm: linear-gradient(135deg, hsl(36 77% 49% / 0.15), hsl(20 14% 8% / 0.8));
     --gradient-card: linear-gradient(180deg, hsl(20 12% 14%), hsl(20 12% 10%));
+    --theme-gradient: none;
     
     --shadow-glow: 0 0 40px hsl(36 77% 49% / 0.15);
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
@@ -59,6 +60,7 @@
     --accent: 35 70% 55%;
     --ring: 30 80% 45%;
     --shadow-glow: 0 0 40px hsl(30 80% 45% / 0.2);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(30 60% 12%) 0%, hsl(20 14% 8%) 70%);
   }
 
   [data-drink-theme="beer"] {
@@ -66,6 +68,7 @@
     --accent: 48 80% 55%;
     --ring: 42 85% 48%;
     --shadow-glow: 0 0 40px hsl(42 85% 48% / 0.2);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(42 50% 12%) 0%, hsl(20 14% 8%) 70%);
   }
 
   [data-drink-theme="wine"] {
@@ -73,6 +76,7 @@
     --accent: 355 55% 52%;
     --ring: 350 65% 42%;
     --shadow-glow: 0 0 40px hsl(350 65% 42% / 0.2);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(350 40% 12%) 0%, hsl(20 14% 8%) 70%);
   }
 
   [data-drink-theme="cocktail"] {
@@ -80,6 +84,7 @@
     --accent: 290 50% 60%;
     --ring: 280 55% 50%;
     --shadow-glow: 0 0 40px hsl(280 55% 50% / 0.2);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(280 35% 12%) 0%, hsl(20 14% 8%) 70%);
   }
 
   [data-drink-theme="other"] {
@@ -87,13 +92,15 @@
     --accent: 210 45% 55%;
     --ring: 200 50% 45%;
     --shadow-glow: 0 0 40px hsl(200 50% 45% / 0.2);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(200 30% 12%) 0%, hsl(20 14% 8%) 70%);
   }
 
   [data-drink-theme="all"] {
-    --primary: 36 77% 49%;
-    --accent: 36 60% 60%;
-    --ring: 36 77% 49%;
-    --shadow-glow: 0 0 40px hsl(36 77% 49% / 0.15);
+    --primary: 0 0% 45%;
+    --accent: 0 0% 55%;
+    --ring: 0 0% 45%;
+    --shadow-glow: 0 0 40px hsl(0 0% 45% / 0.1);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(0 0% 12%) 0%, hsl(20 14% 8%) 70%);
   }
 
   .light {
@@ -130,6 +137,7 @@
 
     --gradient-warm: linear-gradient(135deg, hsl(36 77% 45% / 0.1), hsl(36 30% 96% / 0.8));
     --gradient-card: linear-gradient(180deg, hsl(36 25% 100%), hsl(36 25% 98%));
+    --theme-gradient: none;
     
     --shadow-glow: 0 0 40px hsl(36 77% 45% / 0.1);
     --shadow-card: 0 4px 24px hsl(20 10% 20% / 0.08);
@@ -141,6 +149,7 @@
     --accent: 35 65% 50%;
     --ring: 30 75% 40%;
     --shadow-glow: 0 0 40px hsl(30 75% 40% / 0.15);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(30 40% 92%) 0%, hsl(36 30% 96%) 70%);
   }
 
   .light[data-drink-theme="beer"] {
@@ -148,6 +157,7 @@
     --accent: 48 75% 50%;
     --ring: 42 80% 42%;
     --shadow-glow: 0 0 40px hsl(42 80% 42% / 0.15);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(42 45% 92%) 0%, hsl(36 30% 96%) 70%);
   }
 
   .light[data-drink-theme="wine"] {
@@ -155,6 +165,7 @@
     --accent: 355 50% 48%;
     --ring: 350 60% 38%;
     --shadow-glow: 0 0 40px hsl(350 60% 38% / 0.15);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(350 35% 94%) 0%, hsl(36 30% 96%) 70%);
   }
 
   .light[data-drink-theme="cocktail"] {
@@ -162,6 +173,7 @@
     --accent: 290 45% 55%;
     --ring: 280 50% 45%;
     --shadow-glow: 0 0 40px hsl(280 50% 45% / 0.15);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(280 30% 94%) 0%, hsl(36 30% 96%) 70%);
   }
 
   .light[data-drink-theme="other"] {
@@ -169,13 +181,15 @@
     --accent: 210 40% 50%;
     --ring: 200 45% 40%;
     --shadow-glow: 0 0 40px hsl(200 45% 40% / 0.15);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(200 25% 94%) 0%, hsl(36 30% 96%) 70%);
   }
 
   .light[data-drink-theme="all"] {
-    --primary: 36 77% 45%;
-    --accent: 36 60% 50%;
-    --ring: 36 77% 45%;
-    --shadow-glow: 0 0 40px hsl(36 77% 45% / 0.1);
+    --primary: 0 0% 40%;
+    --accent: 0 0% 50%;
+    --ring: 0 0% 40%;
+    --shadow-glow: 0 0 40px hsl(0 0% 40% / 0.08);
+    --theme-gradient: radial-gradient(ellipse at top, hsl(0 0% 94%) 0%, hsl(0 0% 96%) 70%);
   }
 
   .dark {
@@ -190,9 +204,10 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    background: var(--theme-gradient), hsl(var(--background));
+    transition: background 0.4s ease, color 0.3s ease;
   }
 
   /* Smooth theme transitions */
