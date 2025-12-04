@@ -34,9 +34,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
-import { Camera, X, Loader2, ImagePlus } from 'lucide-react';
+import { Camera, X, Loader2, ImagePlus, Search, Sparkles } from 'lucide-react';
 import { takePhoto, pickFromGallery, dataUrlToBlob } from '@/hooks/useCamera';
 import { Capacitor } from '@capacitor/core';
+import { toast } from 'sonner';
 
 interface AddDrinkDialogProps {
   open: boolean;
@@ -61,6 +62,13 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
   const [price, setPrice] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [isUploading, setIsUploading] = useState(false);
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [lookupInfo, setLookupInfo] = useState<{
+    tastingNotes?: string | null;
+    brandInfo?: string | null;
+    priceRange?: string | null;
+    suggestions?: string | null;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevOpenRef = useRef(false);
 
@@ -101,7 +109,70 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     setLocation('');
     setPrice('');
     setImageUrl(undefined);
+    setLookupInfo(null);
   }, [defaultType]);
+
+  const handleLookup = async () => {
+    if (!name.trim()) {
+      toast.error('Enter a drink name first');
+      return;
+    }
+
+    impact(ImpactStyle.Light);
+    setIsLookingUp(true);
+    setLookupInfo(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('lookup-drink', {
+        body: { drinkName: name.trim(), drinkType: type, brand: brand.trim() || undefined }
+      });
+
+      if (error) {
+        console.error('Lookup error:', error);
+        toast.error('Failed to look up drink info');
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      if (data?.success && data?.data) {
+        notification(NotificationType.Success);
+        setLookupInfo(data.data);
+        toast.success('Found drink information!');
+      }
+    } catch (err) {
+      console.error('Lookup error:', err);
+      toast.error('Failed to look up drink info');
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
+
+  const applyLookupInfo = (field: 'notes' | 'price' | 'all') => {
+    impact(ImpactStyle.Light);
+    if (!lookupInfo) return;
+    
+    if (field === 'notes' || field === 'all') {
+      const combinedNotes = [
+        lookupInfo.tastingNotes,
+        lookupInfo.brandInfo,
+        lookupInfo.suggestions
+      ].filter(Boolean).join('\n\n');
+      if (combinedNotes) setNotes(combinedNotes);
+    }
+    
+    if (field === 'price' || field === 'all') {
+      if (lookupInfo.priceRange) setPrice(lookupInfo.priceRange);
+    }
+    
+    if (field === 'all') {
+      setLookupInfo(null);
+      toast.success('Applied drink info');
+    }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -186,14 +257,30 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="name">Name *</Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Lagavulin 16"
-            required
-            className="bg-secondary/50"
-          />
+          <div className="flex gap-2">
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Lagavulin 16"
+              required
+              className="bg-secondary/50 flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleLookup}
+              disabled={isLookingUp || !name.trim()}
+              title="Look up drink info"
+            >
+              {isLookingUp ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -215,6 +302,37 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
           </Select>
         </div>
       </div>
+
+      {/* Lookup Results */}
+      {lookupInfo && (
+        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-medium text-primary">
+              <Sparkles className="w-4 h-4" />
+              Found Info
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => applyLookupInfo('all')}
+              className="text-xs h-7"
+            >
+              Apply All
+            </Button>
+          </div>
+          {lookupInfo.tastingNotes && (
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              <strong>Taste:</strong> {lookupInfo.tastingNotes}
+            </p>
+          )}
+          {lookupInfo.priceRange && (
+            <p className="text-xs text-muted-foreground">
+              <strong>Price:</strong> {lookupInfo.priceRange}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="brand">Brand / Producer</Label>

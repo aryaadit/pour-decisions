@@ -1,1 +1,4 @@
 project_id = "kvsfwvxlmrtbzafznczd"
+
+[functions.lookup-drink]
+verify_jwt = false
