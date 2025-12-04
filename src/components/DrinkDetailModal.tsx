@@ -1,4 +1,5 @@
-import { Drink, drinkTypeIcons, drinkTypeLabels } from '@/types/drink';
+import { useState } from 'react';
+import { Drink, drinkTypeIcons } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { DrinkTypeBadge } from './DrinkTypeBadge';
 import { format } from 'date-fns';
@@ -15,6 +16,16 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -35,6 +46,7 @@ export function DrinkDetailModal({
   onDelete,
 }: DrinkDetailModalProps) {
   const isMobile = useIsMobile();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (!drink) return null;
 
@@ -43,7 +55,12 @@ export function DrinkDetailModal({
     onEdit(drink);
   };
 
-  const handleDelete = () => {
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setShowDeleteConfirm(false);
     onOpenChange(false);
     onDelete(drink.id);
   };
@@ -116,7 +133,7 @@ export function DrinkDetailModal({
           <Pencil className="h-4 w-4 mr-2" />
           Edit
         </Button>
-        <Button variant="destructive" className="flex-1" onClick={handleDelete}>
+        <Button variant="destructive" className="flex-1" onClick={handleDeleteClick}>
           <Trash2 className="h-4 w-4 mr-2" />
           Delete
         </Button>
@@ -124,39 +141,67 @@ export function DrinkDetailModal({
     </div>
   );
 
+  const deleteConfirmDialog = (
+    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete "{drink.name}"?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently remove this drink from your collection.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirmDelete}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[90vh]">
-          <DrawerHeader className="sr-only">
-            <DrawerTitle>{drink.name}</DrawerTitle>
-          </DrawerHeader>
-          <ScrollArea className="px-4 pb-8 pt-2 max-h-[85vh]">
-            {content}
-          </ScrollArea>
-        </DrawerContent>
-      </Drawer>
+      <>
+        <Drawer open={open} onOpenChange={onOpenChange}>
+          <DrawerContent className="max-h-[90vh]">
+            <DrawerHeader className="sr-only">
+              <DrawerTitle>{drink.name}</DrawerTitle>
+            </DrawerHeader>
+            <ScrollArea className="px-4 pb-8 pt-2 max-h-[85vh]">
+              {content}
+            </ScrollArea>
+          </DrawerContent>
+        </Drawer>
+        {deleteConfirmDialog}
+      </>
     );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden p-0">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{drink.name}</DialogTitle>
-        </DialogHeader>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-4 top-4 z-10 bg-background/80 backdrop-blur-sm"
-          onClick={() => onOpenChange(false)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-        <ScrollArea className="p-6 max-h-[85vh]">
-          {content}
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{drink.name}</DialogTitle>
+          </DialogHeader>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-4 z-10 bg-background/80 backdrop-blur-sm"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <ScrollArea className="p-6 max-h-[85vh]">
+            {content}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+      {deleteConfirmDialog}
+    </>
   );
 }
