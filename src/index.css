@@ -53,6 +53,49 @@
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
   }
 
+  /* Drink type themes - Dark mode */
+  [data-drink-theme="whiskey"] {
+    --primary: 30 80% 45%;
+    --accent: 35 70% 55%;
+    --ring: 30 80% 45%;
+    --shadow-glow: 0 0 40px hsl(30 80% 45% / 0.2);
+  }
+
+  [data-drink-theme="beer"] {
+    --primary: 42 85% 48%;
+    --accent: 48 80% 55%;
+    --ring: 42 85% 48%;
+    --shadow-glow: 0 0 40px hsl(42 85% 48% / 0.2);
+  }
+
+  [data-drink-theme="wine"] {
+    --primary: 350 65% 42%;
+    --accent: 355 55% 52%;
+    --ring: 350 65% 42%;
+    --shadow-glow: 0 0 40px hsl(350 65% 42% / 0.2);
+  }
+
+  [data-drink-theme="cocktail"] {
+    --primary: 280 55% 50%;
+    --accent: 290 50% 60%;
+    --ring: 280 55% 50%;
+    --shadow-glow: 0 0 40px hsl(280 55% 50% / 0.2);
+  }
+
+  [data-drink-theme="other"] {
+    --primary: 200 50% 45%;
+    --accent: 210 45% 55%;
+    --ring: 200 50% 45%;
+    --shadow-glow: 0 0 40px hsl(200 50% 45% / 0.2);
+  }
+
+  [data-drink-theme="all"] {
+    --primary: 36 77% 49%;
+    --accent: 36 60% 60%;
+    --ring: 36 77% 49%;
+    --shadow-glow: 0 0 40px hsl(36 77% 49% / 0.15);
+  }
+
   .light {
     --background: 36 30% 96%;
     --foreground: 20 14% 12%;
@@ -92,6 +135,49 @@
     --shadow-card: 0 4px 24px hsl(20 10% 20% / 0.08);
   }
 
+  /* Drink type themes - Light mode */
+  .light[data-drink-theme="whiskey"] {
+    --primary: 30 75% 40%;
+    --accent: 35 65% 50%;
+    --ring: 30 75% 40%;
+    --shadow-glow: 0 0 40px hsl(30 75% 40% / 0.15);
+  }
+
+  .light[data-drink-theme="beer"] {
+    --primary: 42 80% 42%;
+    --accent: 48 75% 50%;
+    --ring: 42 80% 42%;
+    --shadow-glow: 0 0 40px hsl(42 80% 42% / 0.15);
+  }
+
+  .light[data-drink-theme="wine"] {
+    --primary: 350 60% 38%;
+    --accent: 355 50% 48%;
+    --ring: 350 60% 38%;
+    --shadow-glow: 0 0 40px hsl(350 60% 38% / 0.15);
+  }
+
+  .light[data-drink-theme="cocktail"] {
+    --primary: 280 50% 45%;
+    --accent: 290 45% 55%;
+    --ring: 280 50% 45%;
+    --shadow-glow: 0 0 40px hsl(280 50% 45% / 0.15);
+  }
+
+  .light[data-drink-theme="other"] {
+    --primary: 200 45% 40%;
+    --accent: 210 40% 50%;
+    --ring: 200 45% 40%;
+    --shadow-glow: 0 0 40px hsl(200 45% 40% / 0.15);
+  }
+
+  .light[data-drink-theme="all"] {
+    --primary: 36 77% 45%;
+    --accent: 36 60% 50%;
+    --ring: 36 77% 45%;
+    --shadow-glow: 0 0 40px hsl(36 77% 45% / 0.1);
+  }
+
   .dark {
     --background: 20 14% 8%;
     --foreground: 36 33% 94%;
@@ -106,6 +192,12 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Smooth theme transitions */
+  .glass, button, .gradient-card {
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   }
 
   h1, h2, h3, h4, h5, h6 {

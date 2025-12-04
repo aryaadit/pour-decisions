@@ -47,6 +47,15 @@ const Index = () => {
     }
   }, [user, authLoading, navigate]);
 
+  // Apply drink type theme
+  useEffect(() => {
+    const theme = selectedType || 'all';
+    document.documentElement.setAttribute('data-drink-theme', theme);
+    return () => {
+      document.documentElement.removeAttribute('data-drink-theme');
+    };
+  }, [selectedType]);
+
   // Apply profile defaults when loaded
   useEffect(() => {
     if (profile?.defaultDrinkType && selectedType === null) {
