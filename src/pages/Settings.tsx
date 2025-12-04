@@ -50,6 +50,14 @@ const Settings = () => {
     }
   }, [profile]);
 
+  // Apply drink type theme
+  useEffect(() => {
+    document.documentElement.setAttribute('data-drink-theme', defaultDrinkType);
+    return () => {
+      document.documentElement.removeAttribute('data-drink-theme');
+    };
+  }, [defaultDrinkType]);
+
   const handleSave = async () => {
     setIsSaving(true);
     const { error } = await updateProfile({
