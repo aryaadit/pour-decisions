@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.83dab5265dce4cd6b4679c007e9792e6',
+  appId: 'com.pourdecisions.barkeeply',
   appName: 'barkeeply',
   webDir: 'dist',
   server: {
