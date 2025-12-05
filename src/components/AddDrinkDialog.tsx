@@ -122,9 +122,12 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     setDetailsOpen(false);
   }, [defaultType]);
 
-  const handleLookup = async () => {
-    if (!name.trim()) {
-      toast.error('Enter a drink name first');
+  const handleLookup = async (useImage = false) => {
+    const hasName = name.trim();
+    const hasImage = useImage && imageUrl;
+    
+    if (!hasName && !hasImage) {
+      toast.error('Enter a drink name or add a photo first');
       return;
     }
 
@@ -134,7 +137,12 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
 
     try {
       const { data, error } = await supabase.functions.invoke('lookup-drink', {
-        body: { drinkName: name.trim(), drinkType: type, brand: brand.trim() || undefined }
+        body: { 
+          drinkName: hasName ? name.trim() : undefined, 
+          drinkType: type, 
+          brand: brand.trim() || undefined,
+          imageUrl: hasImage ? imageUrl : undefined
+        }
       });
 
       if (error) {
@@ -150,8 +158,23 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
 
       if (data?.success && data?.data) {
         notification(NotificationType.Success);
-        setLookupInfo(data.data);
-        toast.success('Found drink information!');
+        const info = data.data;
+        setLookupInfo(info);
+        
+        // Auto-fill name, brand, and type if identified from image
+        if (useImage) {
+          if (info.drinkName && !name.trim()) {
+            setName(info.drinkName);
+          }
+          if (info.drinkBrand && !brand.trim()) {
+            setBrand(info.drinkBrand);
+          }
+          if (info.drinkType) {
+            setType(info.drinkType);
+          }
+        }
+        
+        toast.success(useImage ? 'Identified drink from photo!' : 'Found drink information!');
       }
     } catch (err) {
       console.error('Lookup error:', err);
@@ -344,12 +367,14 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
             type="button"
             variant="outline"
             size="icon"
-            onClick={handleLookup}
-            disabled={isLookingUp || !name.trim()}
-            title="Look up drink info"
+            onClick={() => handleLookup(!!imageUrl)}
+            disabled={isLookingUp || (!name.trim() && !imageUrl)}
+            title={imageUrl ? "Identify drink from photo" : "Look up drink info"}
           >
             {isLookingUp ? (
               <Loader2 className="w-4 h-4 animate-spin" />
+            ) : imageUrl ? (
+              <Sparkles className="w-4 h-4" />
             ) : (
               <Search className="w-4 h-4" />
             )}

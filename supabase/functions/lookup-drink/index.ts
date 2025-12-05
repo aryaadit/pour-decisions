@@ -11,11 +11,12 @@ serve(async (req) => {
   }
 
   try {
-    const { drinkName, drinkType, brand } = await req.json();
+    const { drinkName, drinkType, brand, imageUrl } = await req.json();
     
-    if (!drinkName) {
+    // Allow lookup by name OR image
+    if (!drinkName && !imageUrl) {
       return new Response(
-        JSON.stringify({ error: "Drink name is required" }),
+        JSON.stringify({ error: "Drink name or image is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -32,17 +33,28 @@ serve(async (req) => {
     const searchQuery = brand ? `${brand} ${drinkName}` : drinkName;
     const typeContext = drinkType ? `This is a ${drinkType}.` : "";
 
-    console.log(`Looking up drink: ${searchQuery}, type: ${drinkType}`);
+    console.log(`Looking up drink: ${searchQuery || 'from image'}, type: ${drinkType}, hasImage: ${!!imageUrl}`);
 
-    const systemPrompt = `You are a knowledgeable beverage expert and sommelier. When given a drink name, provide accurate and helpful information about it. Be concise but informative. If you're not certain about specific details, indicate that.
+    const systemPrompt = `You are a knowledgeable beverage expert and sommelier. When given a drink name or image, identify it and provide accurate and helpful information about it. Be concise but informative. If you're not certain about specific details, indicate that.
 
 Return your response as a JSON object with these fields:
+- drinkName: The identified name of the drink (only include if identifying from an image)
+- drinkBrand: The identified brand/producer (only include if identifying from an image)  
+- drinkType: The type of drink - must be one of: whiskey, beer, wine, cocktail, other (only include if identifying from an image)
 - tastingNotes: A brief description of flavor profile, aromas, and characteristics (2-3 sentences max)
 - brandInfo: Information about the producer/brand, origin, and any notable background (2-3 sentences max)
 - priceRange: Typical price range (e.g., "$30-50 per bottle" or "$8-15 per glass")
 - suggestions: Any serving suggestions, food pairings, or similar drinks to try (1-2 sentences)
 
 If you don't have reliable information for a field, set it to null.`;
+
+    // Build messages based on whether we have an image
+    const userContent = imageUrl 
+      ? [
+          { type: "text", text: `Please identify this drink from the image and provide information about it.${typeContext ? ` Context: ${typeContext}` : ''}${drinkName ? ` The user thinks it might be "${searchQuery}".` : ''}` },
+          { type: "image_url", image_url: { url: imageUrl } }
+        ]
+      : `Please provide information about this drink: "${searchQuery}". ${typeContext}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -54,7 +66,7 @@ If you don't have reliable information for a field, set it to null.`;
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Please provide information about this drink: "${searchQuery}". ${typeContext}` }
+          { role: "user", content: userContent }
         ],
         response_format: { type: "json_object" },
       }),
