@@ -124,8 +124,12 @@ const Index = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    const { error } = await signOut();
+    if (error) {
+      console.warn('Sign out error (proceeding anyway):', error.message);
+    }
     toast.success('Signed out', { description: 'You have been signed out successfully.' });
+    navigate('/auth');
   };
 
   if (authLoading || isLoading || profileLoading) {

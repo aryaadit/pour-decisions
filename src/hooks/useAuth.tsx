@@ -8,7 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ error: Error | null }>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updatePassword: (password: string) => Promise<{ error: Error | null }>;
 }
@@ -62,7 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Use global scope to sign out from all devices
+    const { error } = await supabase.auth.signOut({ scope: 'global' });
+    
+    // Force clear local state even if server signOut fails (e.g., session already expired)
+    setSession(null);
+    setUser(null);
+    
+    return { error };
   };
 
   const resetPassword = async (email: string) => {
