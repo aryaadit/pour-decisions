@@ -15,24 +15,24 @@
     --popover: 20 12% 10%;
     --popover-foreground: 36 33% 94%;
 
-    --primary: 36 77% 49%;
-    --primary-foreground: 20 14% 8%;
+    --primary: 0 0% 45%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 20 12% 18%;
-    --secondary-foreground: 36 33% 94%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 94%;
 
-    --muted: 20 10% 20%;
-    --muted-foreground: 36 15% 55%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 55%;
 
-    --accent: 36 60% 60%;
-    --accent-foreground: 20 14% 8%;
+    --accent: 0 0% 55%;
+    --accent-foreground: 0 0% 8%;
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 36 33% 94%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 20 12% 20%;
-    --input: 20 12% 18%;
-    --ring: 36 77% 49%;
+    --border: 0 0% 20%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 45%;
 
     --radius: 0.75rem;
 
@@ -44,13 +44,13 @@
     --other: 200 50% 50%;
     
     --star-filled: 45 93% 58%;
-    --star-empty: 20 10% 25%;
+    --star-empty: 0 0% 25%;
 
-    --gradient-warm: linear-gradient(135deg, hsl(36 77% 49% / 0.15), hsl(20 14% 8% / 0.8));
-    --gradient-card: linear-gradient(180deg, hsl(20 12% 14%), hsl(20 12% 10%));
+    --gradient-warm: linear-gradient(135deg, hsl(0 0% 45% / 0.15), hsl(0 0% 8% / 0.8));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 14%), hsl(0 0% 10%));
     --theme-gradient: none;
     
-    --shadow-glow: 0 0 40px hsl(36 77% 49% / 0.15);
+    --shadow-glow: 0 0 40px hsl(0 0% 45% / 0.1);
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
   }
 
@@ -113,34 +113,34 @@
     --popover: 36 25% 100%;
     --popover-foreground: 20 14% 12%;
 
-    --primary: 36 77% 45%;
-    --primary-foreground: 36 30% 98%;
+    --primary: 0 0% 40%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 36 15% 90%;
-    --secondary-foreground: 20 14% 20%;
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 20%;
 
-    --muted: 36 12% 88%;
-    --muted-foreground: 20 10% 45%;
+    --muted: 0 0% 88%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 36 60% 50%;
-    --accent-foreground: 36 30% 98%;
+    --accent: 0 0% 50%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 36 30% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 36 15% 85%;
-    --input: 36 15% 92%;
-    --ring: 36 77% 45%;
+    --border: 0 0% 85%;
+    --input: 0 0% 92%;
+    --ring: 0 0% 40%;
 
     --star-filled: 45 93% 50%;
     --star-empty: 36 12% 80%;
 
-    --gradient-warm: linear-gradient(135deg, hsl(36 77% 45% / 0.1), hsl(36 30% 96% / 0.8));
-    --gradient-card: linear-gradient(180deg, hsl(36 25% 100%), hsl(36 25% 98%));
+    --gradient-warm: linear-gradient(135deg, hsl(0 0% 40% / 0.1), hsl(0 0% 96% / 0.8));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
     --theme-gradient: none;
     
-    --shadow-glow: 0 0 40px hsl(36 77% 45% / 0.1);
-    --shadow-card: 0 4px 24px hsl(20 10% 20% / 0.08);
+    --shadow-glow: 0 0 40px hsl(0 0% 40% / 0.08);
+    --shadow-card: 0 4px 24px hsl(0 0% 20% / 0.08);
   }
 
   /* Drink type themes - Light mode */
