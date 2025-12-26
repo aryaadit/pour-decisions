@@ -172,8 +172,25 @@ export function DrinkDetailModal({
   );
 
   const imagePreviewDialog = drink.imageUrl && (
-    <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+    <Dialog 
+      open={showImagePreview} 
+      onOpenChange={setShowImagePreview}
+      modal={true}
+    >
+      <DialogContent 
+        className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none"
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+          setShowImagePreview(false);
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+          setShowImagePreview(false);
+        }}
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+      >
         <DialogHeader className="sr-only">
           <DialogTitle>Photo of {drink.name}</DialogTitle>
         </DialogHeader>
