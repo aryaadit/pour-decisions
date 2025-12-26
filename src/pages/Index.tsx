@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDrinks } from '@/hooks/useDrinks';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { DrinkType, Drink } from '@/types/drink';
 import { SortOrder } from '@/types/profile';
 import { DrinkListItem } from '@/components/DrinkListItem';
@@ -23,6 +24,7 @@ const Index = () => {
   const { profile, isLoading: profileLoading } = useProfile();
   const { setTheme } = useThemeContext();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks } = useDrinks();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,9 +102,22 @@ const Index = () => {
     setEditingDrink(null);
   };
 
+  const handleAddClick = useCallback(() => {
+    if (isMobile) {
+      const typeParam = selectedType || profile?.defaultDrinkType || 'whiskey';
+      navigate(`/add-drink?type=${typeParam}`);
+    } else {
+      setDialogOpen(true);
+    }
+  }, [isMobile, navigate, selectedType, profile?.defaultDrinkType]);
+
   const handleEdit = (drink: Drink) => {
-    setEditingDrink(drink);
-    setDialogOpen(true);
+    if (isMobile) {
+      navigate(`/add-drink?edit=${drink.id}`);
+    } else {
+      setEditingDrink(drink);
+      setDialogOpen(true);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -166,7 +181,7 @@ const Index = () => {
 
             <div className="flex items-center gap-2">
               {/* Desktop add button */}
-              <Button variant="glow" onClick={() => setDialogOpen(true)} className="hidden sm:inline-flex">
+              <Button variant="glow" onClick={handleAddClick} className="hidden sm:inline-flex">
                 <Plus className="w-4 h-4" />
                 <span>Add Drink</span>
               </Button>
@@ -230,7 +245,7 @@ const Index = () => {
         ) : (
           <EmptyState
             hasFilters={hasFilters}
-            onAddClick={() => setDialogOpen(true)}
+            onAddClick={handleAddClick}
             onClearFilters={handleClearFilters}
           />
         )}
@@ -240,21 +255,23 @@ const Index = () => {
       <Button
         variant="glow"
         size="icon"
-        onClick={() => setDialogOpen(true)}
+        onClick={handleAddClick}
         className="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-40"
         style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
       >
         <Plus className="w-6 h-6" />
       </Button>
 
-      {/* Add/Edit Dialog */}
-      <AddDrinkDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
-        onSave={handleSave}
-        editDrink={editingDrink}
-        defaultType={selectedType || profile?.defaultDrinkType || 'whiskey'}
-      />
+      {/* Add/Edit Dialog - Desktop only */}
+      {!isMobile && (
+        <AddDrinkDialog
+          open={dialogOpen}
+          onOpenChange={handleDialogClose}
+          onSave={handleSave}
+          editDrink={editingDrink}
+          defaultType={selectedType || profile?.defaultDrinkType || 'whiskey'}
+        />
+      )}
 
       {/* Detail Modal */}
       <DrinkDetailModal
