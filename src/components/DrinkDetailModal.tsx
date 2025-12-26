@@ -73,12 +73,12 @@ export function DrinkDetailModal({
         <button
           type="button"
           onClick={() => setShowImagePreview(true)}
-          className="relative w-full aspect-video rounded-xl overflow-hidden group cursor-pointer"
+          className="relative w-full aspect-video rounded-xl overflow-hidden group cursor-pointer bg-muted/50"
         >
           <img
             src={drink.imageUrl}
             alt={`Photo of ${drink.name}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
             <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
