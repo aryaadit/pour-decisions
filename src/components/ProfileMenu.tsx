@@ -95,10 +95,10 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
             <DrawerTitle className="sr-only">Profile Menu</DrawerTitle>
             {MenuContent}
           </DrawerHeader>
-          <div className="px-4 pb-8 space-y-2">
+          <div className="px-4 pb-8 space-y-3">
             <Button 
               variant="outline" 
-              className="w-full justify-start gap-3 h-12"
+              className="w-full justify-start gap-3 h-14 text-base"
               onClick={handleSettings}
             >
               <Settings className="w-5 h-5" />
@@ -106,7 +106,7 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
             </Button>
             <Button 
               variant="outline" 
-              className="w-full justify-start gap-3 h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="w-full justify-start gap-3 h-14 text-base text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={handleSignOut}
             >
               <LogOut className="w-5 h-5" />
