@@ -253,6 +253,9 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         const blob = dataUrlToBlob(photo.dataUrl);
         await uploadFile(blob);
       }
+    } catch (error: any) {
+      console.error('Camera error:', error);
+      toast.error(error?.message || 'Failed to take photo. Please check camera permissions.');
     } finally {
       // Small delay to ensure component has re-stabilized after camera return
       setTimeout(() => {
@@ -270,6 +273,9 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         const blob = dataUrlToBlob(photo.dataUrl);
         await uploadFile(blob);
       }
+    } catch (error: any) {
+      console.error('Gallery error:', error);
+      toast.error(error?.message || 'Failed to access photos. Please check photo library permissions.');
     } finally {
       setTimeout(() => {
         isCameraActiveRef.current = false;
