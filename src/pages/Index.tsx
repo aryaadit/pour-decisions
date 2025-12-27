@@ -174,12 +174,12 @@ const Index = () => {
               <div>
                 <h1 className="font-display text-xl font-bold text-foreground">
                   Pour Decisions
+                  {appInfo && (
+                    <span className="ml-1 text-xs font-normal text-muted-foreground/50">v{appInfo.version}</span>
+                  )}
                 </h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">
                   Track your favorite drinks
-                  {appInfo && (
-                    <span className="ml-2 opacity-50">v{appInfo.version} ({appInfo.build})</span>
-                  )}
                 </p>
               </div>
             </div>
