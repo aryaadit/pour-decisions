@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAppInfo } from '@/hooks/useAppInfo';
 import { DrinkType, Drink } from '@/types/drink';
 import { SortOrder } from '@/types/profile';
 import { DrinkListItem } from '@/components/DrinkListItem';
@@ -25,6 +26,7 @@ const Index = () => {
   const { setTheme } = useThemeContext();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const appInfo = useAppInfo();
   const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks } = useDrinks();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -175,6 +177,9 @@ const Index = () => {
                 </h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">
                   Track your favorite drinks
+                  {appInfo && (
+                    <span className="ml-2 opacity-50">v{appInfo.version} ({appInfo.build})</span>
+                  )}
                 </p>
               </div>
             </div>
