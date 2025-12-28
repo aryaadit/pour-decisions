@@ -262,6 +262,49 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
     </Button>
   );
 
+  // For controlled mode without trigger, just render the drawer/dialog content
+  if (isControlled && !trigger) {
+    if (isMobile) {
+      return (
+        <Drawer open={open} onOpenChange={handleOpenChange}>
+          <DrawerContent className="max-h-[85vh]">
+            <DrawerHeader className="text-left">
+              <DrawerTitle className="flex items-center gap-2">
+                <Bug className="w-5 h-5" />
+                Report a Bug
+              </DrawerTitle>
+              <DrawerDescription>
+                Found something wrong? Let us know and we'll fix it.
+              </DrawerDescription>
+            </DrawerHeader>
+            <ScrollArea className="flex-1 overflow-auto">
+              <div className="px-4 pb-8">
+                {formContent}
+              </div>
+            </ScrollArea>
+          </DrawerContent>
+        </Drawer>
+      );
+    }
+
+    return (
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bug className="w-5 h-5" />
+              Report a Bug
+            </DialogTitle>
+            <DialogDescription>
+              Found something wrong? Let us know and we'll fix it.
+            </DialogDescription>
+          </DialogHeader>
+          {formContent}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={handleOpenChange}>
