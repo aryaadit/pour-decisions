@@ -137,7 +137,7 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
               onClick={handleBugReportClick}
             >
               <Bug className="w-5 h-5" />
-              Report Bug
+              Give Feedback
             </Button>
             <Button 
               variant="outline" 
@@ -187,7 +187,7 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
           trigger={
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
               <Bug className="w-4 h-4 mr-2" />
-              Report Bug
+              Give Feedback
             </DropdownMenuItem>
           }
         />

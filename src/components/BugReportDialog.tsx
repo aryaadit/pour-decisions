@@ -258,7 +258,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
   const defaultTrigger = (
     <Button variant="ghost" size="sm">
       <Bug className="w-4 h-4 mr-2" />
-      Report Bug
+      Give Feedback
     </Button>
   );
 
@@ -271,10 +271,10 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
             <DrawerHeader className="text-left">
               <DrawerTitle className="flex items-center gap-2">
                 <Bug className="w-5 h-5" />
-                Report a Bug
+                Give Feedback
               </DrawerTitle>
               <DrawerDescription>
-                Found something wrong? Let us know and we'll fix it.
+                Found something wrong or have a suggestion? Let us know!
               </DrawerDescription>
             </DrawerHeader>
             <ScrollArea className="flex-1 overflow-auto">
@@ -293,10 +293,10 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bug className="w-5 h-5" />
-              Report a Bug
+              Give Feedback
             </DialogTitle>
             <DialogDescription>
-              Found something wrong? Let us know and we'll fix it.
+              Found something wrong or have a suggestion? Let us know!
             </DialogDescription>
           </DialogHeader>
           {formContent}
@@ -315,10 +315,10 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
           <DrawerHeader className="text-left">
             <DrawerTitle className="flex items-center gap-2">
               <Bug className="w-5 h-5" />
-              Report a Bug
+              Give Feedback
             </DrawerTitle>
             <DrawerDescription>
-              Found something wrong? Let us know and we'll fix it.
+              Found something wrong or have a suggestion? Let us know!
             </DrawerDescription>
           </DrawerHeader>
           <ScrollArea className="flex-1 overflow-auto">
@@ -340,10 +340,10 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bug className="w-5 h-5" />
-            Report a Bug
+            Give Feedback
           </DialogTitle>
           <DialogDescription>
-            Found something wrong? Let us know and we'll fix it.
+            Found something wrong or have a suggestion? Let us know!
           </DialogDescription>
         </DialogHeader>
         {formContent}
