@@ -231,12 +231,14 @@ export function DrinkDetailModal({
     return (
       <>
         <Drawer open={open} onOpenChange={onOpenChange}>
-          <DrawerContent className="max-h-[90vh]">
+          <DrawerContent className="max-h-[85vh] flex flex-col">
             <DrawerHeader className="sr-only">
               <DrawerTitle>{drink.name}</DrawerTitle>
             </DrawerHeader>
-            <ScrollArea className="px-4 pb-8 pt-2 max-h-[85vh]">
-              {content}
+            <ScrollArea className="flex-1 overflow-auto">
+              <div className="px-4 pb-8 pt-2">
+                {content}
+              </div>
             </ScrollArea>
           </DrawerContent>
         </Drawer>

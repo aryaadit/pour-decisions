@@ -53,7 +53,7 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const appInfo = useAppInfo();
-  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks } = useDrinks();
+  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther } = useDrinks();
   const { customTypes } = useCustomDrinkTypes();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -148,6 +148,8 @@ const Index = () => {
       }
     });
   }, [filterDrinks, selectedType, searchQuery, sortOrder]);
+
+  const drinkCountByType = useMemo(() => getDrinkCountByType(), [drinks]);
 
   const hasFilters = !!selectedType || !!searchQuery;
 
@@ -274,6 +276,8 @@ const Index = () => {
             <DrinkTypeFilter
               selectedType={selectedType}
               onSelectType={setSelectedType}
+              drinkCountByType={drinkCountByType}
+              onMigrateDrinksToOther={migrateDrinksToOther}
             />
             <SortSelector value={sortOrder} onChange={setSortOrder} />
           </div>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useCustomDrinkTypes, CustomDrinkType } from '@/hooks/useCustomDrinkTypes';
 import { CustomDrinkTypeDialog } from '@/components/AddCustomDrinkTypeDialog';
-import { Plus, X, Pencil } from 'lucide-react';
+import { Plus, X, Pencil, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   ContextMenu,
@@ -14,17 +14,35 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from '@/components/ui/context-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface DrinkTypeFilterProps {
   selectedType: DrinkType | null;
   onSelectType: (type: DrinkType | null) => void;
+  drinkCountByType?: Record<string, number>;
+  onMigrateDrinksToOther?: (typeName: string) => Promise<void>;
 }
 
-export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterProps) {
+export function DrinkTypeFilter({ 
+  selectedType, 
+  onSelectType, 
+  drinkCountByType = {},
+  onMigrateDrinksToOther 
+}: DrinkTypeFilterProps) {
   const { selectionChanged } = useHaptics();
   const { customTypes, addCustomType, updateCustomType, deleteCustomType } = useCustomDrinkTypes();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingType, setEditingType] = useState<CustomDrinkType | null>(null);
+  const [deleteWarningType, setDeleteWarningType] = useState<CustomDrinkType | null>(null);
 
   const handleSelect = (type: DrinkType | null) => {
     if (type !== selectedType) {
@@ -62,17 +80,40 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
     setDialogOpen(true);
   };
 
-  const handleDeleteCustomType = async (id: string, name: string) => {
-    const result = await deleteCustomType(id);
+  const handleDeleteCustomType = async (customType: CustomDrinkType) => {
+    const drinkCount = drinkCountByType[customType.name] || 0;
+    
+    if (drinkCount > 0) {
+      // Show warning dialog
+      setDeleteWarningType(customType);
+    } else {
+      // No drinks assigned, delete directly
+      await performDelete(customType);
+    }
+  };
+
+  const performDelete = async (customType: CustomDrinkType) => {
+    const drinkCount = drinkCountByType[customType.name] || 0;
+    
+    // Migrate drinks to "other" if there are any
+    if (drinkCount > 0 && onMigrateDrinksToOther) {
+      await onMigrateDrinksToOther(customType.name);
+    }
+    
+    const result = await deleteCustomType(customType.id);
     if (result?.error) {
       toast.error('Failed to delete', { description: result.error });
       return;
     }
     // If the deleted type was selected, reset to "All"
-    if (selectedType === name) {
+    if (selectedType === customType.name) {
       onSelectType(null);
     }
-    toast.success('Drink type removed', { description: `${name} has been removed.` });
+    toast.success('Drink type removed', { 
+      description: drinkCount > 0 
+        ? `${customType.name} removed. ${drinkCount} drink${drinkCount > 1 ? 's' : ''} moved to Other.`
+        : `${customType.name} has been removed.` 
+    });
   };
 
   const handleDialogClose = (open: boolean) => {
@@ -168,7 +209,7 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
               <ContextMenuSeparator />
               <ContextMenuItem
                 className="text-destructive focus:text-destructive"
-                onClick={() => handleDeleteCustomType(customType.id, customType.name)}
+                onClick={() => handleDeleteCustomType(customType)}
               >
                 <X className="w-4 h-4 mr-2" />
                 Remove "{customType.name}"
@@ -195,6 +236,36 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
         onSave={handleSaveCustomType}
         editingType={editingType}
       />
+
+      {/* Delete warning dialog */}
+      <AlertDialog open={!!deleteWarningType} onOpenChange={(open) => !open && setDeleteWarningType(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Delete "{deleteWarningType?.name}"?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This drink type has <strong>{drinkCountByType[deleteWarningType?.name || ''] || 0} drink{(drinkCountByType[deleteWarningType?.name || ''] || 0) > 1 ? 's' : ''}</strong> assigned to it. 
+              Deleting this type will move {(drinkCountByType[deleteWarningType?.name || ''] || 0) > 1 ? 'them' : 'it'} to the "Other" category.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteWarningType) {
+                  performDelete(deleteWarningType);
+                  setDeleteWarningType(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete & Move Drinks
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

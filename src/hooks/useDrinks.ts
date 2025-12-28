@@ -146,6 +146,35 @@ export function useDrinks() {
     });
   };
 
+  const getDrinkCountByType = () => {
+    const counts: Record<string, number> = {};
+    drinks.forEach((drink) => {
+      counts[drink.type] = (counts[drink.type] || 0) + 1;
+    });
+    return counts;
+  };
+
+  const migrateDrinksToOther = async (typeName: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('drinks')
+      .update({ type: 'other' })
+      .eq('type', typeName);
+
+    if (error) {
+      console.error('Error migrating drinks:', error);
+      return;
+    }
+
+    // Update local state
+    setDrinks((prev) =>
+      prev.map((d) =>
+        d.type === typeName ? { ...d, type: 'other' as DrinkType } : d
+      )
+    );
+  };
+
   return {
     drinks,
     isLoading,
@@ -153,5 +182,7 @@ export function useDrinks() {
     updateDrink,
     deleteDrink,
     filterDrinks,
+    getDrinkCountByType,
+    migrateDrinksToOther,
   };
 }
