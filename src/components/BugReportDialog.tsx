@@ -119,7 +119,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
     e.preventDefault();
     
     if (!user) {
-      toast.error('You must be logged in to submit a bug report');
+      toast.error('You must be logged in to submit feedback');
       return;
     }
 
@@ -151,14 +151,14 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
 
       if (error) throw error;
 
-      toast.success('Bug report submitted', {
-        description: 'Thank you for your feedback!',
+      toast.success('Feedback submitted', {
+        description: 'Thank you for your input!',
       });
       
       handleOpenChange(false);
     } catch (error) {
       console.error('Error submitting bug report:', error);
-      toast.error('Failed to submit bug report', {
+      toast.error('Failed to submit feedback', {
         description: 'Please try again later.',
       });
     } finally {
@@ -169,10 +169,10 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="bug-title">Title</Label>
+        <Label htmlFor="feedback-title">Subject</Label>
         <Input
-          id="bug-title"
-          placeholder="Brief description of the issue"
+          id="feedback-title"
+          placeholder="What's on your mind?"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={100}
@@ -180,10 +180,10 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="bug-description">Description</Label>
+        <Label htmlFor="feedback-description">Details</Label>
         <Textarea
-          id="bug-description"
-          placeholder="What happened? What did you expect to happen? Steps to reproduce..."
+          id="feedback-description"
+          placeholder="Share your thoughts, ideas, or report an issue..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
@@ -192,9 +192,9 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
         />
       </div>
       
-      {/* Screenshot attachment */}
+      {/* Image attachment */}
       <div className="space-y-2">
-        <Label>Screenshot (optional)</Label>
+        <Label>Attachment (optional)</Label>
         <input
           type="file"
           ref={fileInputRef}
@@ -227,7 +227,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Add screenshot</span>
+            <span className="text-sm text-muted-foreground">Add image</span>
           </Button>
         )}
       </div>
@@ -248,7 +248,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
               Submitting...
             </>
           ) : (
-            'Submit Report'
+            'Submit Feedback'
           )}
         </Button>
       </div>
