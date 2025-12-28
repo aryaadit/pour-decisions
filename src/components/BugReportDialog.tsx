@@ -28,13 +28,18 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface BugReportDialogProps {
   trigger?: React.ReactNode;
+  open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
-export function BugReportDialog({ trigger, onOpenChange }: BugReportDialogProps) {
+export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }: BugReportDialogProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Support both controlled and uncontrolled usage
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +48,9 @@ export function BugReportDialog({ trigger, onOpenChange }: BugReportDialogProps)
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
+    if (!isControlled) {
+      setInternalOpen(newOpen);
+    }
     onOpenChange?.(newOpen);
     if (!newOpen) {
       // Reset form when closing

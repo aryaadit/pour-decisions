@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,16 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
   const { impact, ImpactStyle } = useHaptics();
   const { isAdmin } = useIsAdmin();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [bugReportOpen, setBugReportOpen] = useState(false);
+
+  const handleBugReportClick = useCallback(() => {
+    impact(ImpactStyle.Light);
+    setDrawerOpen(false);
+    // Small delay to let the parent drawer close first
+    setTimeout(() => {
+      setBugReportOpen(true);
+    }, 150);
+  }, [impact, ImpactStyle]);
 
   const getInitials = () => {
     if (displayName) {
@@ -89,6 +99,7 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
 
   if (isMobile) {
     return (
+      <>
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
         <DrawerTrigger asChild onClick={() => impact(ImpactStyle.Light)}>
           {AvatarButton}
@@ -120,20 +131,14 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
                 Admin Dashboard
               </Button>
             )}
-            <BugReportDialog
-              onOpenChange={(open) => {
-                if (open) setDrawerOpen(false);
-              }}
-              trigger={
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start gap-3 h-14 text-base"
-                >
-                  <Bug className="w-5 h-5" />
-                  Report Bug
-                </Button>
-              }
-            />
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-3 h-14 text-base"
+              onClick={handleBugReportClick}
+            >
+              <Bug className="w-5 h-5" />
+              Report Bug
+            </Button>
             <Button 
               variant="outline" 
               className="w-full justify-start gap-3 h-14 text-base text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -145,6 +150,11 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
           </div>
         </DrawerContent>
       </Drawer>
+      <BugReportDialog
+        open={bugReportOpen}
+        onOpenChange={setBugReportOpen}
+      />
+    </>
     );
   }
 
