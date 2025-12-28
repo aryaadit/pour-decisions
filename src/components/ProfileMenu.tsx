@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, User } from 'lucide-react';
+import { LogOut, Settings, Bug } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
+import { BugReportDialog } from '@/components/BugReportDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +20,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
-import { useState } from 'react';
 
 interface ProfileMenuProps {
   avatarUrl?: string | null;
@@ -104,6 +105,17 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
               <Settings className="w-5 h-5" />
               Settings
             </Button>
+            <BugReportDialog
+              trigger={
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start gap-3 h-14 text-base"
+                >
+                  <Bug className="w-5 h-5" />
+                  Report Bug
+                </Button>
+              }
+            />
             <Button 
               variant="outline" 
               className="w-full justify-start gap-3 h-14 text-base text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -137,6 +149,14 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
           <Settings className="w-4 h-4 mr-2" />
           Settings
         </DropdownMenuItem>
+        <BugReportDialog
+          trigger={
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+              <Bug className="w-4 h-4 mr-2" />
+              Report Bug
+            </DropdownMenuItem>
+          }
+        />
         <DropdownMenuItem onClick={onSignOut} className="text-destructive">
           <LogOut className="w-4 h-4 mr-2" />
           Sign out
