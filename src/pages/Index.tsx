@@ -175,7 +175,7 @@ const Index = () => {
                 <h1 className="font-display text-xl font-bold text-foreground">
                   Pour Decisions
                   {appInfo && (
-                    <span className="ml-1 text-xs font-normal text-muted-foreground/50">v{appInfo.version} Beta</span>
+                    <span className="ml-2 font-display text-[0.625rem] font-bold text-muted-foreground/70">Beta v{appInfo.version}</span>
                   )}
                 </h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">
