@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Drink, DrinkType, drinkTypeLabels, drinkTypeIcons } from '@/types/drink';
+import { Drink, DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons, isBuiltInDrinkType } from '@/types/drink';
 import { StarRating } from '@/components/StarRating';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,12 +28,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useDrinks } from '@/hooks/useDrinks';
+import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { Camera, X, Loader2, ImagePlus, Search, Sparkles, ChevronDown, ChevronLeft } from 'lucide-react';
 import { takePhoto, pickFromGallery, dataUrlToBlob } from '@/hooks/useCamera';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
-
-const drinkTypes: DrinkType[] = ['whiskey', 'beer', 'wine', 'cocktail', 'other'];
 
 export default function AddDrink() {
   const navigate = useNavigate();
@@ -44,6 +43,7 @@ export default function AddDrink() {
   const { user } = useAuth();
   const { drinks, addDrink, updateDrink } = useDrinks();
   const { impact, notification, ImpactStyle, NotificationType } = useHaptics();
+  const { customTypes } = useCustomDrinkTypes();
   
   const [name, setName] = useState('');
   const [type, setType] = useState<DrinkType>(defaultTypeParam || 'whiskey');
@@ -398,17 +398,25 @@ export default function AddDrink() {
               <SelectTrigger className="bg-secondary/50 h-12">
                 <SelectValue>
                   <span className="flex items-center gap-2">
-                    <span>{drinkTypeIcons[type]}</span>
-                    <span>{drinkTypeLabels[type]}</span>
+                    <span>{isBuiltInDrinkType(type) ? drinkTypeIcons[type] : (customTypes.find(c => c.name === type)?.icon || '🍹')}</span>
+                    <span>{isBuiltInDrinkType(type) ? drinkTypeLabels[type] : type}</span>
                   </span>
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover">
-                {drinkTypes.map((t) => (
+                {builtInDrinkTypes.map((t) => (
                   <SelectItem key={t} value={t}>
                     <span className="flex items-center gap-2">
                       <span>{drinkTypeIcons[t]}</span>
                       <span>{drinkTypeLabels[t]}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+                {customTypes.map((ct) => (
+                  <SelectItem key={ct.id} value={ct.name}>
+                    <span className="flex items-center gap-2">
+                      <span>{ct.icon}</span>
+                      <span>{ct.name}</span>
                     </span>
                   </SelectItem>
                 ))}
