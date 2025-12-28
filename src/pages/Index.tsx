@@ -83,28 +83,31 @@ const Index = () => {
     if (selectedType && !isBuiltInDrinkType(selectedType)) {
       const customType = customTypes.find(ct => ct.name === selectedType);
       if (customType) {
-        // Apply custom color as CSS variables
+        // Remove the data attribute first to prevent conflicts
+        root.setAttribute('data-drink-theme', 'custom');
+        
+        // Apply custom color as CSS variables with !important via style
         const hsl = hexToHsl(customType.color);
-        root.style.setProperty('--primary', hsl);
-        root.style.setProperty('--accent', hsl);
-        root.style.setProperty('--ring', hsl);
-        root.style.setProperty('--shadow-glow', `0 0 40px hsl(${hsl} / 0.2)`);
-        root.style.setProperty('--theme-gradient', `radial-gradient(ellipse at top, hsl(${hsl} / 0.15) 0%, hsl(20 14% 8%) 70%)`);
-        root.removeAttribute('data-drink-theme');
+        root.style.setProperty('--primary', hsl, 'important');
+        root.style.setProperty('--accent', hsl, 'important');
+        root.style.setProperty('--ring', hsl, 'important');
+        root.style.setProperty('--shadow-glow', `0 0 40px hsl(${hsl} / 0.2)`, 'important');
+        root.style.setProperty('--theme-gradient', `radial-gradient(ellipse at top, hsl(${hsl} / 0.15) 0%, hsl(20 14% 8%) 70%)`, 'important');
+        return;
       }
-    } else {
-      // Built-in type or "all" - use CSS attribute selector
-      root.style.removeProperty('--primary');
-      root.style.removeProperty('--accent');
-      root.style.removeProperty('--ring');
-      root.style.removeProperty('--shadow-glow');
-      root.style.removeProperty('--theme-gradient');
-      const theme = selectedType || 'all';
-      root.setAttribute('data-drink-theme', theme);
     }
     
+    // Built-in type or "all" - use CSS attribute selector
+    root.style.removeProperty('--primary');
+    root.style.removeProperty('--accent');
+    root.style.removeProperty('--ring');
+    root.style.removeProperty('--shadow-glow');
+    root.style.removeProperty('--theme-gradient');
+    const theme = selectedType || 'all';
+    root.setAttribute('data-drink-theme', theme);
+    
     return () => {
-      root.removeAttribute('data-drink-theme');
+      root.setAttribute('data-drink-theme', 'all');
       root.style.removeProperty('--primary');
       root.style.removeProperty('--accent');
       root.style.removeProperty('--ring');

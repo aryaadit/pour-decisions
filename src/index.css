@@ -103,6 +103,11 @@
     --theme-gradient: radial-gradient(ellipse at top, hsl(0 0% 12%) 0%, hsl(20 14% 8%) 70%);
   }
 
+  /* Custom drink types - styles applied via inline JS */
+  [data-drink-theme="custom"] {
+    /* Variables are set via JavaScript inline styles */
+  }
+
   .light {
     --background: 36 30% 96%;
     --foreground: 20 14% 12%;
