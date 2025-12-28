@@ -83,6 +83,41 @@ export function useCustomDrinkTypes() {
     return { data: newType };
   };
 
+  const updateCustomType = async (id: string, updates: { name?: string; icon?: string; color?: string }) => {
+    if (!user) return { error: 'Not authenticated' };
+
+    // Check if name already exists (if updating name)
+    if (updates.name) {
+      const exists = customTypes.some(
+        (t) => t.id !== id && t.name.toLowerCase() === updates.name!.toLowerCase()
+      );
+      if (exists) {
+        return { error: 'A drink type with this name already exists' };
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('custom_drink_types')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating custom drink type:', error);
+      return { error: error.message };
+    }
+
+    setCustomTypes((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, name: data.name, icon: data.icon, color: data.color }
+          : t
+      )
+    );
+    return { data };
+  };
+
   const deleteCustomType = async (id: string) => {
     const { error } = await supabase
       .from('custom_drink_types')
@@ -102,6 +137,7 @@ export function useCustomDrinkTypes() {
     customTypes,
     isLoading,
     addCustomType,
+    updateCustomType,
     deleteCustomType,
     refetch: fetchCustomTypes,
   };

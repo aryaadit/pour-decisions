@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Loader2 } from 'lucide-react';
+import { CustomDrinkType } from '@/hooks/useCustomDrinkTypes';
 
 const EMOJI_OPTIONS = [
   '🥃', '🍺', '🍷', '🍸', '🍹', '🍾', '🥂', '🍶', '🫗', '🧉',
@@ -40,42 +41,62 @@ const COLOR_OPTIONS = [
   { name: 'Slate', value: '#475569' },
 ];
 
-interface AddCustomDrinkTypeDialogProps {
+interface CustomDrinkTypeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (name: string, icon: string, color: string) => Promise<{ error?: string } | null>;
+  onSave: (name: string, icon: string, color: string) => Promise<{ error?: string } | null>;
+  editingType?: CustomDrinkType | null;
 }
 
-export function AddCustomDrinkTypeDialog({
+export function CustomDrinkTypeDialog({
   open,
   onOpenChange,
-  onAdd,
-}: AddCustomDrinkTypeDialogProps) {
+  onSave,
+  editingType,
+}: CustomDrinkTypeDialogProps) {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🍹');
   const [color, setColor] = useState('#8B5CF6');
-  const [isAdding, setIsAdding] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isEditing = !!editingType;
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editingType) {
+      setName(editingType.name);
+      setIcon(editingType.icon);
+      setColor(editingType.color);
+    } else {
+      setName('');
+      setIcon('🍹');
+      setColor('#8B5CF6');
+    }
+    setError(null);
+  }, [editingType, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    setIsAdding(true);
+    setIsSaving(true);
     setError(null);
 
-    const result = await onAdd(name.trim(), icon, color);
+    const result = await onSave(name.trim(), icon, color);
 
-    setIsAdding(false);
+    setIsSaving(false);
 
     if (result?.error) {
       setError(result.error);
       return;
     }
 
-    setName('');
-    setIcon('🍹');
-    setColor('#8B5CF6');
+    if (!isEditing) {
+      setName('');
+      setIcon('🍹');
+      setColor('#8B5CF6');
+    }
     onOpenChange(false);
   };
 
@@ -83,7 +104,7 @@ export function AddCustomDrinkTypeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Add Custom Drink Type</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Drink Type' : 'Add Custom Drink Type'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Name input - full width at top */}
@@ -199,9 +220,9 @@ export function AddCustomDrinkTypeDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim() || isAdding}>
-              {isAdding && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Add Type
+            <Button type="submit" disabled={!name.trim() || isSaving}>
+              {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {isEditing ? 'Save Changes' : 'Add Type'}
             </Button>
           </DialogFooter>
         </form>
@@ -209,3 +230,6 @@ export function AddCustomDrinkTypeDialog({
     </Dialog>
   );
 }
+
+// For backwards compatibility
+export { CustomDrinkTypeDialog as AddCustomDrinkTypeDialog };
