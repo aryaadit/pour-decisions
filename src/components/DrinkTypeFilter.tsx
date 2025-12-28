@@ -3,15 +3,16 @@ import { DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons, isBuiltI
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
-import { AddCustomDrinkTypeDialog } from '@/components/AddCustomDrinkTypeDialog';
-import { Plus, X } from 'lucide-react';
+import { useCustomDrinkTypes, CustomDrinkType } from '@/hooks/useCustomDrinkTypes';
+import { CustomDrinkTypeDialog } from '@/components/AddCustomDrinkTypeDialog';
+import { Plus, X, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
+  ContextMenuSeparator,
 } from '@/components/ui/context-menu';
 
 interface DrinkTypeFilterProps {
@@ -21,8 +22,9 @@ interface DrinkTypeFilterProps {
 
 export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterProps) {
   const { selectionChanged } = useHaptics();
-  const { customTypes, addCustomType, deleteCustomType } = useCustomDrinkTypes();
+  const { customTypes, addCustomType, updateCustomType, deleteCustomType } = useCustomDrinkTypes();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingType, setEditingType] = useState<CustomDrinkType | null>(null);
 
   const handleSelect = (type: DrinkType | null) => {
     if (type !== selectedType) {
@@ -31,13 +33,33 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
     onSelectType(type);
   };
 
-  const handleAddCustomType = async (name: string, icon: string, color: string) => {
-    const result = await addCustomType(name, icon, color);
-    if (result?.error) {
-      return { error: result.error };
+  const handleSaveCustomType = async (name: string, icon: string, color: string) => {
+    if (editingType) {
+      // Update existing type
+      const oldName = editingType.name;
+      const result = await updateCustomType(editingType.id, { name, icon, color });
+      if (result?.error) {
+        return { error: result.error };
+      }
+      // If the edited type was selected and name changed, update selection
+      if (selectedType === oldName && name !== oldName) {
+        onSelectType(name);
+      }
+      toast.success('Drink type updated', { description: `${name} has been updated.` });
+    } else {
+      // Add new type
+      const result = await addCustomType(name, icon, color);
+      if (result?.error) {
+        return { error: result.error };
+      }
+      toast.success('Drink type added', { description: `${name} is now available.` });
     }
-    toast.success('Drink type added', { description: `${name} is now available.` });
     return null;
+  };
+
+  const handleEditCustomType = (customType: CustomDrinkType) => {
+    setEditingType(customType);
+    setDialogOpen(true);
   };
 
   const handleDeleteCustomType = async (id: string, name: string) => {
@@ -51,6 +73,18 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
       onSelectType(null);
     }
     toast.success('Drink type removed', { description: `${name} has been removed.` });
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setEditingType(null);
+    }
+  };
+
+  const handleAddClick = () => {
+    setEditingType(null);
+    setDialogOpen(true);
   };
 
   const getTypeIcon = (type: DrinkType) => {
@@ -102,7 +136,7 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
           </Button>
         ))}
 
-        {/* Custom types with context menu for deletion */}
+        {/* Custom types with context menu for edit/delete */}
         {customTypes.map((customType) => (
           <ContextMenu key={customType.id}>
             <ContextMenuTrigger asChild>
@@ -127,6 +161,11 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
               </Button>
             </ContextMenuTrigger>
             <ContextMenuContent>
+              <ContextMenuItem onClick={() => handleEditCustomType(customType)}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit "{customType.name}"
+              </ContextMenuItem>
+              <ContextMenuSeparator />
               <ContextMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={() => handleDeleteCustomType(customType.id, customType.name)}
@@ -142,7 +181,7 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setDialogOpen(true)}
+          onClick={handleAddClick}
           className="transition-all duration-200 min-h-[44px] min-w-[44px] border-dashed"
         >
           <Plus className="w-4 h-4" />
@@ -150,12 +189,12 @@ export function DrinkTypeFilter({ selectedType, onSelectType }: DrinkTypeFilterP
         </Button>
       </div>
 
-      <AddCustomDrinkTypeDialog
+      <CustomDrinkTypeDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onAdd={handleAddCustomType}
+        onOpenChange={handleDialogClose}
+        onSave={handleSaveCustomType}
+        editingType={editingType}
       />
     </>
   );
 }
-
