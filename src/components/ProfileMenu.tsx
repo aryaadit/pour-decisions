@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, Bug, Shield } from 'lucide-react';
+import { LogOut, Settings, MessageSquare, Shield } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -136,7 +136,7 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
               className="w-full justify-start gap-3 h-14 text-base"
               onClick={handleBugReportClick}
             >
-              <Bug className="w-5 h-5" />
+              <MessageSquare className="w-5 h-5" />
               Give Feedback
             </Button>
             <Button 
@@ -186,7 +186,7 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
         <BugReportDialog
           trigger={
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <Bug className="w-4 h-4 mr-2" />
+              <MessageSquare className="w-4 h-4 mr-2" />
               Give Feedback
             </DropdownMenuItem>
           }

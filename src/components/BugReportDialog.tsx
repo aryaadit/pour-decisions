@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Bug, Loader2, ImagePlus, X } from 'lucide-react';
+import { MessageSquare, Loader2, ImagePlus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -257,7 +257,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
 
   const defaultTrigger = (
     <Button variant="ghost" size="sm">
-      <Bug className="w-4 h-4 mr-2" />
+      <MessageSquare className="w-4 h-4 mr-2" />
       Give Feedback
     </Button>
   );
@@ -270,7 +270,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
           <DrawerContent className="max-h-[85vh]">
             <DrawerHeader className="text-left">
               <DrawerTitle className="flex items-center gap-2">
-                <Bug className="w-5 h-5" />
+                <MessageSquare className="w-5 h-5" />
                 Give Feedback
               </DrawerTitle>
               <DrawerDescription>
@@ -292,7 +292,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Bug className="w-5 h-5" />
+              <MessageSquare className="w-5 h-5" />
               Give Feedback
             </DialogTitle>
             <DialogDescription>
@@ -314,7 +314,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
         <DrawerContent className="max-h-[85vh]">
           <DrawerHeader className="text-left">
             <DrawerTitle className="flex items-center gap-2">
-              <Bug className="w-5 h-5" />
+              <MessageSquare className="w-5 h-5" />
               Give Feedback
             </DrawerTitle>
             <DrawerDescription>
@@ -339,7 +339,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Bug className="w-5 h-5" />
+            <MessageSquare className="w-5 h-5" />
             Give Feedback
           </DialogTitle>
           <DialogDescription>
