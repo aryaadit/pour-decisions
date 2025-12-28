@@ -168,8 +168,8 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-glow">
-                <GlassWater className="w-5 h-5 text-primary-foreground" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-glow">
+                <img src="/app-icon.png" alt="Pour Decisions" className="w-full h-full object-cover" />
               </div>
               <div>
                 <h1 className="font-display text-xl font-bold text-foreground">
