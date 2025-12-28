@@ -20,11 +20,24 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+const FEEDBACK_CATEGORIES = [
+  { value: 'general', label: 'General Feedback' },
+  { value: 'feature', label: 'Feature Request' },
+  { value: 'bug', label: 'Bug Report' },
+] as const;
 
 interface BugReportDialogProps {
   trigger?: React.ReactNode;
@@ -42,6 +55,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
   const open = isControlled ? controlledOpen : internalOpen;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState<string>('general');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -56,6 +70,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
       // Reset form when closing
       setTitle('');
       setDescription('');
+      setCategory('general');
       setSelectedImage(null);
       setImagePreview(null);
     }
@@ -146,6 +161,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
         user_id: user.id,
         title: title.trim(),
         description: description.trim(),
+        category: category,
         image_url: imageUrl,
       });
 
@@ -168,6 +184,21 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
 
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="feedback-category">Category</Label>
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger id="feedback-category">
+            <SelectValue placeholder="Select a category" />
+          </SelectTrigger>
+          <SelectContent>
+            {FEEDBACK_CATEGORIES.map((cat) => (
+              <SelectItem key={cat.value} value={cat.value}>
+                {cat.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="feedback-title">Subject</Label>
         <Input
