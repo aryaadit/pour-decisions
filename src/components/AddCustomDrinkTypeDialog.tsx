@@ -81,21 +81,33 @@ export function AddCustomDrinkTypeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Add Custom Drink Type</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex gap-3 items-end">
-            {/* Icon picker */}
-            <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Name input - full width at top */}
+          <div className="space-y-2">
+            <Label htmlFor="typeName">Name</Label>
+            <Input
+              id="typeName"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Tequila, Gin, Sake"
+              autoFocus
+            />
+          </div>
+
+          {/* Icon and Color pickers side by side */}
+          <div className="flex gap-4">
+            <div className="space-y-2 flex-1">
               <Label>Icon</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-14 h-14 text-2xl"
+                    className="w-full h-12 text-2xl"
                   >
                     {icon}
                   </Button>
@@ -118,18 +130,17 @@ export function AddCustomDrinkTypeDialog({
               </Popover>
             </div>
 
-            {/* Color picker */}
-            <div className="space-y-2">
+            <div className="space-y-2 flex-1">
               <Label>Color</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-14 h-14 p-1"
+                    className="w-full h-12 p-2"
                   >
                     <div 
-                      className="w-full h-full rounded-md" 
+                      className="w-full h-full rounded" 
                       style={{ backgroundColor: color }}
                     />
                   </Button>
@@ -141,7 +152,7 @@ export function AddCustomDrinkTypeDialog({
                         key={c.value}
                         type="button"
                         variant="ghost"
-                        className="w-12 h-12 p-1 relative"
+                        className="w-12 h-12 p-1"
                         onClick={() => setColor(c.value)}
                         title={c.name}
                       >
@@ -159,26 +170,12 @@ export function AddCustomDrinkTypeDialog({
                 </PopoverContent>
               </Popover>
             </div>
-
-            {/* Name input */}
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="typeName">Name</Label>
-              <Input
-                id="typeName"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Tequila, Gin, Sake"
-                className="h-14"
-                autoFocus
-              />
-            </div>
           </div>
 
           {/* Preview */}
-          <div className="flex items-center gap-2 p-3 rounded-lg border bg-secondary/30">
-            <span className="text-sm text-muted-foreground">Preview:</span>
+          <div className="flex items-center justify-center gap-2 py-3">
             <span
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border"
               style={{ 
                 backgroundColor: `${color}20`,
                 color: color,
@@ -193,7 +190,8 @@ export function AddCustomDrinkTypeDialog({
           {error && (
             <p className="text-sm text-destructive">{error}</p>
           )}
-          <DialogFooter>
+          
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"

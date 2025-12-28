@@ -6,7 +6,8 @@ import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppInfo } from '@/hooks/useAppInfo';
-import { DrinkType, Drink } from '@/types/drink';
+import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
+import { DrinkType, Drink, isBuiltInDrinkType } from '@/types/drink';
 import { SortOrder } from '@/types/profile';
 import { DrinkListItem } from '@/components/DrinkListItem';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
@@ -20,6 +21,31 @@ import { Button } from '@/components/ui/button';
 import { Plus, GlassWater, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Helper to convert hex to HSL for CSS variables
+function hexToHsl(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return '0 0% 50%';
+  
+  let r = parseInt(result[1], 16) / 255;
+  let g = parseInt(result[2], 16) / 255;
+  let b = parseInt(result[3], 16) / 255;
+  
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
 const Index = () => {
   const { user, isLoading: authLoading, signOut } = useAuth();
   const { profile, isLoading: profileLoading } = useProfile();
@@ -28,6 +54,7 @@ const Index = () => {
   const isMobile = useIsMobile();
   const appInfo = useAppInfo();
   const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks } = useDrinks();
+  const { customTypes } = useCustomDrinkTypes();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('date_desc');
@@ -50,12 +77,41 @@ const Index = () => {
 
   // Apply drink type theme
   useEffect(() => {
-    const theme = selectedType || 'all';
-    document.documentElement.setAttribute('data-drink-theme', theme);
+    const root = document.documentElement;
+    
+    // Check if it's a custom type
+    if (selectedType && !isBuiltInDrinkType(selectedType)) {
+      const customType = customTypes.find(ct => ct.name === selectedType);
+      if (customType) {
+        // Apply custom color as CSS variables
+        const hsl = hexToHsl(customType.color);
+        root.style.setProperty('--primary', hsl);
+        root.style.setProperty('--accent', hsl);
+        root.style.setProperty('--ring', hsl);
+        root.style.setProperty('--shadow-glow', `0 0 40px hsl(${hsl} / 0.2)`);
+        root.style.setProperty('--theme-gradient', `radial-gradient(ellipse at top, hsl(${hsl} / 0.15) 0%, hsl(20 14% 8%) 70%)`);
+        root.removeAttribute('data-drink-theme');
+      }
+    } else {
+      // Built-in type or "all" - use CSS attribute selector
+      root.style.removeProperty('--primary');
+      root.style.removeProperty('--accent');
+      root.style.removeProperty('--ring');
+      root.style.removeProperty('--shadow-glow');
+      root.style.removeProperty('--theme-gradient');
+      const theme = selectedType || 'all';
+      root.setAttribute('data-drink-theme', theme);
+    }
+    
     return () => {
-      document.documentElement.removeAttribute('data-drink-theme');
+      root.removeAttribute('data-drink-theme');
+      root.style.removeProperty('--primary');
+      root.style.removeProperty('--accent');
+      root.style.removeProperty('--ring');
+      root.style.removeProperty('--shadow-glow');
+      root.style.removeProperty('--theme-gradient');
     };
-  }, [selectedType]);
+  }, [selectedType, customTypes]);
 
   // Apply profile defaults when loaded
   useEffect(() => {
