@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
+import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { toast } from 'sonner';
-import { DrinkType, drinkTypeLabels } from '@/types/drink';
+import { DrinkType, builtInDrinkTypes, drinkTypeLabels } from '@/types/drink';
 import { SortOrder, sortOrderLabels, ThemePreference } from '@/types/profile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ const Settings = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { profile, isLoading: profileLoading, updateProfile, uploadAvatar } = useProfile();
   const { theme, setTheme } = useThemeContext();
+  const { customTypes } = useCustomDrinkTypes();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -220,8 +222,13 @@ const Settings = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All drinks</SelectItem>
-                  {Object.entries(drinkTypeLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  {builtInDrinkTypes.map((type) => (
+                    <SelectItem key={type} value={type}>{drinkTypeLabels[type]}</SelectItem>
+                  ))}
+                  {customTypes.map((ct) => (
+                    <SelectItem key={ct.id} value={ct.name}>
+                      {ct.icon} {ct.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

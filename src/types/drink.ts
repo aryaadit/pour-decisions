@@ -1,4 +1,7 @@
-export type DrinkType = 'whiskey' | 'beer' | 'wine' | 'cocktail' | 'other';
+export type BuiltInDrinkType = 'whiskey' | 'beer' | 'wine' | 'cocktail' | 'other';
+
+// DrinkType can be a built-in type or a custom type name (string)
+export type DrinkType = BuiltInDrinkType | string;
 
 export interface Drink {
   id: string;
@@ -13,7 +16,9 @@ export interface Drink {
   imageUrl?: string;
 }
 
-export const drinkTypeLabels: Record<DrinkType, string> = {
+export const builtInDrinkTypes: BuiltInDrinkType[] = ['whiskey', 'beer', 'wine', 'cocktail', 'other'];
+
+export const drinkTypeLabels: Record<BuiltInDrinkType, string> = {
   whiskey: 'Whiskey',
   beer: 'Beer',
   wine: 'Wine',
@@ -21,10 +26,14 @@ export const drinkTypeLabels: Record<DrinkType, string> = {
   other: 'Other',
 };
 
-export const drinkTypeIcons: Record<DrinkType, string> = {
+export const drinkTypeIcons: Record<BuiltInDrinkType, string> = {
   whiskey: '🥃',
   beer: '🍺',
   wine: '🍷',
   cocktail: '🍸',
   other: '🥤',
 };
+
+export function isBuiltInDrinkType(type: string): type is BuiltInDrinkType {
+  return builtInDrinkTypes.includes(type as BuiltInDrinkType);
+}
