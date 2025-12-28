@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Bug, Loader2, Trash2, RefreshCw } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ArrowLeft, Bug, Loader2, Trash2, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -17,6 +18,7 @@ interface BugReport {
   title: string;
   description: string;
   status: string;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +37,7 @@ export default function Admin() {
   const [bugReports, setBugReports] = useState<BugReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
 
   const fetchBugReports = async () => {
     setIsLoading(true);
@@ -209,6 +212,20 @@ export default function Admin() {
                   <p className="text-sm text-foreground/80 whitespace-pre-wrap">
                     {report.description}
                   </p>
+                  {report.image_url && (
+                    <div className="relative">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <ImageIcon className="w-3 h-3" />
+                        Attached Screenshot
+                      </div>
+                      <img
+                        src={report.image_url}
+                        alt="Bug report screenshot"
+                        className="rounded-lg border border-border max-h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => setEnlargedImage(report.image_url)}
+                      />
+                    </div>
+                  )}
                   <div className="flex items-center justify-between gap-4 pt-2 border-t border-border/50">
                     <Select
                       value={report.status}
@@ -239,6 +256,18 @@ export default function Admin() {
             ))}
           </div>
         )}
+
+        <Dialog open={!!enlargedImage} onOpenChange={() => setEnlargedImage(null)}>
+          <DialogContent className="max-w-4xl p-2">
+            {enlargedImage && (
+              <img
+                src={enlargedImage}
+                alt="Bug report screenshot"
+                className="w-full h-auto rounded-lg"
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
