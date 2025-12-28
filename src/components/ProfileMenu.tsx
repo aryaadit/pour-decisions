@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, Bug } from 'lucide-react';
+import { LogOut, Settings, Bug, Shield } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { BugReportDialog } from '@/components/BugReportDialog';
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { impact, ImpactStyle } = useHaptics();
+  const { isAdmin } = useIsAdmin();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const getInitials = () => {
@@ -105,6 +107,19 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
               <Settings className="w-5 h-5" />
               Settings
             </Button>
+            {isAdmin && (
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-3 h-14 text-base"
+                onClick={() => {
+                  setDrawerOpen(false);
+                  navigate('/admin');
+                }}
+              >
+                <Shield className="w-5 h-5" />
+                Admin Dashboard
+              </Button>
+            )}
             <BugReportDialog
               trigger={
                 <Button 
@@ -149,6 +164,12 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
           <Settings className="w-4 h-4 mr-2" />
           Settings
         </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem onClick={() => navigate('/admin')}>
+            <Shield className="w-4 h-4 mr-2" />
+            Admin Dashboard
+          </DropdownMenuItem>
+        )}
         <BugReportDialog
           trigger={
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
