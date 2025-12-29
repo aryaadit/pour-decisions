@@ -10,6 +10,7 @@ import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { DrinkType, Drink, isBuiltInDrinkType } from '@/types/drink';
 import { SortOrder } from '@/types/profile';
 import { DrinkListItem } from '@/components/DrinkListItem';
+import { DrinkListItemSkeleton } from '@/components/DrinkListItemSkeleton';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { DrinkTypeFilter } from '@/components/DrinkTypeFilter';
 import { SortSelector } from '@/components/SortSelector';
@@ -18,7 +19,7 @@ import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { ProfileMenu } from '@/components/ProfileMenu';
 import { Button } from '@/components/ui/button';
-import { Plus, GlassWater, Loader2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Helper to convert hex to HSL for CSS variables
@@ -212,8 +213,48 @@ const Index = () => {
 
   if (authLoading || isLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background">
+        {/* Header skeleton */}
+        <header className="sticky top-0 z-50 glass border-b border-border/50 pt-[env(safe-area-inset-top)]">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl shimmer" />
+                <div className="space-y-2">
+                  <div className="h-5 w-32 rounded shimmer" />
+                  <div className="h-3 w-24 rounded shimmer hidden sm:block" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-28 rounded-lg shimmer hidden sm:block" />
+                <div className="w-10 h-10 rounded-full shimmer" />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main content skeleton */}
+        <main className="container mx-auto px-4 py-6">
+          {/* Search bar skeleton */}
+          <div className="h-10 w-full rounded-lg shimmer mb-4" />
+          
+          {/* Filters skeleton */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex gap-2 overflow-x-auto">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-10 w-20 rounded-lg shimmer flex-shrink-0" />
+              ))}
+            </div>
+            <div className="h-10 w-36 rounded-lg shimmer" />
+          </div>
+
+          {/* Drink list skeleton */}
+          <div className="flex flex-col gap-3 max-w-2xl mx-auto">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <DrinkListItemSkeleton key={i} style={{ animationDelay: `${i * 50}ms` }} />
+            ))}
+          </div>
+        </main>
       </div>
     );
   }
@@ -324,7 +365,7 @@ const Index = () => {
         variant="glow"
         size="icon"
         onClick={handleAddClick}
-        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-40"
+        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg z-40 animate-pulse-glow"
         style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
       >
         <Plus className="w-6 h-6" />

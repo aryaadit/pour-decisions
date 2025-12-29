@@ -7,6 +7,7 @@ interface StarRatingProps {
   onChange?: (rating: number) => void;
   size?: 'sm' | 'md' | 'lg';
   readonly?: boolean;
+  animated?: boolean;
 }
 
 const sizeClasses = {
@@ -15,7 +16,7 @@ const sizeClasses = {
   lg: 'w-6 h-6',
 };
 
-export function StarRating({ rating, onChange, size = 'md', readonly = false }: StarRatingProps) {
+export function StarRating({ rating, onChange, size = 'md', readonly = false, animated = false }: StarRatingProps) {
   const { impact, ImpactStyle } = useHaptics();
 
   const handleClick = (value: number) => {
@@ -40,15 +41,18 @@ export function StarRating({ rating, onChange, size = 'md', readonly = false }: 
             !readonly && 'hover:scale-110 cursor-pointer min-w-[44px] min-h-[44px] -mx-1.5',
             readonly && 'cursor-default'
           )}
+          style={animated ? { animationDelay: `${value * 50}ms` } : undefined}
         >
           <Star
             className={cn(
               sizeClasses[size],
-              'transition-colors duration-150',
+              'transition-all duration-200',
               value <= rating
                 ? 'fill-star-filled text-star-filled'
-                : 'fill-transparent text-star-empty'
+                : 'fill-transparent text-star-empty',
+              animated && value <= rating && 'animate-star-pop'
             )}
+            style={animated && value <= rating ? { animationDelay: `${value * 50}ms` } : undefined}
           />
         </button>
       ))}

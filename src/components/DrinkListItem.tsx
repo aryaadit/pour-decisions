@@ -18,22 +18,27 @@ export function DrinkListItem({ drink, onClick, style }: DrinkListItemProps) {
         "bg-card/50 border border-border/50",
         "hover:bg-card hover:border-primary/30 hover:shadow-glow",
         "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background",
-        "transition-all duration-200 cursor-pointer",
-        "animate-fade-in text-left"
+        "transition-all duration-300 cursor-pointer",
+        "animate-fade-in text-left",
+        "card-hover gradient-border",
+        "active:scale-[0.98]"
       )}
       style={style}
       aria-label={`View details for ${drink.name}`}
     >
       {/* Thumbnail / Icon */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 relative">
         {drink.imageUrl ? (
-          <img
-            src={drink.imageUrl}
-            alt={`Photo of ${drink.name}`}
-            className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover"
-          />
+          <div className="relative overflow-hidden rounded-lg">
+            <img
+              src={drink.imageUrl}
+              alt={`Photo of ${drink.name}`}
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
+          </div>
         ) : (
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-primary/10 flex items-center justify-center text-2xl transition-all duration-300 hover:bg-primary/20 hover:scale-105">
             {drinkTypeIcons[drink.type]}
           </div>
         )}
@@ -48,8 +53,8 @@ export function DrinkListItem({ drink, onClick, style }: DrinkListItemProps) {
 
         {/* Meta: Rating, Type Badge, Price */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <StarRating rating={drink.rating} readonly size="sm" />
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+          <StarRating rating={drink.rating} readonly size="sm" animated />
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground transition-colors duration-300">
             {drinkTypeLabels[drink.type]}
           </span>
           {drink.price && (
