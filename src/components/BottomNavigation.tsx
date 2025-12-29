@@ -1,4 +1,4 @@
-import { Home, Search, Plus, User } from "lucide-react";
+import { Wine, Heart, Plus, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -14,8 +14,8 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
   const { impact } = useHaptics();
 
   const tabs = [
-    { id: "home", icon: Home, label: "Home", path: "/" },
-    { id: "search", icon: Search, label: "Search", action: "search" },
+    { id: "drinks", icon: Wine, label: "Drinks", path: "/" },
+    { id: "favorites", icon: Heart, label: "Favorites", path: "/favorites" },
     { id: "add", icon: Plus, label: "Add", path: "/add-drink" },
     { id: "profile", icon: User, label: "Profile", path: "/settings" },
   ];
@@ -23,9 +23,7 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
   const handleTabPress = async (tab: typeof tabs[0]) => {
     await impact(ImpactStyle.Light);
     
-    if (tab.action === "search") {
-      onSearchFocus?.();
-    } else if (tab.path) {
+    if (tab.path) {
       navigate(tab.path);
     }
   };
@@ -47,6 +45,7 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = isActive(tab);
+          const isFavorites = tab.id === "favorites";
 
           return (
             <button
@@ -64,7 +63,8 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
               )}>
                 <Icon className={cn(
                   "w-6 h-6 transition-colors",
-                  active ? "text-primary" : "text-muted-foreground"
+                  active ? "text-primary" : "text-muted-foreground",
+                  isFavorites && active && "fill-current text-red-500"
                 )} />
               </div>
               <span className={cn(

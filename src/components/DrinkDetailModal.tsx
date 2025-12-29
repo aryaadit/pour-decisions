@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Drink, drinkTypeIcons } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { DrinkTypeBadge } from './DrinkTypeBadge';
+import { FavoriteButton } from './FavoriteButton';
 import { format } from 'date-fns';
 import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn } from 'lucide-react';
 import {
@@ -36,6 +37,7 @@ interface DrinkDetailModalProps {
   onOpenChange: (open: boolean) => void;
   onEdit: (drink: Drink) => void;
   onDelete: (id: string) => void;
+  onToggleFavorite?: (id: string) => void;
 }
 
 export function DrinkDetailModal({
@@ -44,6 +46,7 @@ export function DrinkDetailModal({
   onOpenChange,
   onEdit,
   onDelete,
+  onToggleFavorite,
 }: DrinkDetailModalProps) {
   const isMobile = useIsMobile();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -94,9 +97,18 @@ export function DrinkDetailModal({
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h2 className="font-display text-2xl font-bold text-foreground">
-              {drink.name}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-2xl font-bold text-foreground">
+                {drink.name}
+              </h2>
+              {onToggleFavorite && (
+                <FavoriteButton
+                  isFavorite={drink.isFavorite || false}
+                  onToggle={() => onToggleFavorite(drink.id)}
+                  size="md"
+                />
+              )}
+            </div>
             {drink.brand && (
               <p className="text-muted-foreground">{drink.brand}</p>
             )}

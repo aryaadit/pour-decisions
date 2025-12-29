@@ -14,6 +14,7 @@ export interface Drink {
   price?: string;
   dateAdded: Date;
   imageUrl?: string;
+  isFavorite?: boolean;
 }
 
 export const builtInDrinkTypes: BuiltInDrinkType[] = ['whiskey', 'beer', 'wine', 'cocktail', 'other'];

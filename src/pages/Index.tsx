@@ -55,7 +55,7 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const appInfo = useAppInfo();
-  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther } = useDrinks();
+  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther, toggleFavorite } = useDrinks();
   const { customTypes } = useCustomDrinkTypes();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -194,6 +194,16 @@ const Index = () => {
     const drink = drinks.find(d => d.id === id);
     await deleteDrink(id);
     toast.success('Drink removed', { description: `${drink?.name} has been removed from your collection.` });
+  };
+
+  const handleToggleFavorite = async (id: string) => {
+    const drink = drinks.find(d => d.id === id);
+    const newStatus = await toggleFavorite(id);
+    if (newStatus) {
+      toast.success('Added to favorites', { description: `${drink?.name} saved to favorites.` });
+    } else {
+      toast.success('Removed from favorites', { description: `${drink?.name} removed from favorites.` });
+    }
   };
 
   const handleClearFilters = () => {
@@ -368,6 +378,7 @@ const Index = () => {
                 key={drink.id}
                 drink={drink}
                 onClick={() => setViewingDrink(drink)}
+                onToggleFavorite={handleToggleFavorite}
                 style={{ animationDelay: `${index * 30}ms` }}
               />
             ))}
@@ -382,7 +393,7 @@ const Index = () => {
       </main>
 
       {/* Bottom Navigation - Mobile only */}
-      {isMobile && <BottomNavigation onSearchFocus={handleSearchFocus} />}
+      {isMobile && <BottomNavigation />}
 
       {/* Add/Edit Dialog - Desktop only */}
       {!isMobile && (
@@ -406,6 +417,7 @@ const Index = () => {
         }}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onToggleFavorite={handleToggleFavorite}
       />
     </div>
   );

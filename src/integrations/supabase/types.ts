@@ -84,6 +84,7 @@ export type Database = {
           date_added: string
           id: string
           image_url: string | null
+          is_favorite: boolean | null
           location: string | null
           name: string
           notes: string | null
@@ -99,6 +100,7 @@ export type Database = {
           date_added?: string
           id?: string
           image_url?: string | null
+          is_favorite?: boolean | null
           location?: string | null
           name: string
           notes?: string | null
@@ -114,6 +116,7 @@ export type Database = {
           date_added?: string
           id?: string
           image_url?: string | null
+          is_favorite?: boolean | null
           location?: string | null
           name?: string
           notes?: string | null
