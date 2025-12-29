@@ -299,12 +299,15 @@ const Index = () => {
                 <span>Add Drink</span>
               </Button>
 
-              <ProfileMenu
-                avatarUrl={profile?.avatarUrl}
-                displayName={profile?.displayName}
-                email={user.email}
-                onSignOut={handleSignOut}
-              />
+              {/* Hide on mobile - profile accessible via bottom nav */}
+              <div className="hidden md:block">
+                <ProfileMenu
+                  avatarUrl={profile?.avatarUrl}
+                  displayName={profile?.displayName}
+                  email={user.email}
+                  onSignOut={handleSignOut}
+                />
+              </div>
             </div>
           </div>
         </div>
