@@ -4,12 +4,16 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
+import { Heart } from 'lucide-react';
 
 interface QuickFiltersProps {
   selectedType: DrinkType | null;
   onSelectType: (type: DrinkType | null) => void;
   drinkCountByType: Record<string, number>;
   totalDrinks: number;
+  favoritesCount?: number;
+  showFavoritesOnly?: boolean;
+  onToggleFavoritesFilter?: () => void;
 }
 
 export function QuickFilters({ 
@@ -17,6 +21,9 @@ export function QuickFilters({
   onSelectType, 
   drinkCountByType,
   totalDrinks,
+  favoritesCount = 0,
+  showFavoritesOnly = false,
+  onToggleFavoritesFilter,
 }: QuickFiltersProps) {
   const { selectionChanged } = useHaptics();
   const { customTypes } = useCustomDrinkTypes();
@@ -41,6 +48,11 @@ export function QuickFilters({
     onSelectType(type);
   };
 
+  const handleFavoritesToggle = () => {
+    selectionChanged();
+    onToggleFavoritesFilter?.();
+  };
+
   const getTypeIcon = (type: DrinkType) => {
     if (isBuiltInDrinkType(type)) {
       return drinkTypeIcons[type];
@@ -61,29 +73,54 @@ export function QuickFilters({
     <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1">
       {/* All filter - always visible */}
       <Button
-        variant={selectedType === null ? 'default' : 'ghost'}
+        variant={selectedType === null && !showFavoritesOnly ? 'default' : 'ghost'}
         size="sm"
-        onClick={() => handleSelect(null)}
+        onClick={() => {
+          handleSelect(null);
+          if (showFavoritesOnly) onToggleFavoritesFilter?.();
+        }}
         className={cn(
           'shrink-0 h-8 px-3 text-xs font-medium rounded-full transition-all duration-200',
-          selectedType === null && 'shadow-glow'
+          selectedType === null && !showFavoritesOnly && 'shadow-glow'
         )}
       >
         All
         <span className="ml-1.5 opacity-70">{totalDrinks}</span>
       </Button>
 
+      {/* Favorites filter */}
+      {onToggleFavoritesFilter && favoritesCount > 0 && (
+        <Button
+          variant={showFavoritesOnly ? 'default' : 'ghost'}
+          size="sm"
+          onClick={handleFavoritesToggle}
+          className={cn(
+            'shrink-0 h-8 px-3 text-xs font-medium rounded-full transition-all duration-200',
+            showFavoritesOnly && 'shadow-glow bg-red-500 hover:bg-red-600 text-white'
+          )}
+        >
+          <Heart className={cn(
+            "w-3.5 h-3.5 mr-1",
+            showFavoritesOnly && "fill-current"
+          )} />
+          <span className="opacity-70">{favoritesCount}</span>
+        </Button>
+      )}
+
       {/* Top types with counts */}
       {topTypes.map(({ type, count }) => {
         const customColor = getCustomColor(type);
-        const isSelected = selectedType === type;
+        const isSelected = selectedType === type && !showFavoritesOnly;
         
         return (
           <Button
             key={type}
             variant={isSelected ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => handleSelect(type)}
+            onClick={() => {
+              handleSelect(type);
+              if (showFavoritesOnly) onToggleFavoritesFilter?.();
+            }}
             className={cn(
               'shrink-0 h-8 px-3 text-xs font-medium rounded-full transition-all duration-200',
               isSelected && 'shadow-glow'

@@ -55,11 +55,12 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const appInfo = useAppInfo();
-  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther, toggleFavorite } = useDrinks();
+  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther, toggleFavorite, getFavorites } = useDrinks();
   const { customTypes } = useCustomDrinkTypes();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('date_desc');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
@@ -134,7 +135,12 @@ const Index = () => {
   }, [profile?.defaultDrinkType, profile?.defaultSortOrder]);
 
   const filteredDrinks = useMemo(() => {
-    const filtered = filterDrinks(selectedType ?? undefined, searchQuery);
+    let filtered = filterDrinks(selectedType ?? undefined, searchQuery);
+    
+    // Apply favorites filter
+    if (showFavoritesOnly) {
+      filtered = filtered.filter(d => d.isFavorite);
+    }
     
     return [...filtered].sort((a, b) => {
       switch (sortOrder) {
@@ -154,11 +160,12 @@ const Index = () => {
           return 0;
       }
     });
-  }, [filterDrinks, selectedType, searchQuery, sortOrder]);
+  }, [filterDrinks, selectedType, searchQuery, sortOrder, showFavoritesOnly]);
 
   const drinkCountByType = useMemo(() => getDrinkCountByType(), [drinks]);
+  const favoritesCount = useMemo(() => getFavorites().length, [getFavorites]);
   const totalDrinks = drinks.length;
-  const hasFilters = !!selectedType || !!searchQuery;
+  const hasFilters = !!selectedType || !!searchQuery || showFavoritesOnly;
 
 
   const handleSave = async (drinkData: Omit<Drink, 'id' | 'dateAdded'>) => {
@@ -209,6 +216,7 @@ const Index = () => {
   const handleClearFilters = () => {
     setSelectedType(null);
     setSearchQuery('');
+    setShowFavoritesOnly(false);
   };
 
   const handleDialogClose = (open: boolean) => {
@@ -352,6 +360,9 @@ const Index = () => {
             onSelectType={setSelectedType}
             drinkCountByType={drinkCountByType}
             totalDrinks={totalDrinks}
+            favoritesCount={favoritesCount}
+            showFavoritesOnly={showFavoritesOnly}
+            onToggleFavoritesFilter={() => setShowFavoritesOnly(!showFavoritesOnly)}
           />
         </div>
 
