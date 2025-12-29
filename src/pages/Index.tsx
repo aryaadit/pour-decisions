@@ -12,8 +12,8 @@ import { SortOrder } from '@/types/profile';
 import { DrinkListItem } from '@/components/DrinkListItem';
 import { DrinkListItemSkeleton } from '@/components/DrinkListItemSkeleton';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
-import { DrinkTypeFilter } from '@/components/DrinkTypeFilter';
-import { SortSelector } from '@/components/SortSelector';
+import { FilterSheet } from '@/components/FilterSheet';
+import { QuickFilters } from '@/components/QuickFilters';
 import { SearchBar } from '@/components/SearchBar';
 import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
@@ -151,7 +151,7 @@ const Index = () => {
   }, [filterDrinks, selectedType, searchQuery, sortOrder]);
 
   const drinkCountByType = useMemo(() => getDrinkCountByType(), [drinks]);
-
+  const totalDrinks = drinks.length;
   const hasFilters = !!selectedType || !!searchQuery;
 
 
@@ -306,34 +306,45 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        {/* Filters */}
-        <div className="flex flex-col gap-4 mb-6">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search by name, brand, or notes..."
-          />
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <DrinkTypeFilter
+        {/* Unified Action Bar */}
+        <div className="flex flex-col gap-3 mb-4">
+          {/* Search + Filter Trigger Row */}
+          <div className="flex items-center gap-3">
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by name, brand, or notes..."
+            />
+            <FilterSheet
               selectedType={selectedType}
               onSelectType={setSelectedType}
+              sortOrder={sortOrder}
+              onSortChange={setSortOrder}
               drinkCountByType={drinkCountByType}
               onMigrateDrinksToOther={migrateDrinksToOther}
+              totalDrinks={totalDrinks}
             />
-            <SortSelector value={sortOrder} onChange={setSortOrder} />
           </div>
+
+          {/* Quick Filters Row */}
+          <QuickFilters
+            selectedType={selectedType}
+            onSelectType={setSelectedType}
+            drinkCountByType={drinkCountByType}
+            totalDrinks={totalDrinks}
+          />
         </div>
 
-        {/* Stats */}
-        {drinks.length > 0 && (
-          <div className="flex items-center gap-4 mb-6 text-sm text-muted-foreground">
-            <span>{filteredDrinks.length} drink{filteredDrinks.length !== 1 ? 's' : ''}</span>
+        {/* Inline Stats */}
+        {filteredDrinks.length > 0 && filteredDrinks.length !== totalDrinks && (
+          <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+            <span>Showing {filteredDrinks.length} of {totalDrinks}</span>
             {hasFilters && (
               <button
                 onClick={handleClearFilters}
-                className="text-primary hover:underline"
+                className="text-primary hover:underline text-xs"
               >
-                Clear filters
+                Clear
               </button>
             )}
           </div>
