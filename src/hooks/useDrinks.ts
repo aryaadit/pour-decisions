@@ -2,11 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { Drink, DrinkType } from '@/types/drink';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export function useDrinks() {
   const [drinks, setDrinks] = useState<Drink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { trackEvent } = useAnalytics();
 
   const fetchDrinks = useCallback(async () => {
     if (!user) {
@@ -69,6 +71,7 @@ export function useDrinks() {
 
     if (error) {
       console.error('Error adding drink:', error);
+      trackEvent('drink_add_error', 'error', { error: error.message });
       return null;
     }
 
@@ -86,6 +89,15 @@ export function useDrinks() {
     };
 
     setDrinks((prev) => [newDrink, ...prev]);
+    
+    trackEvent('drink_added', 'action', {
+      drink_type: drink.type,
+      has_image: !!drink.imageUrl,
+      has_notes: !!drink.notes,
+      has_price: !!priceValue,
+      rating: drink.rating,
+    });
+    
     return newDrink;
   };
 
@@ -108,6 +120,7 @@ export function useDrinks() {
 
     if (error) {
       console.error('Error updating drink:', error);
+      trackEvent('drink_update_error', 'error', { error: error.message });
       return;
     }
 
@@ -121,17 +134,28 @@ export function useDrinks() {
           : d
       )
     );
+
+    trackEvent('drink_edited', 'action', {
+      drink_type: updates.type,
+      fields_changed: Object.keys(updates).filter(k => k !== 'id'),
+    });
   };
 
   const deleteDrink = async (id: string) => {
+    const drinkToDelete = drinks.find(d => d.id === id);
     const { error } = await supabase.from('drinks').delete().eq('id', id);
 
     if (error) {
       console.error('Error deleting drink:', error);
+      trackEvent('drink_delete_error', 'error', { error: error.message });
       return;
     }
 
     setDrinks((prev) => prev.filter((d) => d.id !== id));
+    
+    trackEvent('drink_deleted', 'action', {
+      drink_type: drinkToDelete?.type,
+    });
   };
 
   const filterDrinks = (type?: DrinkType, searchQuery?: string) => {

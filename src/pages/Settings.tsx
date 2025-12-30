@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { toast } from 'sonner';
 import { DrinkType, builtInDrinkTypes, drinkTypeLabels } from '@/types/drink';
 import { SortOrder, sortOrderLabels, ThemePreference } from '@/types/profile';
@@ -26,6 +27,7 @@ const Settings = () => {
   const { profile, isLoading: profileLoading, updateProfile, uploadAvatar } = useProfile();
   const { theme, setTheme } = useThemeContext();
   const { customTypes } = useCustomDrinkTypes();
+  const { trackEvent } = useAnalytics();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,6 +74,10 @@ const Settings = () => {
     if (error) {
       toast.error('Error', { description: 'Failed to save settings.' });
     } else {
+      trackEvent('settings_saved', 'action', {
+        theme_changed: themePreference !== profile?.themePreference,
+        default_filter_changed: defaultDrinkType !== (profile?.defaultDrinkType || 'all'),
+      });
       toast.success('Settings saved', { description: 'Your preferences have been updated.' });
     }
   };

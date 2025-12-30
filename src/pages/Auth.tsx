@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +25,7 @@ const Auth = () => {
   const [resetSent, setResetSent] = useState(false);
   
   const { signIn, signUp, resetPassword, user, isLoading } = useAuth();
+  const { trackEvent } = useAnalytics();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,23 +82,27 @@ const Auth = () => {
       if (mode === 'login') {
         const { error } = await signIn(email, password);
         if (error) {
+          trackEvent('sign_in_error', 'error', { error: error.message });
           if (error.message.includes('Invalid login credentials')) {
             toast.error('Login failed', { description: 'Invalid email or password. Please try again.' });
           } else {
             toast.error('Login failed', { description: error.message });
           }
         } else {
+          trackEvent('sign_in', 'action', { method: 'email' });
           toast.success('Welcome back!', { description: 'You have successfully logged in.' });
         }
       } else {
         const { error } = await signUp(email, password);
         if (error) {
+          trackEvent('sign_up_error', 'error', { error: error.message });
           if (error.message.includes('User already registered')) {
             toast.error('Account exists', { description: 'An account with this email already exists. Try logging in instead.' });
           } else {
             toast.error('Sign up failed', { description: error.message });
           }
         } else {
+          trackEvent('sign_up', 'action', { method: 'email' });
           toast.success('Account created!', { description: 'You have successfully signed up.' });
         }
       }

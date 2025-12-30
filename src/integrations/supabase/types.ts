@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string | null
+          device_info: Json | null
+          event_category: string
+          event_name: string
+          id: string
+          properties: Json | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: Json | null
+          event_category: string
+          event_name: string
+          id?: string
+          properties?: Json | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: Json | null
+          event_category?: string
+          event_name?: string
+          id?: string
+          properties?: Json | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       bug_reports: {
         Row: {
           category: string
@@ -130,6 +163,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          analytics_enabled: boolean | null
           avatar_url: string | null
           created_at: string
           default_drink_type: string | null
@@ -141,6 +175,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          analytics_enabled?: boolean | null
           avatar_url?: string | null
           created_at?: string
           default_drink_type?: string | null
@@ -152,6 +187,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          analytics_enabled?: boolean | null
           avatar_url?: string | null
           created_at?: string
           default_drink_type?: string | null
