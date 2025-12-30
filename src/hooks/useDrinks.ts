@@ -36,7 +36,6 @@ export function useDrinks() {
           price: d.price || undefined,
           dateAdded: new Date(d.date_added),
           imageUrl: d.image_url || undefined,
-          isFavorite: d.is_favorite || false,
         }))
       );
     }
@@ -176,41 +175,6 @@ export function useDrinks() {
     );
   };
 
-  const toggleFavorite = async (id: string) => {
-    const drink = drinks.find((d) => d.id === id);
-    if (!drink) return;
-
-    const newFavoriteStatus = !drink.isFavorite;
-
-    // Optimistic update
-    setDrinks((prev) =>
-      prev.map((d) =>
-        d.id === id ? { ...d, isFavorite: newFavoriteStatus } : d
-      )
-    );
-
-    const { error } = await supabase
-      .from('drinks')
-      .update({ is_favorite: newFavoriteStatus })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error toggling favorite:', error);
-      // Revert on error
-      setDrinks((prev) =>
-        prev.map((d) =>
-          d.id === id ? { ...d, isFavorite: !newFavoriteStatus } : d
-        )
-      );
-    }
-
-    return newFavoriteStatus;
-  };
-
-  const getFavorites = useCallback(() => {
-    return drinks.filter((d) => d.isFavorite);
-  }, [drinks]);
-
   return {
     drinks,
     isLoading,
@@ -220,7 +184,5 @@ export function useDrinks() {
     filterDrinks,
     getDrinkCountByType,
     migrateDrinksToOther,
-    toggleFavorite,
-    getFavorites,
   };
 }

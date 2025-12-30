@@ -29,12 +29,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useDrinks } from '@/hooks/useDrinks';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Camera, X, Loader2, ImagePlus, Search, Sparkles, ChevronDown, ChevronLeft } from 'lucide-react';
 import { takePhoto, pickFromGallery, dataUrlToBlob } from '@/hooks/useCamera';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
-import BottomNavigation from '@/components/BottomNavigation';
 
 export default function AddDrink() {
   const navigate = useNavigate();
@@ -46,7 +44,6 @@ export default function AddDrink() {
   const { drinks, addDrink, updateDrink } = useDrinks();
   const { impact, notification, ImpactStyle, NotificationType } = useHaptics();
   const { customTypes } = useCustomDrinkTypes();
-  const isMobile = useIsMobile();
   
   const [name, setName] = useState('');
   const [type, setType] = useState<DrinkType>(defaultTypeParam || 'whiskey');
@@ -530,7 +527,7 @@ export default function AddDrink() {
         </div>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-background border-t border-border p-4 pb-20 md:pb-4 safe-area-inset-bottom">
+        <div className="sticky bottom-0 bg-background border-t border-border p-4 safe-area-inset-bottom">
           <div className="flex gap-3">
             <Button
               type="button"
@@ -555,9 +552,6 @@ export default function AddDrink() {
           </div>
         </div>
       </form>
-
-      {/* Bottom Navigation - Mobile only */}
-      {isMobile && <BottomNavigation />}
     </div>
   );
 }

@@ -1,17 +1,15 @@
 import { Drink, drinkTypeIcons, drinkTypeLabels } from '@/types/drink';
 import { StarRating } from './StarRating';
-import { FavoriteButton } from './FavoriteButton';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface DrinkListItemProps {
   drink: Drink;
   onClick?: () => void;
-  onToggleFavorite?: (id: string) => void;
   style?: React.CSSProperties;
 }
 
-export function DrinkListItem({ drink, onClick, onToggleFavorite, style }: DrinkListItemProps) {
+export function DrinkListItem({ drink, onClick, style }: DrinkListItemProps) {
   return (
     <button
       onClick={onClick}
@@ -29,7 +27,7 @@ export function DrinkListItem({ drink, onClick, onToggleFavorite, style }: Drink
       aria-label={`View details for ${drink.name}`}
     >
       {/* Thumbnail / Icon */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 relative">
         {drink.imageUrl ? (
           <div className="relative overflow-hidden rounded-lg">
             <img
@@ -48,19 +46,10 @@ export function DrinkListItem({ drink, onClick, onToggleFavorite, style }: Drink
 
       {/* Middle Text Section */}
       <div className="flex-1 min-w-0 space-y-1">
-        {/* Name row with favorite button */}
-        <div className="flex items-center gap-2">
-          <h3 className="font-display text-base sm:text-lg font-semibold text-foreground truncate">
-            {drink.name}
-          </h3>
-          {onToggleFavorite && (
-            <FavoriteButton
-              isFavorite={drink.isFavorite || false}
-              onToggle={() => onToggleFavorite(drink.id)}
-              size="sm"
-            />
-          )}
-        </div>
+        {/* Name */}
+        <h3 className="font-display text-base sm:text-lg font-semibold text-foreground truncate">
+          {drink.name}
+        </h3>
 
         {/* Meta: Rating, Type Badge, Price */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">

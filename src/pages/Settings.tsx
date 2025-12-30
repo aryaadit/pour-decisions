@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { DrinkType, builtInDrinkTypes, drinkTypeLabels } from '@/types/drink';
 import { SortOrder, sortOrderLabels, ThemePreference } from '@/types/profile';
@@ -21,14 +20,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Camera, Loader2, Sun, Moon, Monitor } from 'lucide-react';
-import BottomNavigation from '@/components/BottomNavigation';
 
 const Settings = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { profile, isLoading: profileLoading, updateProfile, uploadAvatar } = useProfile();
   const { theme, setTheme } = useThemeContext();
   const { customTypes } = useCustomDrinkTypes();
-  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -133,7 +130,7 @@ const Settings = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 pb-24 md:pb-6 max-w-2xl space-y-6">
+      <main className="container mx-auto px-4 py-6 max-w-2xl space-y-6">
         {/* Profile Section */}
         <Card>
           <CardHeader>
@@ -261,9 +258,6 @@ const Settings = () => {
           Save Settings
         </Button>
       </main>
-
-      {/* Bottom Navigation - Mobile only */}
-      {isMobile && <BottomNavigation />}
     </div>
   );
 };

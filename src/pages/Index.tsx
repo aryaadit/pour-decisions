@@ -55,12 +55,11 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const appInfo = useAppInfo();
-  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther, toggleFavorite, getFavorites } = useDrinks();
+  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther } = useDrinks();
   const { customTypes } = useCustomDrinkTypes();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('date_desc');
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
@@ -135,12 +134,7 @@ const Index = () => {
   }, [profile?.defaultDrinkType, profile?.defaultSortOrder]);
 
   const filteredDrinks = useMemo(() => {
-    let filtered = filterDrinks(selectedType ?? undefined, searchQuery);
-    
-    // Apply favorites filter
-    if (showFavoritesOnly) {
-      filtered = filtered.filter(d => d.isFavorite);
-    }
+    const filtered = filterDrinks(selectedType ?? undefined, searchQuery);
     
     return [...filtered].sort((a, b) => {
       switch (sortOrder) {
@@ -160,12 +154,11 @@ const Index = () => {
           return 0;
       }
     });
-  }, [filterDrinks, selectedType, searchQuery, sortOrder, showFavoritesOnly]);
+  }, [filterDrinks, selectedType, searchQuery, sortOrder]);
 
   const drinkCountByType = useMemo(() => getDrinkCountByType(), [drinks]);
-  const favoritesCount = useMemo(() => getFavorites().length, [getFavorites]);
   const totalDrinks = drinks.length;
-  const hasFilters = !!selectedType || !!searchQuery || showFavoritesOnly;
+  const hasFilters = !!selectedType || !!searchQuery;
 
 
   const handleSave = async (drinkData: Omit<Drink, 'id' | 'dateAdded'>) => {
@@ -203,20 +196,9 @@ const Index = () => {
     toast.success('Drink removed', { description: `${drink?.name} has been removed from your collection.` });
   };
 
-  const handleToggleFavorite = async (id: string) => {
-    const drink = drinks.find(d => d.id === id);
-    const newStatus = await toggleFavorite(id);
-    if (newStatus) {
-      toast.success('Added to favorites', { description: `${drink?.name} saved to favorites.` });
-    } else {
-      toast.success('Removed from favorites', { description: `${drink?.name} removed from favorites.` });
-    }
-  };
-
   const handleClearFilters = () => {
     setSelectedType(null);
     setSearchQuery('');
-    setShowFavoritesOnly(false);
   };
 
   const handleDialogClose = (open: boolean) => {
@@ -317,15 +299,12 @@ const Index = () => {
                 <span>Add Drink</span>
               </Button>
 
-              {/* Hide on mobile - profile accessible via bottom nav */}
-              <div className="hidden md:block">
-                <ProfileMenu
-                  avatarUrl={profile?.avatarUrl}
-                  displayName={profile?.displayName}
-                  email={user.email}
-                  onSignOut={handleSignOut}
-                />
-              </div>
+              <ProfileMenu
+                avatarUrl={profile?.avatarUrl}
+                displayName={profile?.displayName}
+                email={user.email}
+                onSignOut={handleSignOut}
+              />
             </div>
           </div>
         </div>
@@ -360,9 +339,6 @@ const Index = () => {
             onSelectType={setSelectedType}
             drinkCountByType={drinkCountByType}
             totalDrinks={totalDrinks}
-            favoritesCount={favoritesCount}
-            showFavoritesOnly={showFavoritesOnly}
-            onToggleFavoritesFilter={() => setShowFavoritesOnly(!showFavoritesOnly)}
           />
         </div>
 
@@ -389,7 +365,6 @@ const Index = () => {
                 key={drink.id}
                 drink={drink}
                 onClick={() => setViewingDrink(drink)}
-                onToggleFavorite={handleToggleFavorite}
                 style={{ animationDelay: `${index * 30}ms` }}
               />
             ))}
@@ -404,7 +379,7 @@ const Index = () => {
       </main>
 
       {/* Bottom Navigation - Mobile only */}
-      {isMobile && <BottomNavigation />}
+      {isMobile && <BottomNavigation onSearchFocus={handleSearchFocus} />}
 
       {/* Add/Edit Dialog - Desktop only */}
       {!isMobile && (
@@ -428,7 +403,6 @@ const Index = () => {
         }}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onToggleFavorite={handleToggleFavorite}
       />
     </div>
   );
