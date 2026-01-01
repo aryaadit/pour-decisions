@@ -81,15 +81,18 @@ export function QuickFilters({
         return (
           <Button
             key={type}
-            variant={isSelected ? 'default' : 'ghost'}
+            variant={isSelected ? 'default' : 'outline'}
             size="sm"
             onClick={() => handleSelect(type)}
             className={cn(
               'shrink-0 h-8 px-3 text-xs font-medium rounded-full transition-all duration-200',
-              isSelected && 'shadow-glow'
+              isSelected && 'shadow-glow',
+              !isSelected && 'bg-muted/50 border-border/50 hover:bg-muted hover:border-border'
             )}
             style={customColor && !isSelected ? {
               color: customColor,
+              borderColor: `${customColor}40`,
+              backgroundColor: `${customColor}15`,
             } : customColor && isSelected ? {
               backgroundColor: customColor,
               borderColor: customColor,
