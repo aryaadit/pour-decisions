@@ -67,7 +67,7 @@ export function DrinkListItem({ drink, onClick, onWishlistToggle, style }: Drink
 
         {/* Meta: Rating, Type Badge, Price */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {!drink.isWishlist && (
+          {!drink.isWishlist && drink.rating && (
             <StarRating rating={drink.rating} readonly size="sm" animated />
           )}
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground transition-colors duration-300">
