@@ -1,6 +1,5 @@
 import { Drink, drinkTypeIcons, drinkTypeLabels } from '@/types/drink';
 import { StarRating } from './StarRating';
-import { WishlistToggle } from './WishlistToggle';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Clock } from 'lucide-react';
