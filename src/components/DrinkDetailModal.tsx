@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Drink, drinkTypeIcons } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { DrinkTypeBadge } from './DrinkTypeBadge';
 import { WishlistToggle } from './WishlistToggle';
 import { AddToCollectionModal } from './AddToCollectionModal';
+import { useCollections } from '@/hooks/useCollections';
 import { format } from 'date-fns';
-import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn, FolderPlus } from 'lucide-react';
+import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn, FolderPlus, Folder } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -50,9 +52,26 @@ export function DrinkDetailModal({
   onWishlistToggle,
 }: DrinkDetailModalProps) {
   const isMobile = useIsMobile();
+  const { collections, getDrinkCollections } = useCollections();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [showAddToCollection, setShowAddToCollection] = useState(false);
+  const [drinkCollectionIds, setDrinkCollectionIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (open && drink) {
+      getDrinkCollections(drink.id).then(setDrinkCollectionIds);
+    }
+  }, [open, drink, getDrinkCollections]);
+
+  // Refetch collections when AddToCollection modal closes
+  useEffect(() => {
+    if (!showAddToCollection && open && drink) {
+      getDrinkCollections(drink.id).then(setDrinkCollectionIds);
+    }
+  }, [showAddToCollection, open, drink, getDrinkCollections]);
+
+  const drinkCollections = collections.filter((c) => drinkCollectionIds.includes(c.id));
 
   if (!drink) return null;
 
@@ -129,6 +148,28 @@ export function DrinkDetailModal({
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-foreground">Tasting Notes</h3>
           <p className="text-muted-foreground leading-relaxed">{drink.notes}</p>
+        </div>
+      )}
+
+      {/* Collections */}
+      {drinkCollections.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+            <Folder className="h-4 w-4" />
+            Collections
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {drinkCollections.map((collection) => (
+              <Badge
+                key={collection.id}
+                variant="secondary"
+                className="text-xs"
+              >
+                <span className="mr-1">{collection.icon}</span>
+                {collection.name}
+              </Badge>
+            ))}
+          </div>
         </div>
       )}
 
