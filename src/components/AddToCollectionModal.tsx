@@ -150,13 +150,14 @@ export function AddToCollectionModal({
           <ScrollArea className="max-h-[300px]">
             <div className="space-y-2">
               {collections.map((collection) => (
-                <label
+                <div
                   key={collection.id}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => handleToggleCollection(collection.id)}
                 >
                   <Checkbox
                     checked={selectedCollections.has(collection.id)}
-                    onCheckedChange={() => handleToggleCollection(collection.id)}
+                    onCheckedChange={() => {}}
                   />
                   <span className="text-xl">{collection.icon}</span>
                   <div className="flex-1 min-w-0">
@@ -165,7 +166,7 @@ export function AddToCollectionModal({
                       {collection.drinkCount || 0} drink{collection.drinkCount !== 1 ? 's' : ''}
                     </p>
                   </div>
-                </label>
+                </div>
               ))}
             </div>
           </ScrollArea>
