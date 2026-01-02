@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCollections } from '@/hooks/useCollections';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { CollectionCard } from '@/components/CollectionCard';
 import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
+import BottomNavigation from '@/components/BottomNavigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Plus, FolderPlus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,6 +14,7 @@ const Collections = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { collections, isLoading, createCollection } = useCollections();
+  const isMobile = useIsMobile();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // Redirect to auth if not logged in
@@ -102,6 +105,10 @@ const Collections = () => {
         onOpenChange={setCreateDialogOpen}
         onSave={handleCreateCollection}
       />
+
+      {/* Mobile Bottom Navigation */}
+      {isMobile && <BottomNavigation />}
+      {isMobile && <div className="h-20" />}
     </div>
   );
 };

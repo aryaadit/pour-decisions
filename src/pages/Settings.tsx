@@ -5,6 +5,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { DrinkType, builtInDrinkTypes, drinkTypeLabels } from '@/types/drink';
 import { SortOrder, sortOrderLabels, ThemePreference } from '@/types/profile';
@@ -21,6 +22,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Camera, Loader2, Sun, Moon, Monitor } from 'lucide-react';
+import BottomNavigation from '@/components/BottomNavigation';
 
 const Settings = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -28,6 +30,7 @@ const Settings = () => {
   const { theme, setTheme } = useThemeContext();
   const { customTypes } = useCustomDrinkTypes();
   const { trackEvent } = useAnalytics();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -263,7 +266,13 @@ const Settings = () => {
           {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
           Save Settings
         </Button>
+
+        {/* Spacer for bottom nav */}
+        {isMobile && <div className="h-16" />}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      {isMobile && <BottomNavigation />}
     </div>
   );
 };
