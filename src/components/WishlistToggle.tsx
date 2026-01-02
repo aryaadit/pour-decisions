@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface WishlistToggleProps {
   isWishlist: boolean;
-  onToggle: () => void;
+  onToggle: (newValue: boolean) => void;
   size?: 'sm' | 'md';
   className?: string;
   disabled?: boolean;
@@ -30,7 +30,7 @@ export function WishlistToggle({
     
     impact(ImpactStyle.Light);
     setIsAnimating(true);
-    onToggle();
+    onToggle(!isWishlist);
     
     setTimeout(() => setIsAnimating(false), 300);
   };

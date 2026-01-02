@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Drink, drinkTypeIcons } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { DrinkTypeBadge } from './DrinkTypeBadge';
+import { WishlistToggle } from './WishlistToggle';
+import { AddToCollectionModal } from './AddToCollectionModal';
 import { format } from 'date-fns';
-import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn } from 'lucide-react';
+import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn, FolderPlus, Bookmark } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +38,7 @@ interface DrinkDetailModalProps {
   onOpenChange: (open: boolean) => void;
   onEdit: (drink: Drink) => void;
   onDelete: (id: string) => void;
+  onWishlistToggle?: (drinkId: string, isWishlist: boolean) => void;
 }
 
 export function DrinkDetailModal({
@@ -44,10 +47,12 @@ export function DrinkDetailModal({
   onOpenChange,
   onEdit,
   onDelete,
+  onWishlistToggle,
 }: DrinkDetailModalProps) {
   const isMobile = useIsMobile();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
+  const [showAddToCollection, setShowAddToCollection] = useState(false);
 
   if (!drink) return null;
 
@@ -94,17 +99,34 @@ export function DrinkDetailModal({
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h2 className="font-display text-2xl font-bold text-foreground">
-              {drink.name}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-2xl font-bold text-foreground">
+                {drink.name}
+              </h2>
+              {drink.isWishlist && (
+                <Bookmark className="w-5 h-5 text-primary fill-current flex-shrink-0" />
+              )}
+            </div>
             {drink.brand && (
               <p className="text-muted-foreground">{drink.brand}</p>
             )}
           </div>
-          <DrinkTypeBadge type={drink.type} />
+          <div className="flex items-center gap-2">
+            {onWishlistToggle && (
+              <WishlistToggle
+                isWishlist={drink.isWishlist || false}
+                onToggle={(isWishlist) => onWishlistToggle(drink.id, isWishlist)}
+              />
+            )}
+            <DrinkTypeBadge type={drink.type} />
+          </div>
         </div>
 
-        <StarRating rating={drink.rating} readonly size="md" />
+        {drink.isWishlist ? (
+          <p className="text-sm text-muted-foreground italic">Want to try this drink</p>
+        ) : (
+          <StarRating rating={drink.rating} readonly size="md" />
+        )}
       </div>
 
       {/* Notes */}
@@ -139,11 +161,13 @@ export function DrinkDetailModal({
       <div className="flex gap-3 pt-2">
         <Button variant="outline" className="flex-1" onClick={handleEdit}>
           <Pencil className="h-4 w-4 mr-2" />
-          Edit
+          {drink.isWishlist ? 'Log It' : 'Edit'}
         </Button>
-        <Button variant="destructive" className="flex-1" onClick={handleDeleteClick}>
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete
+        <Button variant="outline" size="icon" onClick={() => setShowAddToCollection(true)}>
+          <FolderPlus className="h-4 w-4" />
+        </Button>
+        <Button variant="destructive" size="icon" onClick={handleDeleteClick}>
+          <Trash2 className="h-4 w-4" />
         </Button>
       </div>
     </div>
@@ -244,6 +268,14 @@ export function DrinkDetailModal({
         </Drawer>
         {deleteConfirmDialog}
         {imagePreviewDialog}
+        {drink && (
+          <AddToCollectionModal
+            open={showAddToCollection}
+            onOpenChange={setShowAddToCollection}
+            drinkId={drink.id}
+            drinkName={drink.name}
+          />
+        )}
       </>
     );
   }
@@ -270,6 +302,14 @@ export function DrinkDetailModal({
       </Dialog>
       {deleteConfirmDialog}
       {imagePreviewDialog}
+      {drink && (
+        <AddToCollectionModal
+          open={showAddToCollection}
+          onOpenChange={setShowAddToCollection}
+          drinkId={drink.id}
+          drinkName={drink.name}
+        />
+      )}
     </>
   );
 }
