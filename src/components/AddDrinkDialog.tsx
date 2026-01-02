@@ -35,6 +35,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -66,6 +67,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
   const [location, setLocation] = useState('');
   const [price, setPrice] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
+  const [isWishlist, setIsWishlist] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [lookupInfo, setLookupInfo] = useState<{
@@ -99,6 +101,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         setLocation(editDrink.location || '');
         setPrice(editDrink.price || '');
         setImageUrl(editDrink.imageUrl);
+        setIsWishlist(editDrink.isWishlist || false);
         // Expand details if any optional field has data
         setDetailsOpen(!!(editDrink.brand || editDrink.notes || editDrink.location || editDrink.price));
       } else {
@@ -110,6 +113,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         setLocation('');
         setPrice('');
         setImageUrl(undefined);
+        setIsWishlist(false);
         setDetailsOpen(false);
       }
     }
@@ -124,6 +128,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     setLocation('');
     setPrice('');
     setImageUrl(undefined);
+    setIsWishlist(false);
     setLookupInfo(null);
     setDetailsOpen(false);
   }, [defaultType]);
@@ -301,11 +306,12 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
       name: name.trim(),
       type,
       brand: brand.trim() || undefined,
-      rating,
+      rating: isWishlist ? 0 : rating,
       notes: notes.trim() || undefined,
       location: location.trim() || undefined,
       price: price.trim() || undefined,
       imageUrl,
+      isWishlist,
     });
 
     resetForm();
@@ -441,12 +447,31 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label>Rating</Label>
-        <div className="pt-1">
-          <StarRating rating={rating} onChange={setRating} size="lg" />
+      {/* Wishlist Toggle */}
+      <div className="flex items-center justify-between py-2 px-1">
+        <div className="space-y-0.5">
+          <Label htmlFor="wishlist-toggle" className="text-sm font-medium cursor-pointer">
+            Want to try
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Save for later without rating
+          </p>
         </div>
+        <Switch
+          id="wishlist-toggle"
+          checked={isWishlist}
+          onCheckedChange={setIsWishlist}
+        />
       </div>
+
+      {!isWishlist && (
+        <div className="space-y-2">
+          <Label>Rating</Label>
+          <div className="pt-1">
+            <StarRating rating={rating} onChange={setRating} size="lg" />
+          </div>
+        </div>
+      )}
 
       {/* Lookup Results */}
       {lookupInfo && (

@@ -4,12 +4,16 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
+import { Bookmark } from 'lucide-react';
 
 interface QuickFiltersProps {
   selectedType: DrinkType | null;
   onSelectType: (type: DrinkType | null) => void;
   drinkCountByType: Record<string, number>;
   totalDrinks: number;
+  wishlistCount?: number;
+  showWishlist?: boolean;
+  onToggleWishlist?: () => void;
 }
 
 export function QuickFilters({ 
@@ -17,6 +21,9 @@ export function QuickFilters({
   onSelectType, 
   drinkCountByType,
   totalDrinks,
+  wishlistCount = 0,
+  showWishlist = false,
+  onToggleWishlist,
 }: QuickFiltersProps) {
   const { selectionChanged } = useHaptics();
   const { customTypes } = useCustomDrinkTypes();
@@ -61,17 +68,41 @@ export function QuickFilters({
     <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1">
       {/* All filter - always visible */}
       <Button
-        variant={selectedType === null ? 'default' : 'ghost'}
+        variant={selectedType === null && !showWishlist ? 'default' : 'ghost'}
         size="sm"
-        onClick={() => handleSelect(null)}
+        onClick={() => {
+          handleSelect(null);
+          if (showWishlist && onToggleWishlist) onToggleWishlist();
+        }}
         className={cn(
           'shrink-0 h-8 px-3 text-xs font-medium rounded-full transition-all duration-200',
-          selectedType === null && 'shadow-glow'
+          selectedType === null && !showWishlist && 'shadow-glow'
         )}
       >
         All
         <span className="ml-1.5 opacity-70">{totalDrinks}</span>
       </Button>
+
+      {/* Wishlist filter */}
+      {wishlistCount > 0 && onToggleWishlist && (
+        <Button
+          variant={showWishlist ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            selectionChanged();
+            onToggleWishlist();
+            if (!showWishlist) onSelectType(null);
+          }}
+          className={cn(
+            'shrink-0 h-8 px-3 text-xs font-medium rounded-full transition-all duration-200',
+            showWishlist && 'shadow-glow',
+            !showWishlist && 'bg-muted/50 border-border/50 hover:bg-muted hover:border-border'
+          )}
+        >
+          <Bookmark className="w-3 h-3 mr-1" />
+          <span className="opacity-70">{wishlistCount}</span>
+        </Button>
+      )}
 
       {/* Top types with counts */}
       {topTypes.map(({ type, count }) => {

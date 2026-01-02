@@ -1,33 +1,47 @@
 import { Drink, drinkTypeIcons, drinkTypeLabels } from '@/types/drink';
 import { StarRating } from './StarRating';
+import { WishlistToggle } from './WishlistToggle';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Bookmark } from 'lucide-react';
 
 interface DrinkListItemProps {
   drink: Drink;
   onClick?: () => void;
+  onWishlistToggle?: (drinkId: string, isWishlist: boolean) => void;
   style?: React.CSSProperties;
 }
 
-export function DrinkListItem({ drink, onClick, style }: DrinkListItemProps) {
+export function DrinkListItem({ drink, onClick, onWishlistToggle, style }: DrinkListItemProps) {
   return (
-    <button
-      onClick={onClick}
+    <div
       className={cn(
-        "w-full flex items-center gap-4 p-4 rounded-xl",
+        "w-full flex items-center gap-4 p-4 rounded-xl relative",
         "bg-card/50 border border-border/50",
         "hover:bg-card hover:border-primary/30 hover:shadow-glow",
-        "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background",
         "transition-all duration-300 cursor-pointer",
         "animate-fade-in text-left",
         "card-hover gradient-border",
-        "active:scale-[0.98]"
+        drink.isWishlist && "border-primary/30 bg-primary/5"
       )}
       style={style}
-      aria-label={`View details for ${drink.name}`}
     >
+      {/* Wishlist indicator */}
+      {drink.isWishlist && (
+        <div className="absolute top-2 right-2 text-primary pointer-events-none">
+          <Bookmark className="w-4 h-4 fill-current" />
+        </div>
+      )}
+      
+      {/* Clickable area */}
+      <button
+        onClick={onClick}
+        className="absolute inset-0 z-0 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background rounded-xl transition-all duration-300 active:scale-[0.98]"
+        aria-label={`View details for ${drink.name}`}
+      />
+      
       {/* Thumbnail / Icon */}
-      <div className="flex-shrink-0 relative">
+      <div className="flex-shrink-0 relative z-10 pointer-events-none">
         {drink.imageUrl ? (
           <div className="relative overflow-hidden rounded-lg">
             <img
@@ -45,7 +59,7 @@ export function DrinkListItem({ drink, onClick, style }: DrinkListItemProps) {
       </div>
 
       {/* Middle Text Section */}
-      <div className="flex-1 min-w-0 space-y-1">
+      <div className="flex-1 min-w-0 space-y-1 z-10 pointer-events-none">
         {/* Name */}
         <h3 className="font-display text-base sm:text-lg font-semibold text-foreground truncate">
           {drink.name}
@@ -53,7 +67,11 @@ export function DrinkListItem({ drink, onClick, style }: DrinkListItemProps) {
 
         {/* Meta: Rating, Type Badge, Price */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <StarRating rating={drink.rating} readonly size="sm" animated />
+          {drink.isWishlist ? (
+            <span className="text-xs text-muted-foreground italic">Want to try</span>
+          ) : (
+            <StarRating rating={drink.rating} readonly size="sm" animated />
+          )}
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground transition-colors duration-300">
             {drinkTypeLabels[drink.type]}
           </span>
@@ -72,12 +90,18 @@ export function DrinkListItem({ drink, onClick, style }: DrinkListItemProps) {
         )}
       </div>
 
-      {/* Right Date Section */}
-      <div className="flex-shrink-0 hidden sm:block">
-        <span className="text-xs text-muted-foreground whitespace-nowrap">
+      {/* Right Section - Date & Wishlist Toggle */}
+      <div className="flex-shrink-0 flex items-center gap-2 z-10">
+        <span className="text-xs text-muted-foreground whitespace-nowrap hidden sm:block">
           {format(drink.dateAdded, 'MMM d, yyyy')}
         </span>
+        {onWishlistToggle && (
+          <WishlistToggle
+            isWishlist={drink.isWishlist || false}
+            onToggle={(isWishlist) => onWishlistToggle(drink.id, isWishlist)}
+          />
+        )}
       </div>
-    </button>
+    </div>
   );
 }
