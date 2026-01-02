@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { DrinkType, builtInDrinkTypes, drinkTypeIcons, isBuiltInDrinkType } from '@/types/drink';
+import { DrinkType, builtInDrinkTypes, drinkTypeIcons, drinkTypeLabels, isBuiltInDrinkType } from '@/types/drink';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -56,6 +56,13 @@ export function QuickFilters({
     return custom?.icon || '🍹';
   };
 
+  const getTypeLabel = (type: DrinkType) => {
+    if (isBuiltInDrinkType(type)) {
+      return drinkTypeLabels[type];
+    }
+    return type; // Custom types use their name as label
+  };
+
   const getCustomColor = (type: DrinkType) => {
     if (isBuiltInDrinkType(type)) return null;
     return customTypes.find((c) => c.name === type)?.color || null;
@@ -99,8 +106,12 @@ export function QuickFilters({
             !showWishlist && 'bg-muted/50 border-border/50 hover:bg-muted hover:border-border'
           )}
         >
-          <Clock className="w-3 h-3 mr-1" />
-          <span className="opacity-70">{wishlistCount}</span>
+          <Clock className={cn("w-3 h-3", showWishlist && "mr-1")} />
+          {showWishlist ? (
+            <span>Want to try <span className="opacity-70 ml-1">{wishlistCount}</span></span>
+          ) : (
+            <span className="opacity-70">{wishlistCount}</span>
+          )}
         </Button>
       )}
 
@@ -129,8 +140,12 @@ export function QuickFilters({
               borderColor: customColor,
             } : undefined}
           >
-            <span className="mr-1">{getTypeIcon(type)}</span>
-            <span className="opacity-70">{count}</span>
+            <span className={cn(isSelected && "mr-1")}>{getTypeIcon(type)}</span>
+            {isSelected ? (
+              <span>{getTypeLabel(type)} <span className="opacity-70 ml-1">{count}</span></span>
+            ) : (
+              <span className="opacity-70">{count}</span>
+            )}
           </Button>
         );
       })}

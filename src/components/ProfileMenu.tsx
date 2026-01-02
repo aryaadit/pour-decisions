@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, MessageSquare, Shield, FolderOpen } from 'lucide-react';
+import { LogOut, Settings, MessageSquare, Shield } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -113,17 +113,6 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
             <Button 
               variant="outline" 
               className="w-full justify-start gap-3 h-14 text-base"
-              onClick={() => {
-                setDrawerOpen(false);
-                navigate('/collections');
-              }}
-            >
-              <FolderOpen className="w-5 h-5" />
-              Collections
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start gap-3 h-14 text-base"
               onClick={handleSettings}
             >
               <Settings className="w-5 h-5" />
@@ -184,10 +173,6 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
           )}
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/collections')}>
-          <FolderOpen className="w-4 h-4 mr-2" />
-          Collections
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/settings')}>
           <Settings className="w-4 h-4 mr-2" />
           Settings

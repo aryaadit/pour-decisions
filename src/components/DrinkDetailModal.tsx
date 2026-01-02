@@ -5,7 +5,7 @@ import { DrinkTypeBadge } from './DrinkTypeBadge';
 import { WishlistToggle } from './WishlistToggle';
 import { AddToCollectionModal } from './AddToCollectionModal';
 import { format } from 'date-fns';
-import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn, FolderPlus, Clock } from 'lucide-react';
+import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn, FolderPlus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -99,14 +99,9 @@ export function DrinkDetailModal({
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="font-display text-2xl font-bold text-foreground">
-                {drink.name}
-              </h2>
-              {drink.isWishlist && (
-                <Clock className="w-5 h-5 text-orange-500 fill-current flex-shrink-0" />
-              )}
-            </div>
+            <h2 className="font-display text-2xl font-bold text-foreground">
+              {drink.name}
+            </h2>
             {drink.brand && (
               <p className="text-muted-foreground">{drink.brand}</p>
             )}
@@ -123,7 +118,7 @@ export function DrinkDetailModal({
         </div>
 
         {drink.isWishlist ? (
-          <p className="text-sm text-muted-foreground italic">Want to try this drink</p>
+          <p className="text-sm text-orange-500 italic">Want to try this drink</p>
         ) : (
           <StarRating rating={drink.rating} readonly size="md" />
         )}

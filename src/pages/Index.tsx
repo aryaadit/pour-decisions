@@ -310,6 +310,11 @@ const Index = () => {
                 <span>Add Drink</span>
               </Button>
 
+              {/* Desktop collections button */}
+              <Button variant="outline" onClick={() => navigate('/collections')} className="hidden sm:inline-flex">
+                <span>Collections</span>
+              </Button>
+
               <ProfileMenu
                 avatarUrl={profile?.avatarUrl}
                 displayName={profile?.displayName}

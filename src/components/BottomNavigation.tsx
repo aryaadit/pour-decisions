@@ -1,4 +1,4 @@
-import { Home, Search, Plus, User } from "lucide-react";
+import { Home, Plus, User, FolderOpen } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -15,7 +15,7 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
 
   const tabs = [
     { id: "home", icon: Home, label: "Home", path: "/" },
-    { id: "search", icon: Search, label: "Search", action: "search" },
+    { id: "collections", icon: FolderOpen, label: "Collections", path: "/collections" },
     { id: "add", icon: Plus, label: "Add", path: "/add-drink" },
     { id: "profile", icon: User, label: "Profile", path: "/settings" },
   ];
@@ -23,9 +23,7 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
   const handleTabPress = async (tab: typeof tabs[0]) => {
     await impact(ImpactStyle.Light);
     
-    if (tab.action === "search") {
-      onSearchFocus?.();
-    } else if (tab.path) {
+    if (tab.path) {
       navigate(tab.path);
     }
   };
