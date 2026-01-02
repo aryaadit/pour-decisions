@@ -157,7 +157,8 @@ export function AddToCollectionModal({
                 >
                   <Checkbox
                     checked={selectedCollections.has(collection.id)}
-                    onCheckedChange={() => {}}
+                    onCheckedChange={() => handleToggleCollection(collection.id)}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <span className="text-xl">{collection.icon}</span>
                   <div className="flex-1 min-w-0">

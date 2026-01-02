@@ -289,7 +289,7 @@ export function useCollections() {
     return { collection, drinks };
   };
 
-  const getDrinkCollections = async (drinkId: string): Promise<string[]> => {
+  const getDrinkCollections = useCallback(async (drinkId: string): Promise<string[]> => {
     const { data, error } = await supabase
       .from('collection_drinks')
       .select('collection_id')
@@ -301,7 +301,8 @@ export function useCollections() {
     }
 
     return (data || []).map((cd) => cd.collection_id);
-  };
+  }, []);
+
 
   return {
     collections,
