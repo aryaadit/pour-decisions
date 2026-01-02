@@ -3,9 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCollections } from '@/hooks/useCollections';
 import { useDrinks } from '@/hooks/useDrinks';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { DrinkListItem } from '@/components/DrinkListItem';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
+import BottomNavigation from '@/components/BottomNavigation';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -42,6 +44,7 @@ const CollectionDetail = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { collections, updateCollection, deleteCollection, togglePublic, getCollectionDrinks, addDrinkToCollection, removeDrinkFromCollection, refetch } = useCollections();
   const { drinks: allDrinks } = useDrinks();
+  const isMobile = useIsMobile();
 
   const [collection, setCollection] = useState<Collection | null>(null);
   const [collectionDrinks, setCollectionDrinks] = useState<Drink[]>([]);
@@ -403,6 +406,10 @@ const CollectionDetail = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Mobile Bottom Navigation */}
+      {isMobile && <BottomNavigation />}
+      {isMobile && <div className="h-20" />}
     </div>
   );
 };
