@@ -46,18 +46,14 @@ export function WishlistToggle({
       className={cn(
         'relative transition-all duration-200',
         size === 'sm' ? 'h-8 w-8' : 'h-9 w-9',
-        isWishlist && 'text-orange-500 hover:text-orange-600',
+        isWishlist && 'text-orange-500 hover:text-orange-600 bg-orange-500/10',
         !isWishlist && 'text-muted-foreground hover:text-foreground',
         isAnimating && 'scale-110',
         className
       )}
-      title={isWishlist ? 'Already on wishlist (click to remove)' : 'Save for later'}
+      title={isWishlist ? 'On wishlist (click to remove)' : 'Add to wishlist'}
     >
-      {isWishlist ? (
-        <Clock className={cn(iconSize, 'fill-current')} />
-      ) : (
-        <Clock className={iconSize} />
-      )}
+      <Clock className={cn(iconSize, isWishlist && 'fill-orange-500/30')} />
     </Button>
   );
 }
