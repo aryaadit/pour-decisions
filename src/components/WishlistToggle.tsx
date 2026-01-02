@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bookmark, BookmarkCheck } from 'lucide-react';
+import { Clock, CircleCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
 import { cn } from '@/lib/utils';
@@ -46,17 +46,17 @@ export function WishlistToggle({
       className={cn(
         'relative transition-all duration-200',
         size === 'sm' ? 'h-8 w-8' : 'h-9 w-9',
-        isWishlist && 'text-amber-500 hover:text-amber-600',
+        isWishlist && 'text-orange-500 hover:text-orange-600',
         !isWishlist && 'text-muted-foreground hover:text-foreground',
         isAnimating && 'scale-110',
         className
       )}
-      title={isWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+      title={isWishlist ? 'Already on wishlist (click to remove)' : 'Save for later'}
     >
       {isWishlist ? (
-        <BookmarkCheck className={cn(iconSize, 'fill-current')} />
+        <Clock className={cn(iconSize, 'fill-current')} />
       ) : (
-        <Bookmark className={iconSize} />
+        <Clock className={iconSize} />
       )}
     </Button>
   );

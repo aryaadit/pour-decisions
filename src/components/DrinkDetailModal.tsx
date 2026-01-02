@@ -5,7 +5,7 @@ import { DrinkTypeBadge } from './DrinkTypeBadge';
 import { WishlistToggle } from './WishlistToggle';
 import { AddToCollectionModal } from './AddToCollectionModal';
 import { format } from 'date-fns';
-import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn, FolderPlus, Bookmark } from 'lucide-react';
+import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn, FolderPlus, Clock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -104,7 +104,7 @@ export function DrinkDetailModal({
                 {drink.name}
               </h2>
               {drink.isWishlist && (
-                <Bookmark className="w-5 h-5 text-primary fill-current flex-shrink-0" />
+                <Clock className="w-5 h-5 text-orange-500 fill-current flex-shrink-0" />
               )}
             </div>
             {drink.brand && (
@@ -163,7 +163,7 @@ export function DrinkDetailModal({
           <Pencil className="h-4 w-4 mr-2" />
           {drink.isWishlist ? 'Log It' : 'Edit'}
         </Button>
-        <Button variant="outline" size="icon" onClick={() => setShowAddToCollection(true)}>
+        <Button variant="outline" size="icon" onClick={() => setShowAddToCollection(true)} title="Add to collection">
           <FolderPlus className="h-4 w-4" />
         </Button>
         <Button variant="destructive" size="icon" onClick={handleDeleteClick}>

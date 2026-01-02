@@ -3,7 +3,7 @@ import { StarRating } from './StarRating';
 import { WishlistToggle } from './WishlistToggle';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Bookmark } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface DrinkListItemProps {
   drink: Drink;
@@ -28,8 +28,8 @@ export function DrinkListItem({ drink, onClick, onWishlistToggle, style }: Drink
     >
       {/* Wishlist indicator */}
       {drink.isWishlist && (
-        <div className="absolute top-2 right-2 text-primary pointer-events-none">
-          <Bookmark className="w-4 h-4 fill-current" />
+        <div className="absolute top-2 right-2 text-orange-500 pointer-events-none">
+          <Clock className="w-4 h-4 fill-current" />
         </div>
       )}
       
