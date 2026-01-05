@@ -18,6 +18,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { ProfileMenu } from '@/components/ProfileMenu';
+import { TestFlightBanner } from '@/components/TestFlightBanner';
 import BottomNavigation from '@/components/BottomNavigation';
 
 import { Button } from '@/components/ui/button';
@@ -283,6 +284,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* TestFlight Beta Banner */}
+      <TestFlightBanner />
+
       {/* Header */}
       <header className="sticky top-0 z-50 glass border-b border-border/50 pt-[env(safe-area-inset-top)]">
         <div className="container mx-auto px-4 py-4">
