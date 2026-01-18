@@ -149,100 +149,116 @@ const Settings = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-2xl space-y-6">
-        {/* Profile Section */}
+        {/* Profile & Social Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>Your personal information</CardDescription>
+            <CardTitle>Profile & Social</CardTitle>
+            <CardDescription>Manage your identity and social presence</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center gap-4">
-              <div className="relative group">
-                <Avatar className="w-20 h-20 cursor-pointer" onClick={handleAvatarClick}>
-                  <AvatarImage src={profile?.avatarUrl || undefined} />
-                  <AvatarFallback className="bg-primary/20 text-primary text-xl">
-                    {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : getInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <div 
-                  className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  onClick={handleAvatarClick}
-                >
-                  <Camera className="w-6 h-6 text-white" />
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </div>
-              <div className="flex-1">
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your name"
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label>Email</Label>
-              <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Privacy Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Privacy</CardTitle>
-            <CardDescription>Control who can see your profile and activity</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="isPublic">Profile Discoverability</Label>
-                <p className="text-sm text-muted-foreground">
-                  Allow others to find you by username
-                </p>
-              </div>
-              <Switch
-                id="isPublic"
-                checked={isPublic}
-                onCheckedChange={setIsPublic}
-              />
-            </div>
-
-            <div>
-              <Label>Activity Visibility</Label>
-              <p className="text-sm text-muted-foreground mb-3">
-                Who can see your drink activity in their feed
-              </p>
-              <div className="flex flex-col gap-2">
-                {[
-                  { value: 'private', icon: Lock, label: 'Private', description: 'Only you' },
-                  { value: 'followers', icon: Users, label: 'Followers', description: 'People who follow you' },
-                  { value: 'public', icon: Globe, label: 'Public', description: 'Everyone' },
-                ].map(({ value, icon: Icon, label, description }) => (
-                  <Button
-                    key={value}
-                    variant={activityVisibility === value ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setActivityVisibility(value as ActivityVisibility)}
-                    className="justify-start h-auto py-3 px-4"
+          <CardContent className="space-y-8">
+            {/* Identity subsection */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Identity</h3>
+              
+              <div className="flex items-center gap-4">
+                <div className="relative group">
+                  <Avatar className="w-20 h-20 cursor-pointer" onClick={handleAvatarClick}>
+                    <AvatarImage src={profile?.avatarUrl || undefined} />
+                    <AvatarFallback className="bg-primary/20 text-primary text-xl">
+                      {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div 
+                    className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    onClick={handleAvatarClick}
                   >
-                    <Icon className="w-4 h-4 mr-3" />
-                    <div className="text-left">
-                      <div className="font-medium">{label}</div>
-                      <div className="text-xs opacity-70">{description}</div>
-                    </div>
+                    <Camera className="w-6 h-6 text-white" />
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label htmlFor="displayName">Display Name</Label>
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Enter your name"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Email</Label>
+                <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
+              </div>
+
+              {profile?.username && (
+                <div>
+                  <Label>Username</Label>
+                  <p className="text-sm text-muted-foreground mt-1">@{profile.username}</p>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="px-0 h-auto text-primary"
+                    onClick={() => navigate(`/u/${profile.username}`)}
+                  >
+                    View public profile →
                   </Button>
-                ))}
+                </div>
+              )}
+            </div>
+
+            {/* Privacy & Visibility subsection */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Privacy & Visibility</h3>
+              
+              <div className="flex items-center justify-between py-2">
+                <div className="space-y-0.5">
+                  <Label htmlFor="isPublic">Profile Discoverability</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Allow others to find you by username
+                  </p>
+                </div>
+                <Switch
+                  id="isPublic"
+                  checked={isPublic}
+                  onCheckedChange={setIsPublic}
+                />
+              </div>
+
+              <div>
+                <Label>Activity Visibility</Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Who can see your drink activity in their feed
+                </p>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { value: 'private', icon: Lock, label: 'Private', description: 'Only you' },
+                    { value: 'followers', icon: Users, label: 'Followers', description: 'People who follow you' },
+                    { value: 'public', icon: Globe, label: 'Public', description: 'Everyone' },
+                  ].map(({ value, icon: Icon, label, description }) => (
+                    <Button
+                      key={value}
+                      variant={activityVisibility === value ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActivityVisibility(value as ActivityVisibility)}
+                      className="justify-start h-auto py-3 px-4"
+                    >
+                      <Icon className="w-4 h-4 mr-3" />
+                      <div className="text-left">
+                        <div className="font-medium">{label}</div>
+                        <div className="text-xs opacity-70">{description}</div>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
               </div>
             </div>
           </CardContent>
