@@ -114,6 +114,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "collection_drinks_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "collection_drinks_drink_id_fkey"
             columns: ["drink_id"]
             isOneToOne: false
@@ -304,7 +311,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      collections_public: {
+        Row: {
+          cover_color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string | null
+          is_public: boolean | null
+          name: string | null
+          share_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cover_color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          name?: string | null
+          share_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cover_color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          name?: string | null
+          share_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

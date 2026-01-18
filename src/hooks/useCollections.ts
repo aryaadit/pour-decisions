@@ -228,11 +228,11 @@ export function useCollections() {
   };
 
   const getPublicCollection = async (shareId: string): Promise<{ collection: Collection; drinks: Drink[] } | null> => {
+    // Use the collections_public view to prevent user_id exposure
     const { data: collectionData, error: collectionError } = await supabase
-      .from('collections')
+      .from('collections_public')
       .select('*')
       .eq('share_id', shareId)
-      .eq('is_public', true)
       .single();
 
     if (collectionError || !collectionData) {
