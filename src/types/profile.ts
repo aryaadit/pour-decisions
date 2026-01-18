@@ -1,4 +1,5 @@
 import { DrinkType } from './drink';
+import { ActivityVisibility } from './social';
 
 export type SortOrder = 'date_desc' | 'date_asc' | 'rating_desc' | 'rating_asc' | 'name_asc' | 'name_desc';
 export type ThemePreference = 'light' | 'dark' | 'system';
@@ -11,6 +12,10 @@ export interface Profile {
   defaultDrinkType: DrinkType | null;
   defaultSortOrder: SortOrder;
   themePreference: ThemePreference;
+  username: string | null;
+  bio: string | null;
+  isPublic: boolean;
+  activityVisibility: ActivityVisibility;
   createdAt: Date;
   updatedAt: Date;
 }
