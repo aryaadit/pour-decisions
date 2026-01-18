@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_feed: {
+        Row: {
+          activity_type: string
+          created_at: string
+          drink_id: string | null
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          drink_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          drink_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_feed_drink_id_fkey"
+            columns: ["drink_id"]
+            isOneToOne: false
+            referencedRelation: "drinks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           created_at: string | null
@@ -249,42 +284,78 @@ export type Database = {
         }
         Relationships: []
       }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          activity_visibility: string | null
           analytics_enabled: boolean | null
           avatar_url: string | null
+          bio: string | null
           created_at: string
           default_drink_type: string | null
           default_sort_order: string | null
           display_name: string | null
           id: string
+          is_public: boolean | null
           theme_preference: string | null
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
+          activity_visibility?: string | null
           analytics_enabled?: boolean | null
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           default_drink_type?: string | null
           default_sort_order?: string | null
           display_name?: string | null
           id?: string
+          is_public?: boolean | null
           theme_preference?: string | null
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
+          activity_visibility?: string | null
           analytics_enabled?: boolean | null
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           default_drink_type?: string | null
           default_sort_order?: string | null
           display_name?: string | null
           id?: string
+          is_public?: boolean | null
           theme_preference?: string | null
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -347,13 +418,51 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles_public: {
+        Row: {
+          activity_visibility: string | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          display_name: string | null
+          is_public: boolean | null
+          user_id: string | null
+          username: string | null
+        }
+        Insert: {
+          activity_visibility?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          is_public?: boolean | null
+          user_id?: string | null
+          username?: string | null
+        }
+        Update: {
+          activity_visibility?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          is_public?: boolean | null
+          user_id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_activity_visibility: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_following: {
+        Args: { _follower_id: string; _following_id: string }
         Returns: boolean
       }
     }

@@ -1,4 +1,4 @@
-import { Home, Plus, User, FolderOpen } from "lucide-react";
+import { Home, Plus, User, FolderOpen, Activity } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useHaptics } from "@/hooks/useHaptics";
@@ -15,8 +15,9 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
 
   const tabs = [
     { id: "home", icon: Home, label: "Home", path: "/" },
-    { id: "collections", icon: FolderOpen, label: "Collections", path: "/collections" },
+    { id: "feed", icon: Activity, label: "Feed", path: "/feed" },
     { id: "add", icon: Plus, label: "Add", path: "/add-drink" },
+    { id: "collections", icon: FolderOpen, label: "Lists", path: "/collections" },
     { id: "profile", icon: User, label: "Profile", path: "/settings" },
   ];
 
