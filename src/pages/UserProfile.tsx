@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock, Globe, Users } from 'lucide-react';
+import { ArrowLeft, Lock, Globe, Users, Share2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -93,6 +94,37 @@ export default function UserProfile() {
     return false;
   };
 
+  const handleShare = async () => {
+    const profileUrl = `${window.location.origin}/u/${profile?.username}`;
+    const shareData = {
+      title: `${profile?.displayName || profile?.username}'s Profile`,
+      text: `Check out ${profile?.displayName || profile?.username} on Barkeeply`,
+      url: profileUrl,
+    };
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        // User cancelled or share failed, fall back to clipboard
+        if ((error as Error).name !== 'AbortError') {
+          copyToClipboard(profileUrl);
+        }
+      }
+    } else {
+      copyToClipboard(profileUrl);
+    }
+  };
+
+  const copyToClipboard = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Profile link copied to clipboard');
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  };
+
   if (profileLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -132,7 +164,10 @@ export default function UserProfile() {
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold">@{profile.username}</h1>
+          <h1 className="text-lg font-semibold flex-1">@{profile.username}</h1>
+          <Button variant="ghost" size="icon" onClick={handleShare}>
+            <Share2 className="h-5 w-5" />
+          </Button>
         </div>
       </header>
 
