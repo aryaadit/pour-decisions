@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ActivityFeedItem, PublicProfile } from '@/types/social';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export function useActivityFeed(limit = 20) {
   const { user } = useAuth();
@@ -102,6 +103,61 @@ export function useActivityFeed(limit = 20) {
   useEffect(() => {
     fetchFeed();
   }, [fetchFeed]);
+
+  // Real-time subscription for new activities
+  useEffect(() => {
+    if (!user) return;
+
+    const channel: RealtimeChannel = supabase
+      .channel('activity_feed_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'activity_feed',
+        },
+        async (payload) => {
+          const newActivity = payload.new as any;
+          
+          // Fetch the profile for this user
+          const { data: profile } = await supabase
+            .from('profiles_public')
+            .select('*')
+            .eq('user_id', newActivity.user_id)
+            .single();
+
+          const userProfile: PublicProfile | undefined = profile ? {
+            userId: profile.user_id,
+            username: profile.username,
+            displayName: profile.display_name,
+            avatarUrl: profile.avatar_url,
+            bio: profile.bio,
+            isPublic: profile.is_public || false,
+            activityVisibility: (profile.activity_visibility as 'private' | 'followers' | 'public') || 'private',
+            createdAt: new Date(profile.created_at || Date.now()),
+          } : undefined;
+
+          const mappedActivity: ActivityFeedItem = {
+            id: newActivity.id,
+            userId: newActivity.user_id,
+            activityType: newActivity.activity_type as 'drink_added' | 'drink_rated' | 'wishlist_added',
+            drinkId: newActivity.drink_id,
+            metadata: newActivity.metadata as ActivityFeedItem['metadata'],
+            createdAt: new Date(newActivity.created_at),
+            user: userProfile,
+          };
+
+          // Add to the beginning of the list
+          setActivities(prev => [mappedActivity, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   return {
     activities,
