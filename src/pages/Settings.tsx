@@ -21,7 +21,9 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Camera, Loader2, Sun, Moon, Monitor } from 'lucide-react';
+import { ArrowLeft, Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { ActivityVisibility } from '@/types/social';
 import BottomNavigation from '@/components/BottomNavigation';
 
 const Settings = () => {
@@ -38,6 +40,8 @@ const Settings = () => {
   const [defaultDrinkType, setDefaultDrinkType] = useState<DrinkType | 'all'>('all');
   const [defaultSortOrder, setDefaultSortOrder] = useState<SortOrder>('date_desc');
   const [themePreference, setThemePreference] = useState<ThemePreference>(theme);
+  const [isPublic, setIsPublic] = useState(false);
+  const [activityVisibility, setActivityVisibility] = useState<ActivityVisibility>('private');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -53,6 +57,8 @@ const Settings = () => {
       setDefaultDrinkType(profile.defaultDrinkType || 'all');
       setDefaultSortOrder(profile.defaultSortOrder);
       setThemePreference(profile.themePreference);
+      setIsPublic(profile.isPublic || false);
+      setActivityVisibility(profile.activityVisibility || 'private');
     }
   }, [profile]);
 
@@ -71,6 +77,8 @@ const Settings = () => {
       defaultDrinkType: defaultDrinkType === 'all' ? null : defaultDrinkType,
       defaultSortOrder,
       themePreference,
+      isPublic,
+      activityVisibility,
     });
     setIsSaving(false);
 
@@ -80,6 +88,7 @@ const Settings = () => {
       trackEvent('settings_saved', 'action', {
         theme_changed: themePreference !== profile?.themePreference,
         default_filter_changed: defaultDrinkType !== (profile?.defaultDrinkType || 'all'),
+        privacy_changed: isPublic !== profile?.isPublic || activityVisibility !== profile?.activityVisibility,
       });
       toast.success('Settings saved', { description: 'Your preferences have been updated.' });
     }
@@ -184,6 +193,57 @@ const Settings = () => {
             <div>
               <Label>Email</Label>
               <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Privacy Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Privacy</CardTitle>
+            <CardDescription>Control who can see your profile and activity</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="isPublic">Profile Discoverability</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow others to find you by username
+                </p>
+              </div>
+              <Switch
+                id="isPublic"
+                checked={isPublic}
+                onCheckedChange={setIsPublic}
+              />
+            </div>
+
+            <div>
+              <Label>Activity Visibility</Label>
+              <p className="text-sm text-muted-foreground mb-3">
+                Who can see your drink activity in their feed
+              </p>
+              <div className="flex flex-col gap-2">
+                {[
+                  { value: 'private', icon: Lock, label: 'Private', description: 'Only you' },
+                  { value: 'followers', icon: Users, label: 'Followers', description: 'People who follow you' },
+                  { value: 'public', icon: Globe, label: 'Public', description: 'Everyone' },
+                ].map(({ value, icon: Icon, label, description }) => (
+                  <Button
+                    key={value}
+                    variant={activityVisibility === value ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActivityVisibility(value as ActivityVisibility)}
+                    className="justify-start h-auto py-3 px-4"
+                  >
+                    <Icon className="w-4 h-4 mr-3" />
+                    <div className="text-left">
+                      <div className="font-medium">{label}</div>
+                      <div className="text-xs opacity-70">{description}</div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>

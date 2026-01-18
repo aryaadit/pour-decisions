@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { Profile, SortOrder, ThemePreference } from '@/types/profile';
 import { DrinkType } from '@/types/drink';
+import { ActivityVisibility } from '@/types/social';
 
 export function useProfile() {
   const { user } = useAuth();
@@ -34,6 +35,10 @@ export function useProfile() {
           defaultDrinkType: data.default_drink_type as DrinkType | null,
           defaultSortOrder: (data.default_sort_order as SortOrder) || 'date_desc',
           themePreference: (data.theme_preference as ThemePreference) || 'system',
+          username: data.username,
+          bio: data.bio,
+          isPublic: data.is_public || false,
+          activityVisibility: (data.activity_visibility as ActivityVisibility) || 'private',
           createdAt: new Date(data.created_at),
           updatedAt: new Date(data.updated_at),
         });
@@ -55,6 +60,10 @@ export function useProfile() {
     defaultDrinkType: DrinkType | null;
     defaultSortOrder: SortOrder;
     themePreference: ThemePreference;
+    username: string | null;
+    bio: string | null;
+    isPublic: boolean;
+    activityVisibility: ActivityVisibility;
   }>) => {
     if (!user) return { error: new Error('Not authenticated') };
 
@@ -64,6 +73,10 @@ export function useProfile() {
     if ('defaultDrinkType' in updates) dbUpdates.default_drink_type = updates.defaultDrinkType;
     if ('defaultSortOrder' in updates) dbUpdates.default_sort_order = updates.defaultSortOrder;
     if ('themePreference' in updates) dbUpdates.theme_preference = updates.themePreference;
+    if ('username' in updates) dbUpdates.username = updates.username;
+    if ('bio' in updates) dbUpdates.bio = updates.bio;
+    if ('isPublic' in updates) dbUpdates.is_public = updates.isPublic;
+    if ('activityVisibility' in updates) dbUpdates.activity_visibility = updates.activityVisibility;
 
     const { error } = await supabase
       .from('profiles')
