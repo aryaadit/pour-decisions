@@ -13,6 +13,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import BottomNavigation from '@/components/BottomNavigation';
 import { FollowButton } from '@/components/FollowButton';
 import { ActivityCard } from '@/components/ActivityCard';
+import { FollowListModal } from '@/components/FollowListModal';
 import { PublicProfile, ActivityFeedItem } from '@/types/social';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,8 +27,18 @@ export default function UserProfile() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [activities, setActivities] = useState<ActivityFeedItem[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [followListType, setFollowListType] = useState<'Followers' | 'Following' | null>(null);
+  const [followListLoading, setFollowListLoading] = useState(false);
 
-  const { followCounts, isFollowing, isLoading: followsLoading } = useFollows(profile?.userId);
+  const { 
+    followCounts, 
+    isFollowing, 
+    isLoading: followsLoading,
+    followers,
+    following,
+    fetchFollowers,
+    fetchFollowing,
+  } = useFollows(profile?.userId);
 
   const isOwnProfile = user?.id === profile?.userId;
 
@@ -201,11 +212,27 @@ export default function UserProfile() {
 
             {/* Stats */}
             <div className="flex gap-4 mt-3">
-              <button className="text-sm hover:underline">
+              <button 
+                className="text-sm hover:underline"
+                onClick={async () => {
+                  setFollowListType('Followers');
+                  setFollowListLoading(true);
+                  await fetchFollowers(profile.userId);
+                  setFollowListLoading(false);
+                }}
+              >
                 <span className="font-semibold">{followCounts.followers}</span>{' '}
                 <span className="text-muted-foreground">followers</span>
               </button>
-              <button className="text-sm hover:underline">
+              <button 
+                className="text-sm hover:underline"
+                onClick={async () => {
+                  setFollowListType('Following');
+                  setFollowListLoading(true);
+                  await fetchFollowing(profile.userId);
+                  setFollowListLoading(false);
+                }}
+              >
                 <span className="font-semibold">{followCounts.following}</span>{' '}
                 <span className="text-muted-foreground">following</span>
               </button>
@@ -270,6 +297,15 @@ export default function UserProfile() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Follow List Modal */}
+      <FollowListModal
+        open={followListType !== null}
+        onOpenChange={(open) => !open && setFollowListType(null)}
+        title={followListType || 'Followers'}
+        users={followListType === 'Followers' ? followers : following}
+        isLoading={followListLoading}
+      />
 
       {/* Bottom Navigation */}
       {isMobile && <BottomNavigation />}
