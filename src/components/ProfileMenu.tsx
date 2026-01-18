@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, MessageSquare, Shield } from 'lucide-react';
+import { LogOut, Settings, MessageSquare, Shield, Activity, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -26,10 +26,11 @@ interface ProfileMenuProps {
   avatarUrl?: string | null;
   displayName?: string | null;
   email?: string;
+  username?: string | null;
   onSignOut: () => void;
 }
 
-export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: ProfileMenuProps) {
+export function ProfileMenu({ avatarUrl, displayName, email, username, onSignOut }: ProfileMenuProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { impact, ImpactStyle } = useHaptics();
@@ -57,6 +58,20 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
     impact(ImpactStyle.Light);
     setDrawerOpen(false);
     navigate('/settings');
+  };
+
+  const handleFeed = () => {
+    impact(ImpactStyle.Light);
+    setDrawerOpen(false);
+    navigate('/feed');
+  };
+
+  const handleMyProfile = () => {
+    impact(ImpactStyle.Light);
+    setDrawerOpen(false);
+    if (username) {
+      navigate(`/u/${username}`);
+    }
   };
 
   const handleSignOut = () => {
@@ -110,6 +125,24 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
             {MenuContent}
           </DrawerHeader>
           <div className="px-4 pb-8 space-y-3">
+            {username && (
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-3 h-14 text-base"
+                onClick={handleMyProfile}
+              >
+                <User className="w-5 h-5" />
+                My Profile
+              </Button>
+            )}
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-3 h-14 text-base"
+              onClick={handleFeed}
+            >
+              <Activity className="w-5 h-5" />
+              Activity Feed
+            </Button>
             <Button 
               variant="outline" 
               className="w-full justify-start gap-3 h-14 text-base"
@@ -173,6 +206,16 @@ export function ProfileMenu({ avatarUrl, displayName, email, onSignOut }: Profil
           )}
         </div>
         <DropdownMenuSeparator />
+        {username && (
+          <DropdownMenuItem onClick={() => navigate(`/u/${username}`)}>
+            <User className="w-4 h-4 mr-2" />
+            My Profile
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={() => navigate('/feed')}>
+          <Activity className="w-4 h-4 mr-2" />
+          Activity Feed
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/settings')}>
           <Settings className="w-4 h-4 mr-2" />
           Settings

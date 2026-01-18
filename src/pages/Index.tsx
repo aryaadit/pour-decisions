@@ -22,7 +22,7 @@ import { TestFlightBanner } from '@/components/TestFlightBanner';
 import BottomNavigation from '@/components/BottomNavigation';
 
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Helper to convert hex to HSL for CSS variables
@@ -315,8 +315,14 @@ const Index = () => {
                 <span>Add Drink</span>
               </Button>
 
+              {/* Desktop feed button */}
+              <Button variant="ghost" onClick={() => navigate('/feed')} className="hidden sm:inline-flex">
+                <Activity className="w-4 h-4" />
+                <span>Feed</span>
+              </Button>
+
               {/* Desktop collections button */}
-              <Button variant="outline" onClick={() => navigate('/collections')} className="hidden sm:inline-flex">
+              <Button variant="ghost" onClick={() => navigate('/collections')} className="hidden sm:inline-flex">
                 <span>Collections</span>
               </Button>
 
@@ -324,6 +330,7 @@ const Index = () => {
                 avatarUrl={profile?.avatarUrl}
                 displayName={profile?.displayName}
                 email={user.email}
+                username={profile?.username}
                 onSignOut={handleSignOut}
               />
             </div>
