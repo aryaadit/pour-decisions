@@ -57,24 +57,35 @@ export function useSocialProfile() {
     };
   }, []);
 
-  const searchUsers = useCallback(async (query: string, limit = 10): Promise<PublicProfile[]> => {
+  const searchUsers = useCallback(async (query: string, limit = 10, currentUserId?: string): Promise<PublicProfile[]> => {
     if (!query || query.length < 2) return [];
 
     setIsLoading(true);
 
+    // Build the filter to search username OR display_name, AND require is_public = true
+    const searchFilter = `username.ilike.%${query}%,display_name.ilike.%${query}%`;
+    
     const { data, error } = await supabase
       .from('profiles_public')
       .select('*')
       .eq('is_public', true)
-      .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+      .or(searchFilter)
       .limit(limit);
 
     setIsLoading(false);
 
-    if (error || !data) return [];
+    if (error) {
+      console.error('Search error:', error);
+      return [];
+    }
+    
+    if (!data) return [];
+
+    // Use passed currentUserId or fall back to user?.id for filtering
+    const excludeId = currentUserId || user?.id;
 
     return data
-      .filter(p => p.user_id !== user?.id) // Exclude current user
+      .filter(p => p.user_id !== excludeId) // Exclude current user
       .map(p => ({
         userId: p.user_id,
         username: p.username,
