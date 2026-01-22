@@ -3,6 +3,7 @@ import { Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSocialProfile } from '@/hooks/useSocialProfile';
+import { useAuth } from '@/hooks/useAuth';
 import { PublicProfile } from '@/types/social';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -20,6 +21,7 @@ export function UserSearch({
   className 
 }: UserSearchProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { searchUsers, isLoading } = useSocialProfile();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PublicProfile[]>([]);
@@ -30,7 +32,8 @@ export function UserSearch({
   useEffect(() => {
     const search = async () => {
       if (debouncedQuery.length >= 2) {
-        const profiles = await searchUsers(debouncedQuery);
+        // Pass current user ID to ensure proper filtering
+        const profiles = await searchUsers(debouncedQuery, 10, user?.id);
         setResults(profiles);
         setIsOpen(true);
       } else {
@@ -40,7 +43,7 @@ export function UserSearch({
     };
 
     search();
-  }, [debouncedQuery, searchUsers]);
+  }, [debouncedQuery, searchUsers, user?.id]);
 
   const handleSelect = (profile: PublicProfile) => {
     if (onSelect) {
