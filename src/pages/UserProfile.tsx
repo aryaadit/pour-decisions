@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock, Globe, Users, Share2 } from 'lucide-react';
+import { Lock, Globe, Users, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,6 +11,7 @@ import { useFollows } from '@/hooks/useFollows';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import BottomNavigation from '@/components/BottomNavigation';
+import { PageHeader } from '@/components/PageHeader';
 import { FollowButton } from '@/components/FollowButton';
 import { ActivityCard } from '@/components/ActivityCard';
 import { FollowListModal } from '@/components/FollowListModal';
@@ -170,17 +171,15 @@ export default function UserProfile() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b pt-[env(safe-area-inset-top)]">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-lg font-semibold flex-1">@{profile.username}</h1>
+      <PageHeader
+        title={`@${profile.username}`}
+        showBack={true}
+        rightContent={
           <Button variant="ghost" size="icon" onClick={handleShare}>
             <Share2 className="h-5 w-5" />
           </Button>
-        </div>
-      </header>
+        }
+      />
 
       {/* Profile Info */}
       <div className="max-w-2xl mx-auto px-4 py-6">

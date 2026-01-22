@@ -6,8 +6,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { CollectionCard } from '@/components/CollectionCard';
 import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
 import BottomNavigation from '@/components/BottomNavigation';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, FolderPlus, Loader2 } from 'lucide-react';
+import { Plus, FolderPlus, Loader2, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Collections = () => {
@@ -42,27 +43,18 @@ const Collections = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 glass border-b border-border/50 pt-[env(safe-area-inset-top)]">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex-1">
-              <h1 className="font-display text-xl font-bold text-foreground">
-                Collections
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Organize your drinks
-              </p>
-            </div>
-            <Button onClick={() => setCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              New
-            </Button>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        title="Collections"
+        subtitle="Organize your drinks"
+        icon={<FolderOpen className="h-5 w-5" />}
+        showBack={true}
+        rightContent={
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New
+          </Button>
+        }
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
