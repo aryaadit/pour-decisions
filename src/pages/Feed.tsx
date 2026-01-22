@@ -6,6 +6,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
 import { useIsMobile } from '@/hooks/use-mobile';
 import BottomNavigation from '@/components/BottomNavigation';
+import { PageHeader } from '@/components/PageHeader';
 import { ActivityCard } from '@/components/ActivityCard';
 import { UserSearch } from '@/components/UserSearch';
 import { UsernameSetup } from '@/components/UsernameSetup';
@@ -58,17 +59,16 @@ export default function Feed() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b pt-[env(safe-area-inset-top)]">
-        <div className="max-w-2xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Feed
-            </h1>
-          </div>
-          <UserSearch placeholder="Find people to follow..." />
-        </div>
-      </header>
+      <PageHeader
+        title="Feed"
+        icon={<Activity className="h-5 w-5" />}
+        showBack={true}
+      />
+
+      {/* Search Section */}
+      <div className="max-w-2xl mx-auto px-4 py-3 border-b border-border/50">
+        <UserSearch placeholder="Find people to follow..." />
+      </div>
 
       {/* Content */}
       <main className="max-w-2xl mx-auto px-4 py-4">

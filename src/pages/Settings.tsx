@@ -20,9 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PageHeader } from '@/components/PageHeader';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X } from 'lucide-react';
+import { Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X, Settings as SettingsIcon } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { ActivityVisibility } from '@/types/social';
 import BottomNavigation from '@/components/BottomNavigation';
@@ -195,16 +196,11 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 glass border-b border-border/50 pt-[env(safe-area-inset-top)]">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <h1 className="font-display text-xl font-bold">Settings</h1>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        title="Settings"
+        icon={<SettingsIcon className="h-5 w-5" />}
+        showBack={true}
+      />
 
       <main className="container mx-auto px-4 py-6 max-w-2xl space-y-6">
         {/* Profile & Social Section */}
