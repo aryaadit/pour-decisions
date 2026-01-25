@@ -22,7 +22,7 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
     { id: "home", icon: Home, label: "Home", path: "/" },
     { id: "feed", icon: Activity, label: "Feed", path: "/feed" },
     { id: "add", icon: Plus, label: "Add", path: "/add-drink" },
-    { id: "collections", icon: FolderOpen, label: "Lists", path: "/collections" },
+    { id: "collections", icon: FolderOpen, label: "Collections", path: "/collections" },
     { id: "profile", icon: User, label: "Profile", path: profilePath },
   ];
 
