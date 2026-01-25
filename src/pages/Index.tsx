@@ -7,6 +7,7 @@ import { useThemeContext } from '@/hooks/ThemeProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppInfo } from '@/hooks/useAppInfo';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { DrinkType, Drink, isBuiltInDrinkType } from '@/types/drink';
 import { SortOrder } from '@/types/profile';
 import { DrinkListItem } from '@/components/DrinkListItem';
@@ -19,10 +20,11 @@ import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { ProfileMenu } from '@/components/ProfileMenu';
 import { TestFlightBanner } from '@/components/TestFlightBanner';
+import { OnboardingTipCard } from '@/components/OnboardingTipCard';
 import BottomNavigation from '@/components/BottomNavigation';
 
 import { Button } from '@/components/ui/button';
-import { Plus, Activity } from 'lucide-react';
+import { Plus, Activity, Wine, FolderOpen, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Helper to convert hex to HSL for CSS variables
@@ -57,6 +59,7 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const appInfo = useAppInfo();
+  const { isStepVisible, dismissStep } = useOnboarding();
   const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther } = useDrinks();
   const { customTypes } = useCustomDrinkTypes();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
@@ -342,6 +345,52 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
+        {/* Onboarding Tips */}
+        <div className="max-w-2xl mx-auto space-y-3 mb-4">
+          {isStepVisible('welcome') && (
+            <OnboardingTipCard
+              title="Welcome to Pour Decisions!"
+              description="Your personal drink journal. Start by adding your first drink to build your library."
+              icon={<Wine className="w-5 h-5" />}
+              actionLabel="Add your first drink"
+              onAction={handleAddClick}
+              onDismiss={() => dismissStep('welcome')}
+              variant="highlight"
+            />
+          )}
+          
+          {isStepVisible('add_drink') && drinks.length > 0 && (
+            <OnboardingTipCard
+              title="Great start!"
+              description="Keep logging drinks to track your favorites. Tap any drink to see details, rate it, or add notes."
+              icon={<Wine className="w-5 h-5" />}
+              onDismiss={() => dismissStep('add_drink')}
+            />
+          )}
+          
+          {isStepVisible('collections') && drinks.length >= 2 && (
+            <OnboardingTipCard
+              title="Organize with Collections"
+              description="Create curated groups like 'Summer Favorites' or 'Gift Ideas' to organize drinks from your library."
+              icon={<FolderOpen className="w-5 h-5" />}
+              actionLabel="View Collections"
+              onAction={() => navigate('/collections')}
+              onDismiss={() => dismissStep('collections')}
+            />
+          )}
+          
+          {isStepVisible('social') && drinks.length >= 3 && (
+            <OnboardingTipCard
+              title="Connect with friends"
+              description="Follow other users to see their drink discoveries in your feed. Share your profile to let friends find you."
+              icon={<Users className="w-5 h-5" />}
+              actionLabel="Explore the feed"
+              onAction={() => navigate('/feed')}
+              onDismiss={() => dismissStep('social')}
+            />
+          )}
+        </div>
+
         {/* Unified Action Bar */}
         <div className="flex flex-col gap-3 mb-4">
           {/* Search + Filter Trigger Row */}

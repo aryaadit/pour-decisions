@@ -7,6 +7,7 @@ import { useThemeContext } from '@/hooks/ThemeProvider';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
 import { DrinkType, builtInDrinkTypes, drinkTypeLabels } from '@/types/drink';
 import { SortOrder, sortOrderLabels, ThemePreference } from '@/types/profile';
@@ -23,7 +24,7 @@ import {
 import { PageHeader } from '@/components/PageHeader';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X, Settings as SettingsIcon } from 'lucide-react';
+import { Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X, Settings as SettingsIcon, HelpCircle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { ActivityVisibility } from '@/types/social';
 import BottomNavigation from '@/components/BottomNavigation';
@@ -35,6 +36,7 @@ const Settings = () => {
   const { theme, setTheme } = useThemeContext();
   const { customTypes } = useCustomDrinkTypes();
   const { trackEvent } = useAnalytics();
+  const { showTour, state: onboardingState } = useOnboarding();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -407,6 +409,28 @@ const Settings = () => {
                 </SelectContent>
               </Select>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Help Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Help & Support</CardTitle>
+            <CardDescription>Learn how to use the app</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                showTour();
+                navigate('/');
+                toast.success('Tour started!', { description: 'Follow the tips to learn the app.' });
+              }}
+              className="w-full"
+            >
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Take a tour
+            </Button>
           </CardContent>
         </Card>
 

@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/ThemeProvider";
 import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
+import { OnboardingProvider } from "@/hooks/useOnboarding";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -25,26 +26,29 @@ const App = () => (
     <TooltipProvider>
       <ThemeProvider>
         <AuthProvider>
-          <Toaster />
-          <BrowserRouter>
-            <AnalyticsProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/add-drink" element={<AddDrink />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/collections" element={<Collections />} />
-                <Route path="/collections/:id" element={<CollectionDetail />} />
-                <Route path="/share/:shareId" element={<SharedCollection />} />
-                <Route path="/feed" element={<Feed />} />
-                <Route path="/u/:username" element={<UserProfile />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AnalyticsProvider>
-          </BrowserRouter>
+          <OnboardingProvider>
+            <Toaster />
+            <BrowserRouter>
+              <AnalyticsProvider>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/add-drink" element={<AddDrink />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/collections" element={<Collections />} />
+                  <Route path="/collections/:id" element={<CollectionDetail />} />
+                  <Route path="/share/:shareId" element={<SharedCollection />} />
+                  <Route path="/c/:shareId" element={<SharedCollection />} />
+                  <Route path="/feed" element={<Feed />} />
+                  <Route path="/u/:username" element={<UserProfile />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AnalyticsProvider>
+            </BrowserRouter>
+          </OnboardingProvider>
         </AuthProvider>
       </ThemeProvider>
     </TooltipProvider>
