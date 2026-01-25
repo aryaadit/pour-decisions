@@ -41,6 +41,7 @@ export function useCollections() {
           coverColor: c.cover_color,
           shareId: c.share_id,
           isPublic: c.is_public,
+          isSystem: c.is_system || false,
           createdAt: new Date(c.created_at),
           updatedAt: new Date(c.updated_at),
           drinkCount: c.collection_drinks?.[0]?.count || 0,
@@ -88,6 +89,7 @@ export function useCollections() {
       coverColor: data.cover_color,
       shareId: data.share_id,
       isPublic: data.is_public,
+      isSystem: data.is_system || false,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
       drinkCount: 0,
@@ -263,6 +265,7 @@ export function useCollections() {
       coverColor: collectionData.cover_color,
       shareId: collectionData.share_id,
       isPublic: collectionData.is_public,
+      isSystem: false, // Public view doesn't expose is_system
       createdAt: new Date(collectionData.created_at),
       updatedAt: new Date(collectionData.updated_at),
       drinkCount: drinksData?.length || 0,

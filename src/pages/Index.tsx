@@ -62,7 +62,7 @@ const Index = () => {
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('date_desc');
-  const [showWishlist, setShowWishlist] = useState(false);
+  
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDrink, setEditingDrink] = useState<Drink | null>(null);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
@@ -132,12 +132,7 @@ const Index = () => {
   }, [profile?.defaultDrinkType, profile?.defaultSortOrder]);
 
   const filteredDrinks = useMemo(() => {
-    let filtered = filterDrinks(selectedType ?? undefined, searchQuery);
-    
-    // Filter by wishlist if enabled
-    if (showWishlist) {
-      filtered = filtered.filter(d => d.isWishlist);
-    }
+    const filtered = filterDrinks(selectedType ?? undefined, searchQuery);
     
     return [...filtered].sort((a, b) => {
       switch (sortOrder) {
@@ -157,12 +152,11 @@ const Index = () => {
           return 0;
       }
     });
-  }, [filterDrinks, selectedType, searchQuery, sortOrder, showWishlist]);
+  }, [filterDrinks, selectedType, searchQuery, sortOrder]);
 
   const drinkCountByType = useMemo(() => getDrinkCountByType(), [drinks]);
-  const wishlistCount = useMemo(() => drinks.filter(d => d.isWishlist).length, [drinks]);
   const totalDrinks = drinks.length;
-  const hasFilters = !!selectedType || !!searchQuery || showWishlist;
+  const hasFilters = !!selectedType || !!searchQuery;
 
 
   const handleSave = async (drinkData: Omit<Drink, 'id' | 'dateAdded'>) => {
@@ -203,7 +197,6 @@ const Index = () => {
   const handleClearFilters = () => {
     setSelectedType(null);
     setSearchQuery('');
-    setShowWishlist(false);
   };
 
   const handleWishlistToggle = async (drinkId: string, isWishlist: boolean) => {
@@ -366,9 +359,6 @@ const Index = () => {
             onSelectType={setSelectedType}
             drinkCountByType={drinkCountByType}
             totalDrinks={totalDrinks}
-            wishlistCount={wishlistCount}
-            showWishlist={showWishlist}
-            onToggleWishlist={() => setShowWishlist(!showWishlist)}
           />
         </div>
 

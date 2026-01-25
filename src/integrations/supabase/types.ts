@@ -172,6 +172,7 @@ export type Database = {
           icon: string | null
           id: string
           is_public: boolean | null
+          is_system: boolean | null
           name: string
           share_id: string | null
           updated_at: string
@@ -184,6 +185,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_public?: boolean | null
+          is_system?: boolean | null
           name: string
           share_id?: string | null
           updated_at?: string
@@ -196,6 +198,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_public?: boolean | null
+          is_system?: boolean | null
           name?: string
           share_id?: string | null
           updated_at?: string
@@ -454,6 +457,10 @@ export type Database = {
     }
     Functions: {
       get_activity_visibility: { Args: { _user_id: string }; Returns: string }
+      get_or_create_wishlist_collection: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

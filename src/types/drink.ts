@@ -25,6 +25,7 @@ export interface Collection {
   coverColor: string;
   shareId: string;
   isPublic: boolean;
+  isSystem?: boolean;
   createdAt: Date;
   updatedAt: Date;
   drinkCount?: number;

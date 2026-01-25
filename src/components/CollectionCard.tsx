@@ -1,6 +1,6 @@
 import { Collection } from '@/types/drink';
 import { cn } from '@/lib/utils';
-import { Globe, Lock } from 'lucide-react';
+import { Globe, Lock, Star } from 'lucide-react';
 
 interface CollectionCardProps {
   collection: Collection;
@@ -43,6 +43,9 @@ export function CollectionCard({ collection, onClick }: CollectionCardProps) {
             <h3 className="font-display text-base font-semibold text-foreground truncate">
               {collection.name}
             </h3>
+            {collection.isSystem && (
+              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500/50 flex-shrink-0" />
+            )}
             {collection.isPublic ? (
               <Globe className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
             ) : (
