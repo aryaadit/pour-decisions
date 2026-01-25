@@ -15,7 +15,9 @@ import { PageHeader } from '@/components/PageHeader';
 import { FollowButton } from '@/components/FollowButton';
 import { ActivityCard } from '@/components/ActivityCard';
 import { FollowListModal } from '@/components/FollowListModal';
+import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { PublicProfile, ActivityFeedItem } from '@/types/social';
+import { Drink } from '@/types/drink';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function UserProfile() {
@@ -30,6 +32,7 @@ export default function UserProfile() {
   const [activitiesLoading, setActivitiesLoading] = useState(false);
   const [followListType, setFollowListType] = useState<'Followers' | 'Following' | null>(null);
   const [followListLoading, setFollowListLoading] = useState(false);
+  const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
 
   const { 
     followCounts, 
@@ -104,6 +107,10 @@ export default function UserProfile() {
     if (profile?.activityVisibility === 'public') return true;
     if (profile?.activityVisibility === 'followers' && isFollowing) return true;
     return false;
+  };
+
+  const handleDrinkClick = (drink: Drink) => {
+    setViewingDrink(drink);
   };
 
   const handleShare = async () => {
@@ -289,13 +296,25 @@ export default function UserProfile() {
             ) : (
               <div className="space-y-4">
                 {activities.map((activity) => (
-                  <ActivityCard key={activity.id} activity={activity} />
+                  <ActivityCard 
+                    key={activity.id} 
+                    activity={activity}
+                    onDrinkClick={handleDrinkClick}
+                  />
                 ))}
               </div>
             )}
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Drink Detail Modal - Read-only for profile items */}
+      <DrinkDetailModal
+        drink={viewingDrink}
+        open={!!viewingDrink}
+        onOpenChange={(open) => !open && setViewingDrink(null)}
+        readOnly={true}
+      />
 
       {/* Follow List Modal */}
       <FollowListModal
