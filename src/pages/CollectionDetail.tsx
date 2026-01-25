@@ -367,7 +367,7 @@ const CollectionDetail = () => {
           <ScrollArea className="flex-1 -mx-6 px-6">
             {allDrinks.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">
-                No drinks in your collection yet
+                No drinks in your library yet
               </div>
             ) : (
               <div className="space-y-2 py-2">
