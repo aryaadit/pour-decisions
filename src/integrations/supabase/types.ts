@@ -47,6 +47,13 @@ export type Database = {
             referencedRelation: "drinks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "activity_feed_drink_id_fkey"
+            columns: ["drink_id"]
+            isOneToOne: false
+            referencedRelation: "drinks_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       analytics_events: {
@@ -160,6 +167,13 @@ export type Database = {
             columns: ["drink_id"]
             isOneToOne: false
             referencedRelation: "drinks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_drinks_drink_id_fkey"
+            columns: ["drink_id"]
+            isOneToOne: false
+            referencedRelation: "drinks_public"
             referencedColumns: ["id"]
           },
         ]
@@ -418,6 +432,21 @@ export type Database = {
           name?: string | null
           share_id?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      drinks_public: {
+        Row: {
+          brand: string | null
+          created_at: string | null
+          date_added: string | null
+          id: string | null
+          image_url: string | null
+          is_wishlist: boolean | null
+          name: string | null
+          rating: number | null
+          type: string | null
+          user_id: string | null
         }
         Relationships: []
       }

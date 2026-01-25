@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Lock, Globe, Users, Share2 } from 'lucide-react';
+import { Lock, Globe, Users, Share2, Wine } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,14 +10,18 @@ import { useSocialProfile } from '@/hooks/useSocialProfile';
 import { useFollows } from '@/hooks/useFollows';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useProfileStats, TopDrink } from '@/hooks/useProfileStats';
 import BottomNavigation from '@/components/BottomNavigation';
 import { PageHeader } from '@/components/PageHeader';
 import { FollowButton } from '@/components/FollowButton';
 import { ActivityCard } from '@/components/ActivityCard';
 import { FollowListModal } from '@/components/FollowListModal';
 import { DrinkDetailModal, DrinkOwner } from '@/components/DrinkDetailModal';
+import { ProfileStatsCard } from '@/components/ProfileStatsCard';
+import { TopDrinksShowcase } from '@/components/TopDrinksShowcase';
+import { ProfileCollectionsGrid } from '@/components/ProfileCollectionsGrid';
 import { PublicProfile, ActivityFeedItem } from '@/types/social';
-import { Drink } from '@/types/drink';
+import { Drink, Collection } from '@/types/drink';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function UserProfile() {
@@ -30,10 +34,13 @@ export default function UserProfile() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [activities, setActivities] = useState<ActivityFeedItem[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
   const [followListType, setFollowListType] = useState<'Followers' | 'Following' | null>(null);
   const [followListLoading, setFollowListLoading] = useState(false);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
   const [viewingOwner, setViewingOwner] = useState<DrinkOwner | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
   const { 
     followCounts, 
@@ -47,6 +54,20 @@ export default function UserProfile() {
 
   const isOwnProfile = user?.id === profile?.userId;
 
+  const canViewActivity = () => {
+    if (isOwnProfile) return true;
+    if (profile?.activityVisibility === 'public') return true;
+    if (profile?.activityVisibility === 'followers' && isFollowing) return true;
+    return false;
+  };
+
+  const { stats, topDrinks, isLoading: statsLoading, canViewStats } = useProfileStats(
+    profile?.userId,
+    isOwnProfile,
+    canViewActivity(),
+    profile?.createdAt || null
+  );
+
   useEffect(() => {
     const loadProfile = async () => {
       if (!username) return;
@@ -56,9 +77,11 @@ export default function UserProfile() {
     loadProfile();
   }, [username, getProfileByUsername]);
 
+  // Load activities when switching to Activity tab or when profile changes
   useEffect(() => {
     const loadActivities = async () => {
-      if (!profile?.userId) return;
+      if (!profile?.userId || activeTab !== 'activity') return;
+      if (!canViewActivity()) return;
 
       setActivitiesLoading(true);
       
@@ -85,7 +108,44 @@ export default function UserProfile() {
     };
 
     loadActivities();
-  }, [profile]);
+  }, [profile, activeTab]);
+
+  // Load collections when switching to Collections tab
+  useEffect(() => {
+    const loadCollections = async () => {
+      if (!profile?.userId || activeTab !== 'collections') return;
+
+      setCollectionsLoading(true);
+
+      // Query collections that are public for this user
+      const { data, error } = await supabase
+        .from('collections')
+        .select('*, collection_drinks(count)')
+        .eq('user_id', profile.userId)
+        .eq('is_public', true)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setCollections(data.map(c => ({
+          id: c.id,
+          name: c.name,
+          description: c.description || undefined,
+          icon: c.icon || '📚',
+          coverColor: c.cover_color || '#8B5CF6',
+          shareId: c.share_id || '',
+          isPublic: c.is_public || false,
+          isSystem: c.is_system || false,
+          createdAt: new Date(c.created_at),
+          updatedAt: new Date(c.updated_at),
+          drinkCount: (c.collection_drinks as { count: number }[])?.[0]?.count || 0,
+        })));
+      }
+
+      setCollectionsLoading(false);
+    };
+
+    loadCollections();
+  }, [profile, activeTab]);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?';
@@ -103,16 +163,36 @@ export default function UserProfile() {
     }
   };
 
-  const canViewActivity = () => {
-    if (isOwnProfile) return true;
-    if (profile?.activityVisibility === 'public') return true;
-    if (profile?.activityVisibility === 'followers' && isFollowing) return true;
-    return false;
-  };
-
   const handleDrinkClick = (drink: Drink, owner: DrinkOwner) => {
     setViewingDrink(drink);
     setViewingOwner(owner);
+  };
+
+  const handleTopDrinkClick = async (topDrink: TopDrink) => {
+    // Fetch full drink data for the modal
+    const { data } = await supabase
+      .from('drinks_public')
+      .select('*')
+      .eq('id', topDrink.id)
+      .maybeSingle();
+
+    if (data) {
+      const drink: Drink = {
+        id: data.id,
+        name: data.name,
+        type: data.type,
+        brand: data.brand || undefined,
+        rating: data.rating || 0,
+        dateAdded: new Date(data.date_added),
+        imageUrl: data.image_url || undefined,
+        isWishlist: data.is_wishlist || false,
+      };
+      setViewingDrink(drink);
+      setViewingOwner(profile ? {
+        username: profile.username || '',
+        displayName: profile.displayName || undefined,
+      } : null);
+    }
   };
 
   const handleShare = async () => {
@@ -127,7 +207,6 @@ export default function UserProfile() {
       try {
         await navigator.share(shareData);
       } catch (error) {
-        // User cancelled or share failed, fall back to clipboard
         if ((error as Error).name !== 'AbortError') {
           copyToClipboard(profileUrl);
         }
@@ -218,8 +297,17 @@ export default function UserProfile() {
               <p className="mt-2 text-foreground">{profile.bio}</p>
             )}
 
-            {/* Stats */}
-            <div className="flex gap-4 mt-3">
+            {/* Stats Row */}
+            <div className="flex gap-4 mt-3 flex-wrap">
+              {/* Drinks count */}
+              {canViewStats && stats && (
+                <div className="text-sm flex items-center gap-1">
+                  <Wine className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="font-semibold">{stats.totalDrinks}</span>{' '}
+                  <span className="text-muted-foreground">drinks</span>
+                </div>
+              )}
+              
               <button 
                 className="text-sm hover:underline"
                 onClick={async () => {
@@ -267,13 +355,56 @@ export default function UserProfile() {
         </div>
       </div>
 
-      {/* Activity Tab */}
+      {/* Tabs */}
       <div className="max-w-2xl mx-auto px-4">
-        <Tabs defaultValue="activity">
-          <TabsList className="w-full">
-            <TabsTrigger value="activity" className="flex-1">Activity</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="collections">Collections</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="mt-4 space-y-6">
+            {!canViewStats ? (
+              <div className="text-center py-12">
+                <Lock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="font-semibold mb-2">Stats are private</h3>
+                <p className="text-muted-foreground text-sm">
+                  {profile.activityVisibility === 'followers'
+                    ? 'Follow this user to see their stats'
+                    : 'This user keeps their stats private'}
+                </p>
+              </div>
+            ) : (
+              <>
+                <ProfileStatsCard stats={stats} isLoading={statsLoading} />
+                <TopDrinksShowcase 
+                  drinks={topDrinks} 
+                  isLoading={statsLoading}
+                  onDrinkClick={handleTopDrinkClick}
+                />
+                
+                {/* Empty state when no drinks */}
+                {!statsLoading && stats?.totalDrinks === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Wine className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                    <p>No drinks logged yet</p>
+                  </div>
+                )}
+              </>
+            )}
+          </TabsContent>
+
+          {/* Collections Tab */}
+          <TabsContent value="collections" className="mt-4">
+            <ProfileCollectionsGrid 
+              collections={collections} 
+              isLoading={collectionsLoading} 
+            />
+          </TabsContent>
+
+          {/* Activity Tab */}
           <TabsContent value="activity" className="mt-4">
             {!canViewActivity() ? (
               <div className="text-center py-12">
@@ -310,7 +441,7 @@ export default function UserProfile() {
         </Tabs>
       </div>
 
-      {/* Drink Detail Modal - Read-only for profile items */}
+      {/* Drink Detail Modal */}
       <DrinkDetailModal
         drink={viewingDrink}
         open={!!viewingDrink}
