@@ -7,6 +7,7 @@ import { ReactNode } from 'react';
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
+  helperText?: string;
   icon?: ReactNode;
   showBack?: boolean;
   showHome?: boolean;
@@ -17,6 +18,7 @@ interface PageHeaderProps {
 export function PageHeader({
   title,
   subtitle,
+  helperText,
   icon,
   showBack = true,
   showHome = false,
@@ -72,6 +74,11 @@ export function PageHeader({
           {/* Right Content */}
           {rightContent}
         </div>
+        
+        {/* Helper Text */}
+        {helperText && (
+          <p className="text-xs text-muted-foreground mt-2 pl-11">{helperText}</p>
+        )}
       </div>
     </header>
   );

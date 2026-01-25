@@ -28,7 +28,7 @@ export function ProfileCollectionsGrid({ collections, isLoading }: ProfileCollec
         <FolderOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
         <h3 className="font-semibold mb-2">No public collections</h3>
         <p className="text-muted-foreground text-sm">
-          This user hasn't shared any collections yet
+          This user hasn't shared any curated drink groups yet
         </p>
       </div>
     );

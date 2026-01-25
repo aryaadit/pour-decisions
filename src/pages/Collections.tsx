@@ -49,11 +49,12 @@ const Collections = () => {
         icon={<FolderOpen className="h-5 w-5" />}
         showBack={true}
         rightContent={
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
+          <Button onClick={() => setCreateDialogOpen(true)} size="sm">
+            <Plus className="w-4 h-4 mr-1" />
             New
           </Button>
         }
+        helperText="Curated groups to organize drinks from your library"
       />
 
       {/* Main Content */}
