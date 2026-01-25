@@ -2,6 +2,7 @@ import { Home, Plus, User, FolderOpen, Activity } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useProfile } from "@/hooks/useProfile";
 import { ImpactStyle } from "@capacitor/haptics";
 
 interface BottomNavigationProps {
@@ -12,13 +13,17 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { impact } = useHaptics();
+  const { profile } = useProfile();
+
+  // Profile path depends on whether user has a username set
+  const profilePath = profile?.username ? `/u/${profile.username}` : '/settings';
 
   const tabs = [
     { id: "home", icon: Home, label: "Home", path: "/" },
     { id: "feed", icon: Activity, label: "Feed", path: "/feed" },
     { id: "add", icon: Plus, label: "Add", path: "/add-drink" },
     { id: "collections", icon: FolderOpen, label: "Lists", path: "/collections" },
-    { id: "profile", icon: User, label: "Profile", path: "/settings" },
+    { id: "profile", icon: User, label: "Profile", path: profilePath },
   ];
 
   const handleTabPress = async (tab: typeof tabs[0]) => {
@@ -30,6 +35,10 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
   };
 
   const isActive = (tab: typeof tabs[0]) => {
+    if (tab.id === 'profile') {
+      // Profile is active on user profile page or settings
+      return location.pathname.startsWith('/u/') || location.pathname === '/settings';
+    }
     if (tab.path) {
       return location.pathname === tab.path;
     }
