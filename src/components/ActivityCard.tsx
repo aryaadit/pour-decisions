@@ -13,19 +13,21 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { Drink, DrinkType } from '@/types/drink';
 
 interface ActivityCardProps {
   activity: ActivityFeedItem;
+  onDrinkClick?: (drink: Drink) => void;
 }
 
-export function ActivityCard({ activity }: ActivityCardProps) {
+export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const { addDrink } = useDrinks();
   const { impact } = useHaptics();
   const [isSaving, setIsSaving] = useState(false);
 
-  const { user, metadata, activityType, createdAt } = activity;
+  const { user, metadata, activityType, createdAt, drinkId } = activity;
 
   const getActivityIcon = () => {
     switch (activityType) {
@@ -58,7 +60,8 @@ export function ActivityCard({ activity }: ActivityCardProps) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const handleSaveToWishlist = async () => {
+  const handleSaveToWishlist = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!metadata.name || !metadata.type || !authUser) return;
     
     setIsSaving(true);
@@ -68,12 +71,12 @@ export function ActivityCard({ activity }: ActivityCardProps) {
       await addDrink({
         name: metadata.name,
         type: metadata.type,
-        brand: null,
-        rating: null,
-        notes: null,
-        location: null,
-        price: null,
-        imageUrl: metadata.image_url || null,
+        brand: undefined,
+        rating: 0,
+        notes: undefined,
+        location: undefined,
+        price: undefined,
+        imageUrl: metadata.image_url || undefined,
         isWishlist: true,
       });
       toast.success(`Added "${metadata.name}" to your wishlist`);
@@ -87,6 +90,26 @@ export function ActivityCard({ activity }: ActivityCardProps) {
   const handleProfileClick = () => {
     if (user?.username) {
       navigate(`/u/${user.username}`);
+    }
+  };
+
+  const handleDrinkClick = () => {
+    if (onDrinkClick && metadata.name && metadata.type && drinkId) {
+      // Create a drink object from the activity metadata
+      const drink: Drink = {
+        id: drinkId,
+        name: metadata.name,
+        type: metadata.type as DrinkType,
+        brand: undefined,
+        rating: metadata.rating || 0,
+        notes: undefined,
+        location: undefined,
+        price: undefined,
+        dateAdded: createdAt,
+        imageUrl: metadata.image_url || undefined,
+        isWishlist: activityType === 'wishlist_added',
+      };
+      onDrinkClick(drink);
     }
   };
 
@@ -125,9 +148,12 @@ export function ActivityCard({ activity }: ActivityCardProps) {
               {formatDistanceToNow(createdAt, { addSuffix: true })}
             </p>
 
-            {/* Drink Info */}
+            {/* Drink Info - Clickable */}
             {metadata.name && (
-              <div className="mt-3 flex gap-3">
+              <div 
+                className="mt-3 flex gap-3 cursor-pointer hover:bg-muted/50 -mx-2 px-2 py-2 rounded-lg transition-colors"
+                onClick={handleDrinkClick}
+              >
                 {/* Drink Image */}
                 {metadata.image_url && (
                   <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">

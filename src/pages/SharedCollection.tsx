@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCollections } from '@/hooks/useCollections';
 import { DrinkListItem } from '@/components/DrinkListItem';
+import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { Button } from '@/components/ui/button';
 import { Globe, Loader2, Wine, ExternalLink } from 'lucide-react';
 import { Drink, Collection } from '@/types/drink';
@@ -14,6 +15,7 @@ const SharedCollection = () => {
   const [drinks, setDrinks] = useState<Drink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
 
   useEffect(() => {
     if (shareId) {
@@ -111,44 +113,12 @@ const SharedCollection = () => {
         ) : (
           <div className="flex flex-col gap-3 max-w-2xl mx-auto">
             {drinks.map((drink, index) => (
-              <div
+              <DrinkListItem
                 key={drink.id}
-                className="w-full flex items-center gap-4 p-4 rounded-xl bg-card/50 border border-border/50 animate-fade-in"
+                drink={drink}
+                onClick={() => setViewingDrink(drink)}
                 style={{ animationDelay: `${index * 30}ms` }}
-              >
-                {/* Thumbnail */}
-                {drink.imageUrl ? (
-                  <img
-                    src={drink.imageUrl}
-                    alt={drink.name}
-                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
-                    🍹
-                  </div>
-                )}
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-base font-semibold text-foreground truncate">
-                    {drink.name}
-                  </h3>
-                  {drink.brand && (
-                    <p className="text-sm text-muted-foreground truncate">{drink.brand}</p>
-                  )}
-                  <div className="flex items-center gap-1 mt-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <span
-                        key={i}
-                        className={`text-xs ${i < drink.rating ? 'text-amber-500' : 'text-muted-foreground/30'}`}
-                      >
-                        ★
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              />
             ))}
           </div>
         )}
@@ -166,6 +136,14 @@ const SharedCollection = () => {
           </Link>
         </div>
       </main>
+
+      {/* Drink Detail Modal - Read-only for public collections */}
+      <DrinkDetailModal
+        drink={viewingDrink}
+        open={!!viewingDrink}
+        onOpenChange={(open) => !open && setViewingDrink(null)}
+        readOnly={true}
+      />
     </div>
   );
 };

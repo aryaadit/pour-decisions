@@ -39,9 +39,10 @@ interface DrinkDetailModalProps {
   drink: Drink | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEdit: (drink: Drink) => void;
-  onDelete: (id: string) => void;
+  onEdit?: (drink: Drink) => void;
+  onDelete?: (id: string) => void;
   onWishlistToggle?: (drinkId: string, isWishlist: boolean) => void;
+  readOnly?: boolean;
 }
 
 export function DrinkDetailModal({
@@ -51,6 +52,7 @@ export function DrinkDetailModal({
   onEdit,
   onDelete,
   onWishlistToggle,
+  readOnly = false,
 }: DrinkDetailModalProps) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -199,19 +201,25 @@ export function DrinkDetailModal({
         </span>
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-3 pt-2">
-        <Button variant="outline" className="flex-1" onClick={handleEdit}>
-          <Pencil className="h-4 w-4 mr-2" />
-          {drink.isWishlist ? 'Log It' : 'Edit'}
-        </Button>
-        <Button variant="outline" size="icon" onClick={() => setShowAddToCollection(true)} title="Add to collection">
-          <FolderPlus className="h-4 w-4" />
-        </Button>
-        <Button variant="destructive" size="icon" onClick={handleDeleteClick}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
+      {/* Actions - hidden in read-only mode */}
+      {!readOnly && (
+        <div className="flex gap-3 pt-2">
+          {onEdit && (
+            <Button variant="outline" className="flex-1" onClick={handleEdit}>
+              <Pencil className="h-4 w-4 mr-2" />
+              {drink.isWishlist ? 'Log It' : 'Edit'}
+            </Button>
+          )}
+          <Button variant="outline" size="icon" onClick={() => setShowAddToCollection(true)} title="Add to collection">
+            <FolderPlus className="h-4 w-4" />
+          </Button>
+          {onDelete && (
+            <Button variant="destructive" size="icon" onClick={handleDeleteClick}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 

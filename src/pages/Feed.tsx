@@ -10,8 +10,10 @@ import { PageHeader } from '@/components/PageHeader';
 import { ActivityCard } from '@/components/ActivityCard';
 import { UserSearch } from '@/components/UserSearch';
 import { UsernameSetup } from '@/components/UsernameSetup';
+import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Drink } from '@/types/drink';
 
 export default function Feed() {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ export default function Feed() {
   const isMobile = useIsMobile();
   
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
+  const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -39,6 +42,10 @@ export default function Feed() {
   const handleUsernameSetupComplete = () => {
     setShowUsernameSetup(false);
     refetchProfile();
+  };
+
+  const handleDrinkClick = (drink: Drink) => {
+    setViewingDrink(drink);
   };
 
   if (authLoading || profileLoading) {
@@ -97,7 +104,11 @@ export default function Feed() {
         ) : (
           <div className="space-y-4">
             {activities.map((activity) => (
-              <ActivityCard key={activity.id} activity={activity} />
+              <ActivityCard 
+                key={activity.id} 
+                activity={activity}
+                onDrinkClick={handleDrinkClick}
+              />
             ))}
 
             {hasMore && (
@@ -110,6 +121,14 @@ export default function Feed() {
           </div>
         )}
       </main>
+
+      {/* Drink Detail Modal - Read-only for feed items */}
+      <DrinkDetailModal
+        drink={viewingDrink}
+        open={!!viewingDrink}
+        onOpenChange={(open) => !open && setViewingDrink(null)}
+        readOnly={true}
+      />
 
       {/* Username Setup Modal */}
       <UsernameSetup 
