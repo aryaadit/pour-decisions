@@ -120,21 +120,22 @@ export function useDrinks() {
   };
 
   const updateDrink = async (id: string, updates: Partial<Drink>) => {
-    const priceValue = updates.price?.trim() || null;
+    // Only include fields that are explicitly provided in updates
+    const dbUpdates: Record<string, any> = {};
+    
+    if ('name' in updates) dbUpdates.name = updates.name;
+    if ('type' in updates) dbUpdates.type = updates.type;
+    if ('brand' in updates) dbUpdates.brand = updates.brand || null;
+    if ('rating' in updates) dbUpdates.rating = updates.rating;
+    if ('notes' in updates) dbUpdates.notes = updates.notes || null;
+    if ('location' in updates) dbUpdates.location = updates.location || null;
+    if ('price' in updates) dbUpdates.price = updates.price?.trim() || null;
+    if ('imageUrl' in updates) dbUpdates.image_url = updates.imageUrl || null;
+    if ('isWishlist' in updates) dbUpdates.is_wishlist = updates.isWishlist;
 
     const { error } = await supabase
       .from('drinks')
-      .update({
-        name: updates.name,
-        type: updates.type,
-        brand: updates.brand || null,
-        rating: updates.rating,
-        notes: updates.notes || null,
-        location: updates.location || null,
-        price: priceValue,
-        image_url: updates.imageUrl || null,
-        is_wishlist: updates.isWishlist,
-      })
+      .update(dbUpdates)
       .eq('id', id);
 
     if (error) {
