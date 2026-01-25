@@ -398,6 +398,9 @@ export default function UserProfile() {
 
           {/* Collections Tab */}
           <TabsContent value="collections" className="mt-4">
+            <p className="text-xs text-muted-foreground mb-4">
+              Curated groups of drinks from this user's library
+            </p>
             <ProfileCollectionsGrid 
               collections={collections} 
               isLoading={collectionsLoading} 
