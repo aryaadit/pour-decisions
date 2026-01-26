@@ -19,7 +19,7 @@ import { FollowListModal } from '@/components/FollowListModal';
 import { DrinkDetailModal, DrinkOwner } from '@/components/DrinkDetailModal';
 import { ProfileStatsCard } from '@/components/ProfileStatsCard';
 import { TopDrinksShowcase } from '@/components/TopDrinksShowcase';
-import { ProfileCollectionsGrid } from '@/components/ProfileCollectionsGrid';
+import { ProfileCollectionsShowcase } from '@/components/ProfileCollectionsShowcase';
 import { PublicProfile, ActivityFeedItem } from '@/types/social';
 import { Drink, Collection } from '@/types/drink';
 import { supabase } from '@/integrations/supabase/client';
@@ -401,9 +401,10 @@ export default function UserProfile() {
             <p className="text-xs text-muted-foreground mb-4">
               Curated groups of drinks from this user's library
             </p>
-            <ProfileCollectionsGrid 
+            <ProfileCollectionsShowcase 
               collections={collections} 
-              isLoading={collectionsLoading} 
+              isLoading={collectionsLoading}
+              userId={profile.userId}
             />
           </TabsContent>
 
