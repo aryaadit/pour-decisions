@@ -1,4 +1,4 @@
-import { Wine, Star, Calendar, TrendingUp } from 'lucide-react';
+import { Wine, Star, Calendar, TrendingUp, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProfileStats } from '@/hooks/useProfileStats';
@@ -34,6 +34,11 @@ export function ProfileStatsCard({ stats, isLoading }: ProfileStatsCardProps) {
       label: 'Drinks Logged',
       value: stats.totalDrinks.toString(),
       icon: <Wine className="h-4 w-4 text-primary" />,
+    },
+    {
+      label: 'Wishlist',
+      value: stats.wishlistCount.toString(),
+      icon: <Clock className="h-4 w-4 text-amber-500" />,
     },
     stats.favoriteType && {
       label: 'Favorite Type',

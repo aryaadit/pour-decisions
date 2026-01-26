@@ -4,6 +4,7 @@ import { Drink, DrinkType, drinkTypeIcons, isBuiltInDrinkType } from '@/types/dr
 
 export interface ProfileStats {
   totalDrinks: number;
+  wishlistCount: number;
   averageRating: number | null;
   favoriteType: { type: DrinkType; count: number; icon: string } | null;
   topRatedDrink: { name: string; rating: number } | null;
@@ -53,12 +54,11 @@ export function useProfileStats(
     setError(null);
 
     try {
-      // Fetch drinks from the public view (respects privacy settings)
-      const { data: drinks, error: drinksError } = await supabase
+      // Fetch all drinks from the public view (respects privacy settings)
+      const { data: allDrinks, error: drinksError } = await supabase
         .from('drinks_public')
         .select('id, name, type, rating, image_url, brand, is_wishlist')
-        .eq('user_id', userId)
-        .eq('is_wishlist', false);
+        .eq('user_id', userId);
 
       if (drinksError) {
         console.error('Error fetching drinks:', drinksError);
@@ -67,7 +67,9 @@ export function useProfileStats(
         return;
       }
 
-      const loggedDrinks = drinks || [];
+      // Separate logged drinks and wishlist
+      const loggedDrinks = (allDrinks || []).filter(d => !d.is_wishlist);
+      const wishlistCount = (allDrinks || []).filter(d => d.is_wishlist).length;
 
       // Calculate stats
       const totalDrinks = loggedDrinks.length;
@@ -102,6 +104,7 @@ export function useProfileStats(
 
       setStats({
         totalDrinks,
+        wishlistCount,
         averageRating,
         favoriteType,
         topRatedDrink,
