@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Bug, Loader2, Trash2, RefreshCw, Image as ImageIcon, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Bug, Loader2, Trash2, RefreshCw, Image as ImageIcon, BarChart3, Wrench, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
@@ -159,7 +159,7 @@ export default function Admin() {
 
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               Analytics
@@ -168,10 +168,60 @@ export default function Admin() {
               <Bug className="w-4 h-4" />
               Bug Reports
             </TabsTrigger>
+            <TabsTrigger value="devtools" className="flex items-center gap-2">
+              <Wrench className="w-4 h-4" />
+              Dev Tools
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics">
             <AnalyticsDashboard />
+          </TabsContent>
+
+          <TabsContent value="devtools">
+            <div className="max-w-xl mx-auto space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <RotateCcw className="w-5 h-5" />
+                    Onboarding State
+                  </CardTitle>
+                  <CardDescription>
+                    Reset your onboarding flags to test the welcome carousel and tip cards.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      if (!user) return;
+                      try {
+                        const { error } = await supabase
+                          .from('profiles')
+                          .update({
+                            has_seen_welcome: false,
+                            onboarding_step: 'welcome',
+                            dismissed_onboarding_steps: [],
+                          })
+                          .eq('user_id', user.id);
+                        
+                        if (error) throw error;
+                        toast.success('Onboarding reset! Refresh the page to see the welcome carousel.');
+                      } catch (error) {
+                        console.error('Error resetting onboarding:', error);
+                        toast.error('Failed to reset onboarding');
+                      }
+                    }}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Reset My Onboarding
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    This will show the welcome carousel on your next visit and re-enable all onboarding tips.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="bugs">
