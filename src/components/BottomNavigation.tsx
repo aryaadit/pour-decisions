@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Home, Plus, User, FolderOpen, Activity } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -15,16 +16,18 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
   const { impact } = useHaptics();
   const { profile } = useProfile();
 
-  // Profile path depends on whether user has a username set
-  const profilePath = profile?.username ? `/u/${profile.username}` : '/settings';
+  // Memoize profile path to prevent recalculation on every render
+  const profilePath = useMemo(() => {
+    return profile?.username ? `/u/${profile.username}` : '/settings';
+  }, [profile?.username]);
 
-  const tabs = [
+  const tabs = useMemo(() => [
     { id: "home", icon: Home, label: "Home", path: "/" },
     { id: "feed", icon: Activity, label: "Feed", path: "/feed" },
     { id: "add", icon: Plus, label: "Add", path: "/add-drink" },
     { id: "collections", icon: FolderOpen, label: "Collections", path: "/collections" },
     { id: "profile", icon: User, label: "Profile", path: profilePath },
-  ];
+  ], [profilePath]);
 
   const handleTabPress = async (tab: typeof tabs[0]) => {
     await impact(ImpactStyle.Light);
