@@ -9,10 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Bug, Loader2, Trash2, RefreshCw, Image as ImageIcon, BarChart3, Wrench, RotateCcw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Bug, Loader2, Trash2, RefreshCw, Image as ImageIcon, BarChart3, Wrench, RotateCcw, Users, Search, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface BugReport {
   id: string;
@@ -23,6 +27,17 @@ interface BugReport {
   image_url: string | null;
   created_at: string;
   updated_at: string;
+}
+
+interface UserProfile {
+  id: string;
+  user_id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  has_seen_welcome: boolean;
+  onboarding_step: string;
+  dismissed_onboarding_steps: string[];
 }
 
 const statusColors: Record<string, string> = {
@@ -40,6 +55,13 @@ export default function Admin() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
+  
+  // Dev Tools state
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
 
   const fetchBugReports = async () => {
     setIsLoading(true);
@@ -59,6 +81,69 @@ export default function Admin() {
     }
   };
 
+  const searchUsers = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, user_id, username, display_name, avatar_url, has_seen_welcome, onboarding_step, dismissed_onboarding_steps')
+        .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+        .limit(10);
+
+      if (error) throw error;
+      setSearchResults((data as UserProfile[]) || []);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      toast.error('Failed to search users');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const updateUserOnboarding = async (userId: string, updates: Partial<Pick<UserProfile, 'has_seen_welcome' | 'onboarding_step' | 'dismissed_onboarding_steps'>>) => {
+    setIsUpdatingUser(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Update local state
+      if (selectedUser && selectedUser.user_id === userId) {
+        setSelectedUser({ ...selectedUser, ...updates });
+      }
+      toast.success('User onboarding updated');
+    } catch (error) {
+      console.error('Error updating user onboarding:', error);
+      toast.error('Failed to update user onboarding');
+    } finally {
+      setIsUpdatingUser(false);
+    }
+  };
+
+  const resetUserOnboarding = async (userId: string) => {
+    await updateUserOnboarding(userId, {
+      has_seen_welcome: false,
+      onboarding_step: 'welcome',
+      dismissed_onboarding_steps: [],
+    });
+  };
+
+  const markUserOnboardingComplete = async (userId: string) => {
+    await updateUserOnboarding(userId, {
+      has_seen_welcome: true,
+      onboarding_step: 'completed',
+      dismissed_onboarding_steps: ['welcome', 'add_drink', 'collections', 'social'],
+    });
+  };
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
@@ -75,6 +160,14 @@ export default function Admin() {
       fetchBugReports();
     }
   }, [user, authLoading, isAdmin, adminLoading, navigate]);
+
+  // Debounced user search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchUsers(userSearchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [userSearchQuery]);
 
   const handleStatusChange = async (reportId: string, newStatus: string) => {
     try {
@@ -180,14 +273,15 @@ export default function Admin() {
 
           <TabsContent value="devtools">
             <div className="max-w-xl mx-auto space-y-4">
+              {/* Self Reset Card */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <RotateCcw className="w-5 h-5" />
-                    Onboarding State
+                    My Onboarding
                   </CardTitle>
                   <CardDescription>
-                    Reset your onboarding flags to test the welcome carousel and tip cards.
+                    Reset your own onboarding flags to test the welcome carousel.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -195,30 +289,158 @@ export default function Admin() {
                     variant="outline"
                     onClick={async () => {
                       if (!user) return;
-                      try {
-                        const { error } = await supabase
-                          .from('profiles')
-                          .update({
-                            has_seen_welcome: false,
-                            onboarding_step: 'welcome',
-                            dismissed_onboarding_steps: [],
-                          })
-                          .eq('user_id', user.id);
-                        
-                        if (error) throw error;
-                        toast.success('Onboarding reset! Refresh the page to see the welcome carousel.');
-                      } catch (error) {
-                        console.error('Error resetting onboarding:', error);
-                        toast.error('Failed to reset onboarding');
-                      }
+                      await resetUserOnboarding(user.id);
                     }}
+                    disabled={isUpdatingUser}
                   >
-                    <RotateCcw className="w-4 h-4 mr-2" />
+                    {isUpdatingUser ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
                     Reset My Onboarding
                   </Button>
-                  <p className="text-xs text-muted-foreground">
-                    This will show the welcome carousel on your next visit and re-enable all onboarding tips.
-                  </p>
+                </CardContent>
+              </Card>
+
+              {/* User Impersonation Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    User Onboarding Manager
+                  </CardTitle>
+                  <CardDescription>
+                    Search for any user and toggle their onboarding state for testing.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Search Input */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by username or display name..."
+                      value={userSearchQuery}
+                      onChange={(e) => setUserSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                    {isSearching && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+
+                  {/* Search Results */}
+                  {searchResults.length > 0 && !selectedUser && (
+                    <div className="border border-border rounded-lg divide-y divide-border max-h-48 overflow-y-auto">
+                      {searchResults.map((profile) => (
+                        <button
+                          key={profile.id}
+                          className="w-full px-3 py-2 flex items-center gap-3 hover:bg-muted/50 transition-colors text-left"
+                          onClick={() => {
+                            setSelectedUser(profile);
+                            setUserSearchQuery('');
+                            setSearchResults([]);
+                          }}
+                        >
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage src={profile.avatar_url || undefined} />
+                            <AvatarFallback className="text-xs">
+                              {(profile.display_name || profile.username || '?')[0].toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {profile.display_name || profile.username || 'Unknown'}
+                            </p>
+                            {profile.username && (
+                              <p className="text-xs text-muted-foreground">@{profile.username}</p>
+                            )}
+                          </div>
+                          <Badge variant="outline" className={profile.has_seen_welcome ? 'bg-green-500/10 text-green-600' : 'bg-yellow-500/10 text-yellow-600'}>
+                            {profile.has_seen_welcome ? 'Completed' : 'New User'}
+                          </Badge>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Selected User Panel */}
+                  {selectedUser && (
+                    <div className="border border-border rounded-lg p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={selectedUser.avatar_url || undefined} />
+                            <AvatarFallback>
+                              {(selectedUser.display_name || selectedUser.username || '?')[0].toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">
+                              {selectedUser.display_name || selectedUser.username || 'Unknown'}
+                            </p>
+                            {selectedUser.username && (
+                              <p className="text-sm text-muted-foreground">@{selectedUser.username}</p>
+                            )}
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => setSelectedUser(null)}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="has-seen-welcome" className="text-sm">Has Seen Welcome</Label>
+                          <Switch
+                            id="has-seen-welcome"
+                            checked={selectedUser.has_seen_welcome}
+                            disabled={isUpdatingUser}
+                            onCheckedChange={(checked) => {
+                              updateUserOnboarding(selectedUser.user_id, { has_seen_welcome: checked });
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Onboarding Step</Label>
+                          <Badge variant="outline">{selectedUser.onboarding_step}</Badge>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Dismissed Steps</Label>
+                          <span className="text-xs text-muted-foreground">
+                            {selectedUser.dismissed_onboarding_steps?.length || 0} steps
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-2 border-t border-border">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          disabled={isUpdatingUser}
+                          onClick={() => resetUserOnboarding(selectedUser.user_id)}
+                        >
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Reset
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          disabled={isUpdatingUser}
+                          onClick={() => markUserOnboardingComplete(selectedUser.user_id)}
+                        >
+                          <Check className="w-4 h-4 mr-2" />
+                          Mark Complete
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {userSearchQuery && searchResults.length === 0 && !isSearching && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No users found matching "{userSearchQuery}"
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>
