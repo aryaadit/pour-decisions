@@ -24,10 +24,11 @@ import {
 import { PageHeader } from '@/components/PageHeader';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X, Settings as SettingsIcon, HelpCircle } from 'lucide-react';
+import { Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X, Settings as SettingsIcon, HelpCircle, MessageSquare } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { ActivityVisibility } from '@/types/social';
 import BottomNavigation from '@/components/BottomNavigation';
+import { BugReportDialog } from '@/components/BugReportDialog';
 
 const Settings = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -416,9 +417,9 @@ const Settings = () => {
         <Card>
           <CardHeader>
             <CardTitle>Help & Support</CardTitle>
-            <CardDescription>Learn how to use the app</CardDescription>
+            <CardDescription>Learn how to use the app or share feedback</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <Button 
               variant="outline" 
               onClick={() => {
@@ -431,6 +432,14 @@ const Settings = () => {
               <HelpCircle className="w-4 h-4 mr-2" />
               Take a tour
             </Button>
+            <BugReportDialog 
+              trigger={
+                <Button variant="outline" className="w-full">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Give Feedback
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
 
