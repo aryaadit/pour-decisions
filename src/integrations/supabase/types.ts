@@ -334,9 +334,12 @@ export type Database = {
           created_at: string
           default_drink_type: string | null
           default_sort_order: string | null
+          dismissed_onboarding_steps: string[] | null
           display_name: string | null
+          has_seen_welcome: boolean | null
           id: string
           is_public: boolean | null
+          onboarding_step: string | null
           theme_preference: string | null
           updated_at: string
           user_id: string
@@ -350,9 +353,12 @@ export type Database = {
           created_at?: string
           default_drink_type?: string | null
           default_sort_order?: string | null
+          dismissed_onboarding_steps?: string[] | null
           display_name?: string | null
+          has_seen_welcome?: boolean | null
           id?: string
           is_public?: boolean | null
+          onboarding_step?: string | null
           theme_preference?: string | null
           updated_at?: string
           user_id: string
@@ -366,9 +372,12 @@ export type Database = {
           created_at?: string
           default_drink_type?: string | null
           default_sort_order?: string | null
+          dismissed_onboarding_steps?: string[] | null
           display_name?: string | null
+          has_seen_welcome?: boolean | null
           id?: string
           is_public?: boolean | null
+          onboarding_step?: string | null
           theme_preference?: string | null
           updated_at?: string
           user_id?: string

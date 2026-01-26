@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { Profile, SortOrder, ThemePreference } from '@/types/profile';
+import { Profile, SortOrder, ThemePreference, OnboardingStep } from '@/types/profile';
 import { DrinkType } from '@/types/drink';
 import { ActivityVisibility } from '@/types/social';
 
@@ -39,6 +39,9 @@ export function useProfile() {
           bio: data.bio,
           isPublic: data.is_public || false,
           activityVisibility: (data.activity_visibility as ActivityVisibility) || 'private',
+          hasSeenWelcome: data.has_seen_welcome || false,
+          onboardingStep: (data.onboarding_step as OnboardingStep) || 'welcome',
+          dismissedOnboardingSteps: (data.dismissed_onboarding_steps as OnboardingStep[]) || [],
           createdAt: new Date(data.created_at),
           updatedAt: new Date(data.updated_at),
         });
@@ -64,6 +67,9 @@ export function useProfile() {
     bio: string | null;
     isPublic: boolean;
     activityVisibility: ActivityVisibility;
+    hasSeenWelcome: boolean;
+    onboardingStep: OnboardingStep;
+    dismissedOnboardingSteps: OnboardingStep[];
   }>) => {
     if (!user) return { error: new Error('Not authenticated') };
 
@@ -77,6 +83,9 @@ export function useProfile() {
     if ('bio' in updates) dbUpdates.bio = updates.bio;
     if ('isPublic' in updates) dbUpdates.is_public = updates.isPublic;
     if ('activityVisibility' in updates) dbUpdates.activity_visibility = updates.activityVisibility;
+    if ('hasSeenWelcome' in updates) dbUpdates.has_seen_welcome = updates.hasSeenWelcome;
+    if ('onboardingStep' in updates) dbUpdates.onboarding_step = updates.onboardingStep;
+    if ('dismissedOnboardingSteps' in updates) dbUpdates.dismissed_onboarding_steps = updates.dismissedOnboardingSteps;
 
     const { error } = await supabase
       .from('profiles')

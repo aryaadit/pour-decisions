@@ -3,6 +3,7 @@ import { ActivityVisibility } from './social';
 
 export type SortOrder = 'date_desc' | 'date_asc' | 'rating_desc' | 'rating_asc' | 'name_asc' | 'name_desc';
 export type ThemePreference = 'light' | 'dark' | 'system';
+export type OnboardingStep = 'welcome' | 'add_drink' | 'collections' | 'social' | 'completed';
 
 export interface Profile {
   id: string;
@@ -16,6 +17,9 @@ export interface Profile {
   bio: string | null;
   isPublic: boolean;
   activityVisibility: ActivityVisibility;
+  hasSeenWelcome: boolean;
+  onboardingStep: OnboardingStep;
+  dismissedOnboardingSteps: OnboardingStep[];
   createdAt: Date;
   updatedAt: Date;
 }
