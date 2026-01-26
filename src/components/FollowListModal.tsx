@@ -199,7 +199,7 @@ export function FollowListModal({
           </p>
         </div>
       ) : (
-        <div className="p-2 space-y-1">
+        <div className="p-2 divide-y divide-border/30">
           {filteredUsers.map((profile) => (
             <div
               key={profile.userId}
