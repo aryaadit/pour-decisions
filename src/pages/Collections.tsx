@@ -5,7 +5,7 @@ import { useCollections } from '@/hooks/useCollections';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CollectionCard } from '@/components/CollectionCard';
 import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
-import BottomNavigation from '@/components/BottomNavigation';
+
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Plus, FolderPlus, Loader2, FolderOpen } from 'lucide-react';
@@ -99,8 +99,7 @@ const Collections = () => {
         onSave={handleCreateCollection}
       />
 
-      {/* Mobile Bottom Navigation */}
-      {isMobile && <BottomNavigation />}
+      {/* Spacer for bottom nav */}
       {isMobile && <div className="h-20" />}
     </div>
   );

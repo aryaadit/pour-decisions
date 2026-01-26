@@ -27,7 +27,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X, Settings as SettingsIcon, HelpCircle, MessageSquare } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { ActivityVisibility } from '@/types/social';
-import BottomNavigation from '@/components/BottomNavigation';
 import { BugReportDialog } from '@/components/BugReportDialog';
 
 const Settings = () => {
@@ -449,11 +448,8 @@ const Settings = () => {
         </Button>
 
         {/* Spacer for bottom nav */}
-        {isMobile && <div className="h-16" />}
+        {isMobile && <div className="h-20" />}
       </main>
-
-      {/* Mobile Bottom Navigation */}
-      {isMobile && <BottomNavigation />}
     </div>
   );
 };

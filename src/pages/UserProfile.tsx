@@ -11,7 +11,7 @@ import { useFollows } from '@/hooks/useFollows';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useProfileStats, TopDrink } from '@/hooks/useProfileStats';
-import BottomNavigation from '@/components/BottomNavigation';
+
 import { PageHeader } from '@/components/PageHeader';
 import { FollowButton } from '@/components/FollowButton';
 import { ActivityCard } from '@/components/ActivityCard';
@@ -478,8 +478,8 @@ export default function UserProfile() {
         isLoading={followListLoading}
       />
 
-      {/* Bottom Navigation */}
-      {isMobile && <BottomNavigation />}
+      {/* Spacer for bottom nav */}
+      {isMobile && <div className="h-20" />}
     </div>
   );
 }

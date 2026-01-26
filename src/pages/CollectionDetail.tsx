@@ -7,7 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { DrinkListItem } from '@/components/DrinkListItem';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
-import BottomNavigation from '@/components/BottomNavigation';
+
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -413,8 +413,7 @@ const CollectionDetail = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Mobile Bottom Navigation */}
-      {isMobile && <BottomNavigation />}
+      {/* Spacer for bottom nav */}
       {isMobile && <div className="h-20" />}
     </div>
   );

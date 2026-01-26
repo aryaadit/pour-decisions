@@ -22,7 +22,7 @@ import { ProfileMenu } from '@/components/ProfileMenu';
 import { TestFlightBanner } from '@/components/TestFlightBanner';
 import { OnboardingTipCard } from '@/components/OnboardingTipCard';
 import { WelcomeCarousel } from '@/components/WelcomeCarousel';
-import BottomNavigation from '@/components/BottomNavigation';
+
 
 import { Button } from '@/components/ui/button';
 import { Plus, Activity, Wine, FolderOpen, Users } from 'lucide-react';
@@ -463,10 +463,7 @@ const Index = () => {
         )}
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      {isMobile && <BottomNavigation />}
-
-      {/* Add padding for bottom nav on mobile */}
+      {/* Spacer for bottom nav on mobile */}
       {isMobile && <div className="h-20" />}
 
       {/* Add/Edit Dialog - Desktop only */}

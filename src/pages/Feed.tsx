@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
 import { useIsMobile } from '@/hooks/use-mobile';
-import BottomNavigation from '@/components/BottomNavigation';
+
 import { PageHeader } from '@/components/PageHeader';
 import { ActivityCard } from '@/components/ActivityCard';
 import { UserSearch } from '@/components/UserSearch';
@@ -145,8 +145,8 @@ export default function Feed() {
         onComplete={handleUsernameSetupComplete} 
       />
 
-      {/* Bottom Navigation */}
-      {isMobile && <BottomNavigation />}
+      {/* Spacer for bottom nav */}
+      {isMobile && <div className="h-20" />}
     </div>
   );
 }
