@@ -20,6 +20,7 @@ import { DrinkDetailModal, DrinkOwner } from '@/components/DrinkDetailModal';
 import { ProfileStatsCard } from '@/components/ProfileStatsCard';
 import { TopDrinksShowcase } from '@/components/TopDrinksShowcase';
 import { ProfileCollectionsShowcase } from '@/components/ProfileCollectionsShowcase';
+import { CollectionCompareSection } from '@/components/CollectionCompareSection';
 import { PublicProfile, ActivityFeedItem } from '@/types/social';
 import { Drink, Collection } from '@/types/drink';
 import { supabase } from '@/integrations/supabase/client';
@@ -397,15 +398,34 @@ export default function UserProfile() {
           </TabsContent>
 
           {/* Collections Tab */}
-          <TabsContent value="collections" className="mt-4">
-            <p className="text-xs text-muted-foreground mb-4">
-              Curated groups of drinks from this user's library
-            </p>
-            <ProfileCollectionsShowcase 
-              collections={collections} 
-              isLoading={collectionsLoading}
-              userId={profile.userId}
+          <TabsContent value="collections" className="mt-4 space-y-8">
+            {/* Collection Comparison Section */}
+            <CollectionCompareSection
+              profileUserId={profile.userId}
+              profile={profile}
+              isOwnProfile={isOwnProfile}
+              isFollowing={isFollowing}
+              canViewActivity={canViewActivity()}
+              onDrinkClick={(drink) => {
+                setViewingDrink(drink);
+                setViewingOwner(profile ? {
+                  username: profile.username || '',
+                  displayName: profile.displayName || undefined,
+                } : null);
+              }}
             />
+
+            {/* Collections Showcase */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-4">
+                Curated groups of drinks from this user's library
+              </p>
+              <ProfileCollectionsShowcase 
+                collections={collections} 
+                isLoading={collectionsLoading}
+                userId={profile.userId}
+              />
+            </div>
           </TabsContent>
 
           {/* Activity Tab */}
