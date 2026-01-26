@@ -76,12 +76,12 @@ export default function Feed() {
       />
 
       {/* Search Section */}
-      <div className="max-w-2xl mx-auto px-4 py-3 border-b border-border/50">
+      <div className="max-w-2xl mx-auto px-4 py-2 border-b border-border/50">
         <UserSearch placeholder="Find people to follow..." />
       </div>
 
       {/* Content */}
-      <main className="max-w-2xl mx-auto px-4 py-4">
+      <main className="max-w-2xl mx-auto px-4 py-3">
         {feedLoading && activities.length === 0 ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
@@ -105,7 +105,7 @@ export default function Feed() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {activities.map((activity) => (
               <ActivityCard 
                 key={activity.id} 

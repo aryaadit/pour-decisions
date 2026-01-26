@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import { Wine, Star, Heart, Bookmark } from 'lucide-react';
+import { Wine, Star, Heart, Bookmark, MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -33,13 +33,13 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
   const getActivityIcon = () => {
     switch (activityType) {
       case 'drink_added':
-        return <Wine className="h-4 w-4 text-primary" />;
+        return <Wine className="h-3 w-3 text-primary" />;
       case 'drink_rated':
-        return <Star className="h-4 w-4 text-yellow-500" />;
+        return <Star className="h-3 w-3 text-yellow-500" />;
       case 'wishlist_added':
-        return <Heart className="h-4 w-4 text-pink-500" />;
+        return <Heart className="h-3 w-3 text-pink-500" />;
       default:
-        return <Wine className="h-4 w-4" />;
+        return <Wine className="h-3 w-3" />;
     }
   };
 
@@ -48,9 +48,9 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
       case 'drink_added':
         return 'logged';
       case 'drink_rated':
-        return metadata.old_rating ? 'updated rating for' : 'rated';
+        return metadata.old_rating ? 'updated' : 'rated';
       case 'wishlist_added':
-        return 'added to wishlist';
+        return 'wants to try';
       default:
         return 'interacted with';
     }
@@ -59,6 +59,13 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Truncate notes for preview
+  const getNotesPreview = (notes: string | undefined, maxLength = 100) => {
+    if (!notes) return null;
+    if (notes.length <= maxLength) return notes;
+    return notes.substring(0, maxLength).trim() + '...';
   };
 
   const handleSaveToWishlist = async (e: React.MouseEvent) => {
@@ -88,15 +95,15 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
     setIsSaving(false);
   };
 
-  const handleProfileClick = () => {
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (user?.username) {
       navigate(`/u/${user.username}`);
     }
   };
 
-  const handleDrinkClick = () => {
+  const handleCardClick = () => {
     if (onDrinkClick && metadata.name && metadata.type && drinkId && user) {
-      // Create a drink object from the activity metadata
       const drink: Drink = {
         id: drinkId,
         name: metadata.name,
@@ -118,50 +125,50 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
     }
   };
 
+  const notesPreview = getNotesPreview(metadata.notes);
+
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          {/* User Avatar */}
+    <Card 
+      className="overflow-hidden cursor-pointer hover:bg-muted/30 transition-colors active:scale-[0.99]"
+      onClick={handleCardClick}
+    >
+      <CardContent className="p-3">
+        <div className="flex gap-2.5">
+          {/* User Avatar - Smaller */}
           <Avatar 
-            className="h-10 w-10 cursor-pointer hover:ring-2 ring-primary transition-all"
+            className="h-8 w-8 shrink-0 cursor-pointer hover:ring-2 ring-primary transition-all"
             onClick={handleProfileClick}
           >
             <AvatarImage src={user?.avatarUrl || undefined} />
-            <AvatarFallback className="bg-primary/10 text-primary">
+            <AvatarFallback className="bg-primary/10 text-primary text-xs">
               {getInitials(user?.displayName || user?.username)}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 min-w-0">
-            {/* Header */}
-            <div className="flex items-center gap-2 flex-wrap">
+            {/* Compact Header */}
+            <div className="flex items-center gap-1.5 text-sm">
               <span 
-                className="font-semibold text-foreground cursor-pointer hover:underline"
+                className="font-medium text-foreground truncate cursor-pointer hover:underline"
                 onClick={handleProfileClick}
               >
                 {user?.displayName || user?.username || 'Unknown'}
               </span>
-              <span className="text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-xs shrink-0">
                 {getActivityText()}
               </span>
               {getActivityIcon()}
+              <span className="text-muted-foreground text-xs shrink-0">
+                · {formatDistanceToNow(createdAt, { addSuffix: false })}
+              </span>
             </div>
 
-            {/* Timestamp */}
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {formatDistanceToNow(createdAt, { addSuffix: true })}
-            </p>
-
-            {/* Drink Info - Clickable */}
+            {/* Drink Info - Compact */}
             {metadata.name && (
-              <div 
-                className="mt-3 flex gap-3 cursor-pointer hover:bg-muted/50 -mx-2 px-2 py-2 rounded-lg transition-colors"
-                onClick={handleDrinkClick}
-              >
-                {/* Drink Image */}
+              <div className="mt-1.5 flex gap-2.5">
+                {/* Drink Image - Smaller */}
                 {metadata.image_url && (
-                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                  <div className="w-12 h-12 rounded-md overflow-hidden bg-muted shrink-0">
                     <img 
                       src={metadata.image_url} 
                       alt={metadata.name}
@@ -170,38 +177,51 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
                   </div>
                 )}
 
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-foreground truncate">
-                    {metadata.name}
-                  </h4>
-                  
-                  <div className="flex items-center gap-2 mt-1">
+                <div className="flex-1 min-w-0 space-y-1">
+                  {/* Drink name and type inline */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-medium text-sm text-foreground truncate">
+                      {metadata.name}
+                    </h4>
                     {metadata.type && (
                       <DrinkTypeBadge type={metadata.type} size="sm" />
                     )}
                   </div>
 
-                  {/* Rating */}
-                  {metadata.rating && activityType !== 'wishlist_added' && (
-                    <div className="mt-1">
+                  {/* Rating and location inline */}
+                  <div className="flex items-center gap-3 text-xs">
+                    {metadata.rating && activityType !== 'wishlist_added' && (
                       <StarRating rating={metadata.rating} size="sm" readonly />
-                    </div>
+                    )}
+                    {metadata.location && (
+                      <span className="flex items-center gap-1 text-muted-foreground truncate">
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{metadata.location}</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Notes Preview */}
+                  {notesPreview && (
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      "{notesPreview}"
+                    </p>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Actions */}
-            <div className="mt-3 flex gap-2">
+            {/* Compact Action */}
+            <div className="mt-2 flex justify-end">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={handleSaveToWishlist}
                 disabled={isSaving}
-                className="text-xs"
+                className="h-7 text-xs text-muted-foreground hover:text-foreground"
               >
                 <Bookmark className="h-3 w-3 mr-1" />
-                Save to Wishlist
+                Save
               </Button>
             </div>
           </div>

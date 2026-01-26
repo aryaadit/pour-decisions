@@ -21,6 +21,8 @@ export interface ActivityFeedItem {
     rating?: number;
     old_rating?: number;
     image_url?: string;
+    notes?: string;
+    location?: string;
   };
   createdAt: Date;
   // Joined data
