@@ -1,32 +1,53 @@
-import { useRef, memo, useCallback } from 'react';
+import { useRef, memo, useCallback, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Drink } from '@/types/drink';
 import { MemoizedDrinkListItem } from './MemoizedDrinkListItem';
+import { Loader2 } from 'lucide-react';
 
 interface VirtualizedDrinkListProps {
   drinks: Drink[];
   onDrinkClick: (drink: Drink) => void;
   onWishlistToggle: (drinkId: string, isWishlist: boolean) => void;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
 }
 
-const ITEM_GAP = 12; // Gap between items in pixels
+const ITEM_GAP = 12;
+const LOAD_MORE_THRESHOLD = 5; // Load more when within 5 items of bottom
 
 export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
   drinks,
   onDrinkClick,
   onWishlistToggle,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  onLoadMore,
 }: VirtualizedDrinkListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
     count: drinks.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 110, // Slightly increased base estimate
+    estimateSize: () => 110,
     overscan: 5,
-    gap: ITEM_GAP, // Use built-in gap support
+    gap: ITEM_GAP,
   });
 
   const items = virtualizer.getVirtualItems();
+
+  // Infinite scroll: check if we need to load more
+  useEffect(() => {
+    if (!onLoadMore || !hasNextPage || isFetchingNextPage) return;
+
+    const lastItem = items[items.length - 1];
+    if (!lastItem) return;
+
+    // If we're within threshold of the end, load more
+    if (lastItem.index >= drinks.length - LOAD_MORE_THRESHOLD) {
+      onLoadMore();
+    }
+  }, [items, drinks.length, hasNextPage, isFetchingNextPage, onLoadMore]);
 
   const handleClick = useCallback((drink: Drink) => {
     onDrinkClick(drink);
@@ -80,6 +101,14 @@ export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
           );
         })}
       </div>
+
+      {/* Loading indicator for infinite scroll */}
+      {isFetchingNextPage && (
+        <div className="flex items-center justify-center py-4">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-sm text-muted-foreground">Loading more...</span>
+        </div>
+      )}
     </div>
   );
 });

@@ -61,7 +61,7 @@ const Index = () => {
   const isMobile = useIsMobile();
   const appInfo = useAppInfo();
   const { isStepVisible, dismissStep, showWelcomeCarousel, completeWelcome } = useOnboarding();
-  const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther } = useDrinks();
+  const { drinks, isLoading, isFetchingNextPage, hasNextPage, loadMore, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther } = useDrinks();
   const { customTypes } = useCustomDrinkTypes();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -448,6 +448,9 @@ const Index = () => {
             drinks={filteredDrinks}
             onDrinkClick={setViewingDrink}
             onWishlistToggle={handleWishlistToggle}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={loadMore}
           />
         ) : (
           <EmptyState
