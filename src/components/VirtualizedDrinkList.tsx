@@ -9,6 +9,8 @@ interface VirtualizedDrinkListProps {
   onWishlistToggle: (drinkId: string, isWishlist: boolean) => void;
 }
 
+const ITEM_GAP = 12; // Gap between items in pixels
+
 export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
   drinks,
   onDrinkClick,
@@ -19,8 +21,9 @@ export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
   const virtualizer = useVirtualizer({
     count: drinks.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 100, // Estimated row height
-    overscan: 5, // Render 5 extra items above/below viewport
+    estimateSize: () => 110, // Slightly increased base estimate
+    overscan: 5,
+    gap: ITEM_GAP, // Use built-in gap support
   });
 
   const items = virtualizer.getVirtualItems();
@@ -42,7 +45,7 @@ export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
       ref={parentRef}
       className="max-w-2xl mx-auto overflow-auto"
       style={{
-        height: 'calc(100vh - 280px)', // Account for header, filters, nav
+        height: 'calc(100vh - 280px)',
         contain: 'strict',
       }}
     >
@@ -58,22 +61,21 @@ export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
           return (
             <div
               key={drink.id}
+              data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
               style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 width: '100%',
-                height: `${virtualRow.size}px`,
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <div className="pb-3">
-                <MemoizedDrinkListItem
-                  drink={drink}
-                  onClick={() => handleClick(drink)}
-                  onWishlistToggle={handleWishlistToggle}
-                />
-              </div>
+              <MemoizedDrinkListItem
+                drink={drink}
+                onClick={() => handleClick(drink)}
+                onWishlistToggle={handleWishlistToggle}
+              />
             </div>
           );
         })}
