@@ -61,7 +61,7 @@ export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
   }
 
   return (
-    <div ref={listRef} className="max-w-2xl mx-auto pb-24">
+    <div ref={listRef} className="max-w-2xl mx-auto pb-20">
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
