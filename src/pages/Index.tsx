@@ -10,12 +10,12 @@ import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { DrinkType, Drink, isBuiltInDrinkType } from '@/types/drink';
 import { SortOrder } from '@/types/profile';
-import { DrinkListItem } from '@/components/DrinkListItem';
+import { MemoizedDrinkListItem } from '@/components/MemoizedDrinkListItem';
 import { DrinkListItemSkeleton } from '@/components/DrinkListItemSkeleton';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { FilterSheet } from '@/components/FilterSheet';
 import { QuickFilters } from '@/components/QuickFilters';
-import { SearchBar } from '@/components/SearchBar';
+import { DebouncedSearchBar } from '@/components/DebouncedSearchBar';
 import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { ProfileMenu } from '@/components/ProfileMenu';
@@ -401,10 +401,11 @@ const Index = () => {
         <div className="flex flex-col gap-3 mb-4">
           {/* Search + Filter Trigger Row */}
           <div className="flex items-center gap-3">
-            <SearchBar
+            <DebouncedSearchBar
               value={searchQuery}
               onChange={setSearchQuery}
               placeholder="Search by name, brand, or notes..."
+              debounceMs={150}
             />
             <FilterSheet
               selectedType={selectedType}
@@ -444,13 +445,12 @@ const Index = () => {
         {/* Drink List */}
         {filteredDrinks.length > 0 ? (
           <div className="flex flex-col gap-3 max-w-2xl mx-auto">
-            {filteredDrinks.map((drink, index) => (
-              <DrinkListItem
+            {filteredDrinks.map((drink) => (
+              <MemoizedDrinkListItem
                 key={drink.id}
                 drink={drink}
                 onClick={() => setViewingDrink(drink)}
                 onWishlistToggle={handleWishlistToggle}
-                style={{ animationDelay: `${index * 30}ms` }}
               />
             ))}
           </div>
