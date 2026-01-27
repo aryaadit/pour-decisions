@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCollections } from '@/hooks/useCollections';
@@ -17,6 +17,17 @@ const Collections = () => {
   const { collections, isLoading, createCollection } = useCollections();
   const isMobile = useIsMobile();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  // Sort collections: Wishlist (system) first, then by created date
+  const sortedCollections = useMemo(() => {
+    return [...collections].sort((a, b) => {
+      // System collections (Wishlist) always first
+      if (a.isSystem && !b.isSystem) return -1;
+      if (!a.isSystem && b.isSystem) return 1;
+      // Then by creation date (newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [collections]);
 
   // Redirect to auth if not logged in
   if (!authLoading && !user) {
@@ -81,7 +92,7 @@ const Collections = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
-            {collections.map((collection, index) => (
+            {sortedCollections.map((collection) => (
               <CollectionCard
                 key={collection.id}
                 collection={collection}
