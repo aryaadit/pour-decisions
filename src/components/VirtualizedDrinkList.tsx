@@ -62,53 +62,55 @@ export const VirtualizedDrinkList = memo(function VirtualizedDrinkList({
   }
 
   return (
-    <div
-      ref={parentRef}
-      className="max-w-2xl mx-auto overflow-auto"
-      style={{
-        height: 'calc(100vh - 280px)',
-        contain: 'strict',
-      }}
-    >
+    <div className="max-w-2xl mx-auto">
       <div
+        ref={parentRef}
+        className="overflow-auto pb-24"
         style={{
-          height: `${virtualizer.getTotalSize()}px`,
-          width: '100%',
-          position: 'relative',
+          height: 'calc(100dvh - 320px)',
+          minHeight: '300px',
         }}
       >
-        {items.map((virtualRow) => {
-          const drink = drinks[virtualRow.index];
-          return (
-            <div
-              key={drink.id}
-              data-index={virtualRow.index}
-              ref={virtualizer.measureElement}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-            >
-              <MemoizedDrinkListItem
-                drink={drink}
-                onClick={() => handleClick(drink)}
-                onWishlistToggle={handleWishlistToggle}
-              />
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Loading indicator for infinite scroll */}
-      {isFetchingNextPage && (
-        <div className="flex items-center justify-center py-4">
-          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Loading more...</span>
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {items.map((virtualRow) => {
+            const drink = drinks[virtualRow.index];
+            return (
+              <div
+                key={drink.id}
+                data-index={virtualRow.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <MemoizedDrinkListItem
+                  drink={drink}
+                  onClick={() => handleClick(drink)}
+                  onWishlistToggle={handleWishlistToggle}
+                />
+              </div>
+            );
+          })}
         </div>
-      )}
+
+        {/* Loading indicator for infinite scroll */}
+        {isFetchingNextPage && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading more...</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 });
