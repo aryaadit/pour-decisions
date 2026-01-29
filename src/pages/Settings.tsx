@@ -444,11 +444,20 @@ const Settings = () => {
 
         <Button onClick={handleSave} disabled={isSaving} className="w-full">
           {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-          Save Settings
+          Save Changes
         </Button>
 
-        {/* Spacer for bottom nav */}
-        {isMobile && <div className="h-20" />}
+        {/* Footer Links */}
+        <div className="flex justify-center pt-4 pb-8">
+          <Button
+            variant="link"
+            size="sm"
+            onClick={() => navigate('/privacy')}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Privacy Policy
+          </Button>
+        </div>
       </main>
     </div>
   );
