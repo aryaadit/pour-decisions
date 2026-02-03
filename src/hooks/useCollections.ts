@@ -242,20 +242,41 @@ export function useCollections() {
       return null;
     }
 
-    const { data: drinksData, error: drinksError } = await supabase
-      .from('collection_drinks')
-      .select(`
-        drink_id,
-        position,
-        drinks (*)
-      `)
+    // Use the collection_drinks_public view for secure access to public collection drinks
+    // Then join with drinks_public view to get drink details safely
+    const { data: collectionDrinksData, error: collectionDrinksError } = await supabase
+      .from('collection_drinks_public')
+      .select('drink_id, position')
       .eq('collection_id', collectionData.id)
       .order('position', { ascending: true });
 
-    if (drinksError) {
-      console.error('Error fetching public collection drinks:', drinksError);
+    if (collectionDrinksError) {
+      console.error('Error fetching public collection drinks:', collectionDrinksError);
       return null;
     }
+
+    // Fetch drink details using the drinks_public view
+    const drinkIds = (collectionDrinksData || []).map(cd => cd.drink_id);
+    let drinksData: any[] = [];
+    
+    if (drinkIds.length > 0) {
+      const { data: drinksResult, error: drinksError } = await supabase
+        .from('drinks_public')
+        .select('*')
+        .in('id', drinkIds);
+      
+      if (drinksError) {
+        console.error('Error fetching drink details:', drinksError);
+        return null;
+      }
+      drinksData = drinksResult || [];
+    }
+
+    // Create a map for quick lookup and maintain position order
+    const drinksMap = new Map(drinksData.map(d => [d.id, d]));
+    const orderedDrinks = (collectionDrinksData || [])
+      .map(cd => drinksMap.get(cd.drink_id))
+      .filter(Boolean);
 
     const collection: Collection = {
       id: collectionData.id,
@@ -268,24 +289,22 @@ export function useCollections() {
       isSystem: false, // Public view doesn't expose is_system
       createdAt: new Date(collectionData.created_at),
       updatedAt: new Date(collectionData.updated_at),
-      drinkCount: drinksData?.length || 0,
+      drinkCount: orderedDrinks.length,
     };
 
-    const drinks: Drink[] = (drinksData || [])
-      .filter((cd: any) => cd.drinks)
-      .map((cd: any) => ({
-        id: cd.drinks.id,
-        name: cd.drinks.name,
-        type: cd.drinks.type as DrinkType,
-        brand: cd.drinks.brand || undefined,
-        rating: cd.drinks.rating || 0,
-        notes: cd.drinks.notes || undefined,
-        location: cd.drinks.location || undefined,
-        price: cd.drinks.price || undefined,
-        dateAdded: new Date(cd.drinks.date_added),
-        imageUrl: cd.drinks.image_url || undefined,
-        isWishlist: cd.drinks.is_wishlist || false,
-      }));
+    const drinks: Drink[] = orderedDrinks.map((d: any) => ({
+      id: d.id,
+      name: d.name,
+      type: d.type as DrinkType,
+      brand: d.brand || undefined,
+      rating: d.rating || 0,
+      notes: undefined, // Not exposed in drinks_public view
+      location: undefined, // Not exposed in drinks_public view  
+      price: undefined, // Not exposed in drinks_public view
+      dateAdded: new Date(d.date_added),
+      imageUrl: d.image_url || undefined,
+      isWishlist: d.is_wishlist || false,
+    }));
 
     trackEvent('shared_collection_viewed', 'page_view', { shareId });
     
