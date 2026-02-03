@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Lock, Globe, Users, Share2, Wine } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StorageAvatar } from '@/components/StorageAvatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSocialProfile } from '@/hooks/useSocialProfile';
@@ -274,12 +274,11 @@ export default function UserProfile() {
       {/* Profile Info */}
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="flex items-start gap-4">
-          <Avatar className="h-20 w-20">
-            <AvatarImage src={profile.avatarUrl || undefined} />
-            <AvatarFallback className="bg-primary/10 text-primary text-xl">
-              {getInitials(profile.displayName || profile.username)}
-            </AvatarFallback>
-          </Avatar>
+          <StorageAvatar
+            storagePath={profile.avatarUrl}
+            fallback={getInitials(profile.displayName || profile.username)}
+            className="h-20 w-20"
+          />
 
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">

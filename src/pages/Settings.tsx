@@ -22,7 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PageHeader } from '@/components/PageHeader';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StorageAvatar } from '@/components/StorageAvatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X, Settings as SettingsIcon, HelpCircle, MessageSquare } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -218,12 +219,12 @@ const Settings = () => {
               
               <div className="flex items-center gap-4">
                 <div className="relative group">
-                  <Avatar className="w-20 h-20 cursor-pointer" onClick={handleAvatarClick}>
-                    <AvatarImage src={profile?.avatarUrl || undefined} />
-                    <AvatarFallback className="bg-primary/20 text-primary text-xl">
-                      {isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : getInitials()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <StorageAvatar
+                    storagePath={profile?.avatarUrl}
+                    fallback={isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : getInitials()}
+                    className="w-20 h-20 cursor-pointer"
+                    onClick={handleAvatarClick}
+                  />
                   <div 
                     className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                     onClick={handleAvatarClick}

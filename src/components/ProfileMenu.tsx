@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StorageAvatar } from '@/components/StorageAvatar';
 import { Button } from '@/components/ui/button';
 import { LogOut, Settings, MessageSquare, Shield, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -77,24 +77,22 @@ export function ProfileMenu({ avatarUrl, displayName, email, username, onSignOut
 
   const AvatarButton = (
     <Button variant="ghost" size="icon" className="text-muted-foreground min-w-[44px] min-h-[44px]">
-      <Avatar className="w-9 h-9">
-        <AvatarImage src={avatarUrl || undefined} />
-        <AvatarFallback className="bg-primary/20 text-primary text-sm">
-          {getInitials()}
-        </AvatarFallback>
-      </Avatar>
+      <StorageAvatar
+        storagePath={avatarUrl}
+        fallback={getInitials()}
+        className="w-9 h-9"
+      />
     </Button>
   );
 
   const MenuContent = (
     <>
       <div className="flex items-center gap-3 px-2 py-3">
-        <Avatar className="w-12 h-12">
-          <AvatarImage src={avatarUrl || undefined} />
-          <AvatarFallback className="bg-primary/20 text-primary">
-            {getInitials()}
-          </AvatarFallback>
-        </Avatar>
+        <StorageAvatar
+          storagePath={avatarUrl}
+          fallback={getInitials()}
+          className="w-12 h-12"
+        />
         <div className="flex-1 min-w-0">
           <p className="font-medium truncate">
             {displayName || email}
