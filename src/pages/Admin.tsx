@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Bug, Loader2, Trash2, RefreshCw, Image as ImageIcon, BarChart3, Wrench, RotateCcw, Users, Search, Check, X } from 'lucide-react';
+import { ArrowLeft, Bug, Loader2, Trash2, RefreshCw, Image as ImageIcon, BarChart3, Wrench, RotateCcw, Users, Search, Check, X, ExternalLink, FileText, ImageIcon as ImageLucide } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
@@ -441,6 +441,50 @@ export default function Admin() {
                       No users found matching "{userSearchQuery}"
                     </p>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Store Assets Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ImageLucide className="w-5 h-5" />
+                    Store Assets & Pages
+                  </CardTitle>
+                  <CardDescription>
+                    Quick access to app store assets and compliance pages.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3"
+                    onClick={() => navigate('/store-listing')}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Store Listing Page
+                    <ExternalLink className="w-3 h-3 ml-auto text-muted-foreground" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3"
+                    onClick={() => navigate('/privacy')}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Privacy Policy
+                    <ExternalLink className="w-3 h-3 ml-auto text-muted-foreground" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3"
+                    asChild
+                  >
+                    <a href="/feature-graphic.png" target="_blank" rel="noopener noreferrer">
+                      <ImageLucide className="w-4 h-4" />
+                      Feature Graphic (1024x500)
+                      <ExternalLink className="w-3 h-3 ml-auto text-muted-foreground" />
+                    </a>
+                  </Button>
                 </CardContent>
               </Card>
             </div>
