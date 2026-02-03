@@ -408,6 +408,44 @@ export type Database = {
       }
     }
     Views: {
+      collection_drinks_public: {
+        Row: {
+          added_at: string | null
+          collection_id: string | null
+          drink_id: string | null
+          position: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_drinks_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_drinks_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_drinks_drink_id_fkey"
+            columns: ["drink_id"]
+            isOneToOne: false
+            referencedRelation: "drinks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collection_drinks_drink_id_fkey"
+            columns: ["drink_id"]
+            isOneToOne: false
+            referencedRelation: "drinks_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collections_public: {
         Row: {
           cover_color: string | null
