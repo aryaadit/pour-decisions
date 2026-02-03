@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Drink, DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons, isBuiltInDrinkType } from '@/types/drink';
 import { StarRating } from './StarRating';
+import { StorageImage } from './StorageImage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -241,11 +242,10 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
       return;
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('drink-images')
-      .getPublicUrl(filePath);
+    // Store the path in format "bucket/path" for signed URL generation
+    const storagePath = `drink-images/${filePath}`;
 
-    setImageUrl(publicUrl);
+    setImageUrl(storagePath);
     setIsUploading(false);
   };
 
@@ -327,8 +327,8 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
           {/* Photo Button */}
           {imageUrl ? (
             <div className="relative flex-shrink-0">
-              <img
-                src={imageUrl}
+              <StorageImage
+                storagePath={imageUrl}
                 alt="Drink preview"
                 className="w-10 h-10 object-cover rounded-lg border border-border"
               />

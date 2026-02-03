@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Drink, DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons, isBuiltInDrinkType } from '@/types/drink';
 import { StarRating } from '@/components/StarRating';
+import { StorageImage } from '@/components/StorageImage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -184,11 +185,10 @@ export default function AddDrink() {
       return;
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('drink-images')
-      .getPublicUrl(filePath);
+    // Store the path in format "bucket/path" for signed URL generation
+    const storagePath = `drink-images/${filePath}`;
 
-    setImageUrl(publicUrl);
+    setImageUrl(storagePath);
     setIsUploading(false);
   };
 
@@ -313,8 +313,8 @@ export default function AddDrink() {
             <div className="flex gap-2 items-center">
               {imageUrl ? (
                 <div className="relative flex-shrink-0">
-                  <img
-                    src={imageUrl}
+                  <StorageImage
+                    storagePath={imageUrl}
                     alt="Drink preview"
                     className="w-12 h-12 object-cover rounded-lg border border-border"
                   />

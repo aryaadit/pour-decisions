@@ -111,13 +111,12 @@ export function useProfile() {
 
     if (uploadError) return { error: uploadError, url: null };
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(filePath);
+    // Store the path in format "bucket/path" for signed URL generation
+    const storagePath = `avatars/${filePath}`;
 
-    await updateProfile({ avatarUrl: publicUrl });
+    await updateProfile({ avatarUrl: storagePath });
 
-    return { error: null, url: publicUrl };
+    return { error: null, url: storagePath };
   };
 
   return {

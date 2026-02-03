@@ -123,11 +123,8 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
       return null;
     }
 
-    const { data } = supabase.storage
-      .from('bug-attachments')
-      .getPublicUrl(fileName);
-
-    return data.publicUrl;
+    // Store the path in format "bucket/path" for signed URL generation
+    return `bug-attachments/${fileName}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

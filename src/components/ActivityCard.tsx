@@ -1,11 +1,12 @@
 import { formatDistanceToNow } from 'date-fns';
 import { Wine, Star, Heart, Bookmark, MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ActivityFeedItem } from '@/types/social';
 import { StarRating } from '@/components/StarRating';
 import { DrinkTypeBadge } from '@/components/DrinkTypeBadge';
+import { StorageImage } from '@/components/StorageImage';
 import { useNavigate } from 'react-router-dom';
 import { useDrinks } from '@/hooks/useDrinks';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -15,6 +16,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Drink, DrinkType } from '@/types/drink';
 import { DrinkOwner } from './DrinkDetailModal';
+import { useSignedUrl } from '@/hooks/useSignedUrl';
 
 interface ActivityCardProps {
   activity: ActivityFeedItem;
@@ -126,6 +128,7 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
   };
 
   const notesPreview = getNotesPreview(metadata.notes);
+  const { signedUrl: avatarUrl } = useSignedUrl(user?.avatarUrl);
 
   return (
     <Card 
@@ -139,7 +142,7 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
             className="h-8 w-8 shrink-0 cursor-pointer hover:ring-2 ring-primary transition-all"
             onClick={handleProfileClick}
           >
-            <AvatarImage src={user?.avatarUrl || undefined} />
+            {avatarUrl && <img src={avatarUrl} alt="" className="h-full w-full object-cover" />}
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
               {getInitials(user?.displayName || user?.username)}
             </AvatarFallback>
@@ -169,8 +172,8 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
                 {/* Drink Image - Smaller */}
                 {metadata.image_url && (
                   <div className="w-12 h-12 rounded-md overflow-hidden bg-muted shrink-0">
-                    <img 
-                      src={metadata.image_url} 
+                    <StorageImage 
+                      storagePath={metadata.image_url} 
                       alt={metadata.name}
                       className="w-full h-full object-cover"
                     />

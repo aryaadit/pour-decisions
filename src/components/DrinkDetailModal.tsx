@@ -5,7 +5,9 @@ import { StarRating } from './StarRating';
 import { DrinkTypeBadge } from './DrinkTypeBadge';
 import { WishlistToggle } from './WishlistToggle';
 import { AddToCollectionModal } from './AddToCollectionModal';
+import { StorageImage } from './StorageImage';
 import { useCollections } from '@/hooks/useCollections';
+import { useSignedUrl } from '@/hooks/useSignedUrl';
 import { format } from 'date-fns';
 import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn, FolderPlus, Folder, Loader2 } from 'lucide-react';
 import {
@@ -160,6 +162,9 @@ export function DrinkDetailModal({
     </div>
   );
 
+  // Get signed URL for image preview
+  const { signedUrl: imageSignedUrl } = useSignedUrl(displayDrink.imageUrl);
+
   const content = isLoadingFull ? loadingContent : (
     <div className="space-y-6">
       {/* Image */}
@@ -169,10 +174,15 @@ export function DrinkDetailModal({
           onClick={() => setShowImagePreview(true)}
           className="relative w-full aspect-video rounded-xl overflow-hidden group cursor-pointer bg-muted/50"
         >
-          <img
-            src={displayDrink.imageUrl}
+          <StorageImage
+            storagePath={displayDrink.imageUrl}
             alt={`Photo of ${displayDrink.name}`}
             className="w-full h-full object-contain"
+            fallback={
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-6xl">{drinkTypeIcons[displayDrink.type]}</span>
+              </div>
+            }
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
             <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -374,11 +384,13 @@ export function DrinkDetailModal({
           <X className="h-5 w-5" />
         </Button>
         <div className="flex items-center justify-center p-4">
-          <img
-            src={displayDrink.imageUrl}
-            alt={`Photo of ${displayDrink.name}`}
-            className="max-w-full max-h-[85vh] object-contain rounded-lg"
-          />
+          {imageSignedUrl && (
+            <img
+              src={imageSignedUrl}
+              alt={`Photo of ${displayDrink.name}`}
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>
