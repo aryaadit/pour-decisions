@@ -21,6 +21,7 @@ export function useDrinks() {
     const { data, error } = await supabase
       .from('drinks')
       .select('*')
+      .eq('user_id', user.id) // Only fetch the current user's own drinks
       .order('date_added', { ascending: false });
 
     if (error) {
