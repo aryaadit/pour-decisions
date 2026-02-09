@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { Clock } from 'lucide-react';
 import { Drink, drinkTypeIcons, drinkTypeLabels } from '@/types/drink';
 import { StarRating } from '@/components/StarRating';
+import { StorageImage } from '@/components/StorageImage';
 import { cn } from '@/lib/utils';
 
 interface MemoizedDrinkListItemProps {
@@ -50,13 +51,17 @@ export const MemoizedDrinkListItem = memo(function MemoizedDrinkListItem({
       <div className="flex-shrink-0 relative z-10 pointer-events-none">
         {drink.imageUrl ? (
           <div className="relative overflow-hidden rounded-lg">
-            <img
-              src={drink.imageUrl}
+            <StorageImage
+              storagePath={drink.imageUrl}
               alt={`Photo of ${drink.name}`}
               loading="lazy"
               className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
+              fallback={
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
+                  {drinkTypeIcons[drink.type]}
+                </div>
+              }
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
           </div>
         ) : (
           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-primary/10 flex items-center justify-center text-2xl transition-all duration-300 hover:bg-primary/20 hover:scale-105">
