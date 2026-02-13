@@ -1,4 +1,5 @@
-import { Star, Wine, ChevronRight } from 'lucide-react';
+import { Star, Wine, ChevronRight, FolderOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { StorageImage } from '@/components/StorageImage';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -110,7 +111,10 @@ export function ProfileCollectionsShowcase({ collections, isLoading, userId, isO
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
+      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+        Collections
+      </h3>
       {collectionsWithPreviews.map((collection) => (
         <button
           key={collection.id}
@@ -195,12 +199,15 @@ export function ProfileCollectionsShowcase({ collections, isLoading, userId, isO
         </button>
       ))}
       {isOwnProfile && (
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => navigate('/collections')}
-          className="w-full text-center text-sm text-primary hover:text-primary/80 transition-colors py-2"
+          className="w-full"
         >
+          <FolderOpen className="h-4 w-4 mr-2" />
           Manage Collections
-        </button>
+        </Button>
       )}
     </div>
   );
