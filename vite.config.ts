@@ -85,6 +85,22 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ].filter(Boolean),
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            // framer-motion is lazy-loaded (only WelcomeCarousel uses it)
+            if (id.includes("framer-motion")) return "vendor-framer";
+            // recharts + d3 only used by Admin (already lazy)
+            if (id.includes("recharts") || id.includes("d3-")) return "vendor-recharts";
+            // Group supabase + radix together to avoid circular chunk issues
+            if (id.includes("@supabase") || id.includes("@radix-ui")) return "vendor-ui";
+          }
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

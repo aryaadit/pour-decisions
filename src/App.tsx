@@ -13,16 +13,16 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { queryClient, setupCachePersistence } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 
-// Core tabs — eagerly loaded for instant navigation
+// Core tabs — eagerly loaded for instant bottom-nav switching
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Settings from "./pages/Settings";
-import AddDrink from "./pages/AddDrink";
 import Collections from "./pages/Collections";
 import Feed from "./pages/Feed";
-import UserProfile from "./pages/UserProfile";
 
-// Non-core routes — lazy-loaded to reduce initial bundle
+// All other routes — lazy-loaded to reduce initial bundle
+const Auth = lazy(() => import("./pages/Auth"));
+const Settings = lazy(() => import("./pages/Settings"));
+const AddDrink = lazy(() => import("./pages/AddDrink"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Admin = lazy(() => import("./pages/Admin"));
 const CollectionDetail = lazy(() => import("./pages/CollectionDetail"));
@@ -56,14 +56,14 @@ function AppRoutes() {
         <Routes>
           {/* Core tabs — eagerly loaded */}
           <Route path="/" element={<Index />} />
+          <Route path="/collections" element={<Collections />} />
+          <Route path="/feed" element={<Feed />} />
+
+          {/* Lazy-loaded routes */}
           <Route path="/auth" element={<Auth />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/add-drink" element={<AddDrink />} />
-          <Route path="/collections" element={<Collections />} />
-          <Route path="/feed" element={<Feed />} />
           <Route path="/u/:username" element={<UserProfile />} />
-
-          {/* Non-core routes — lazy-loaded */}
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/collections/:id" element={<CollectionDetail />} />
