@@ -4,6 +4,22 @@ import { QueryClient } from "@tanstack/react-query";
 const CACHE_KEY = "BARKEEPLY_QUERY_CACHE";
 const CACHE_VERSION = "v1";
 
+// ISO 8601 date pattern for JSON reviver
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+
+/**
+ * JSON reviver that converts ISO date strings back to Date objects.
+ * Needed because JSON.stringify turns Date objects into strings,
+ * and our domain types (Drink, Profile, etc.) expect real Date instances.
+ */
+function dateReviver(_key: string, value: unknown): unknown {
+  if (typeof value === "string" && ISO_DATE_RE.test(value)) {
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return value;
+}
+
 // Create query client with offline-first configuration
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,7 +72,7 @@ export function restoreQueryCache() {
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) return;
 
-    const { version, timestamp, queries } = JSON.parse(cached);
+    const { version, timestamp, queries } = JSON.parse(cached, dateReviver);
 
     // Check version and age (24 hours max)
     if (version !== CACHE_VERSION) return;
