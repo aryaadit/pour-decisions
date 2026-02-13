@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import * as adminService from '@/services/adminService';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,27 +18,8 @@ import { format } from 'date-fns';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-interface BugReport {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string;
-  status: string;
-  image_url: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface UserProfile {
-  id: string;
-  user_id: string;
-  username: string | null;
-  display_name: string | null;
-  avatar_url: string | null;
-  has_seen_welcome: boolean;
-  onboarding_step: string;
-  dismissed_onboarding_steps: string[];
-}
+type BugReport = adminService.BugReport;
+type UserProfile = adminService.AdminUserProfile;
 
 const statusColors: Record<string, string> = {
   open: 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30',
@@ -66,13 +47,8 @@ export default function Admin() {
   const fetchBugReports = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('bug_reports')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setBugReports(data || []);
+      const data = await adminService.fetchBugReports();
+      setBugReports(data);
     } catch (error) {
       console.error('Error fetching bug reports:', error);
       toast.error('Failed to load bug reports');
@@ -89,14 +65,8 @@ export default function Admin() {
 
     setIsSearching(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, user_id, username, display_name, avatar_url, has_seen_welcome, onboarding_step, dismissed_onboarding_steps')
-        .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
-        .limit(10);
-
-      if (error) throw error;
-      setSearchResults((data as UserProfile[]) || []);
+      const data = await adminService.searchProfiles(query);
+      setSearchResults(data);
     } catch (error) {
       console.error('Error searching users:', error);
       toast.error('Failed to search users');
@@ -108,12 +78,7 @@ export default function Admin() {
   const updateUserOnboarding = async (userId: string, updates: Partial<Pick<UserProfile, 'has_seen_welcome' | 'onboarding_step' | 'dismissed_onboarding_steps'>>) => {
     setIsUpdatingUser(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('user_id', userId);
-
-      if (error) throw error;
+      await adminService.updateUserOnboarding(userId, updates);
 
       // Update local state
       if (selectedUser && selectedUser.user_id === userId) {
@@ -171,12 +136,7 @@ export default function Admin() {
 
   const handleStatusChange = async (reportId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('bug_reports')
-        .update({ status: newStatus })
-        .eq('id', reportId);
-
-      if (error) throw error;
+      await adminService.updateBugReportStatus(reportId, newStatus);
 
       setBugReports(prev =>
         prev.map(report =>
@@ -194,12 +154,7 @@ export default function Admin() {
     if (!confirm('Are you sure you want to delete this bug report?')) return;
 
     try {
-      const { error } = await supabase
-        .from('bug_reports')
-        .delete()
-        .eq('id', reportId);
-
-      if (error) throw error;
+      await adminService.deleteBugReport(reportId);
 
       setBugReports(prev => prev.filter(report => report.id !== reportId));
       toast.success('Bug report deleted');

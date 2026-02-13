@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCollections } from '@/hooks/useCollections';
-import { DrinkListItem } from '@/components/DrinkListItem';
+import { DrinkListItem } from '@/components/MemoizedDrinkListItem';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { Button } from '@/components/ui/button';
 import { Globe, Loader2, Wine, ExternalLink } from 'lucide-react';

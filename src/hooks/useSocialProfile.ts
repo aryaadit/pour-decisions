@@ -1,138 +1,78 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { PublicProfile, ActivityVisibility } from '@/types/social';
+import * as profileService from '@/services/profileService';
 
 export function useSocialProfile() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  const getProfileByUsername = useCallback(async (username: string): Promise<PublicProfile | null> => {
-    setIsLoading(true);
-    
-    const { data, error } = await supabase
-      .from('profiles_public')
-      .select('*')
-      .ilike('username', username)
-      .maybeSingle();
+  const getProfileByUsername = useCallback(
+    async (username: string): Promise<PublicProfile | null> => {
+      setIsLoading(true);
+      try {
+        return await profileService.fetchProfileByUsername(username);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
-    setIsLoading(false);
+  const getProfileByUserId = useCallback(
+    async (userId: string): Promise<PublicProfile | null> => {
+      setIsLoading(true);
+      try {
+        return await profileService.fetchProfileByUserId(userId);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
-    if (error || !data) return null;
+  const searchUsers = useCallback(
+    async (
+      query: string,
+      limit = 10,
+      currentUserId?: string
+    ): Promise<PublicProfile[]> => {
+      if (!query || query.length < 2) return [];
+      setIsLoading(true);
+      try {
+        const excludeId = currentUserId || user?.id;
+        return await profileService.searchUsers(query, limit, excludeId);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [user]
+  );
 
-    return {
-      userId: data.user_id,
-      username: data.username,
-      displayName: data.display_name,
-      avatarUrl: data.avatar_url,
-      bio: data.bio,
-      isPublic: data.is_public || false,
-      activityVisibility: (data.activity_visibility as ActivityVisibility) || 'private',
-      createdAt: new Date(data.created_at || Date.now()),
-    };
-  }, []);
+  const checkUsernameAvailable = useCallback(
+    async (username: string): Promise<boolean> => {
+      return profileService.checkUsernameAvailable(username, user?.id);
+    },
+    [user]
+  );
 
-  const getProfileByUserId = useCallback(async (userId: string): Promise<PublicProfile | null> => {
-    setIsLoading(true);
-    
-    const { data, error } = await supabase
-      .from('profiles_public')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    setIsLoading(false);
-
-    if (error || !data) return null;
-
-    return {
-      userId: data.user_id,
-      username: data.username,
-      displayName: data.display_name,
-      avatarUrl: data.avatar_url,
-      bio: data.bio,
-      isPublic: data.is_public || false,
-      activityVisibility: (data.activity_visibility as ActivityVisibility) || 'private',
-      createdAt: new Date(data.created_at || Date.now()),
-    };
-  }, []);
-
-  const searchUsers = useCallback(async (query: string, limit = 10, currentUserId?: string): Promise<PublicProfile[]> => {
-    if (!query || query.length < 2) return [];
-
-    setIsLoading(true);
-
-    // Build the filter to search username OR display_name, AND require is_public = true
-    const searchFilter = `username.ilike.%${query}%,display_name.ilike.%${query}%`;
-    
-    const { data, error } = await supabase
-      .from('profiles_public')
-      .select('*')
-      .eq('is_public', true)
-      .or(searchFilter)
-      .limit(limit);
-
-    setIsLoading(false);
-
-    if (error) {
-      console.error('Search error:', error);
-      return [];
-    }
-    
-    if (!data) return [];
-
-    // Use passed currentUserId or fall back to user?.id for filtering
-    const excludeId = currentUserId || user?.id;
-
-    return data
-      .filter(p => p.user_id !== excludeId) // Exclude current user
-      .map(p => ({
-        userId: p.user_id,
-        username: p.username,
-        displayName: p.display_name,
-        avatarUrl: p.avatar_url,
-        bio: p.bio,
-        isPublic: p.is_public || false,
-        activityVisibility: (p.activity_visibility as ActivityVisibility) || 'private',
-        createdAt: new Date(p.created_at || Date.now()),
-      }));
-  }, [user]);
-
-  const checkUsernameAvailable = useCallback(async (username: string): Promise<boolean> => {
-    if (!username || username.length < 3) return false;
-
-    const { data } = await supabase
-      .from('profiles_public')
-      .select('user_id')
-      .ilike('username', username)
-      .maybeSingle();
-
-    // If data exists and it's not the current user, username is taken
-    if (data && data.user_id !== user?.id) return false;
-    
-    return true;
-  }, [user]);
-
-  const updateSocialProfile = useCallback(async (updates: {
-    username?: string;
-    bio?: string;
-    isPublic?: boolean;
-    activityVisibility?: ActivityVisibility;
-  }) => {
-    if (!user) return { error: new Error('Not authenticated') };
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        username: updates.username,
-        bio: updates.bio,
-        is_public: updates.isPublic,
-        activity_visibility: updates.activityVisibility,
-      })
-      .eq('user_id', user.id);
-
-    return { error };
-  }, [user]);
+  const updateSocialProfile = useCallback(
+    async (updates: {
+      username?: string;
+      bio?: string;
+      isPublic?: boolean;
+      activityVisibility?: ActivityVisibility;
+    }) => {
+      if (!user) return { error: new Error('Not authenticated') };
+      try {
+        await profileService.updateSocialProfile(user.id, updates);
+        return { error: null };
+      } catch (error) {
+        return { error: error as Error };
+      }
+    },
+    [user]
+  );
 
   return {
     isLoading,

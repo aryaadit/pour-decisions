@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import { queryKeys } from '@/lib/queryKeys';
+import * as customDrinkTypeService from '@/services/customDrinkTypeService';
 
 export interface CustomDrinkType {
   id: string;
@@ -10,45 +11,75 @@ export interface CustomDrinkType {
 }
 
 export function useCustomDrinkTypes() {
-  const [customTypes, setCustomTypes] = useState<CustomDrinkType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const fetchCustomTypes = useCallback(async () => {
-    if (!user) {
-      setCustomTypes([]);
-      setIsLoading(false);
-      return;
-    }
+  const { data: customTypes = [], isLoading } = useQuery({
+    queryKey: queryKeys.customDrinkTypes.list(user?.id ?? ''),
+    queryFn: () => customDrinkTypeService.fetchCustomDrinkTypes(user!.id),
+    enabled: !!user,
+  });
 
-    const { data, error } = await supabase
-      .from('custom_drink_types')
-      .select('*')
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching custom drink types:', error);
-    } else {
-      setCustomTypes(
-        (data || []).map((d) => ({
-          id: d.id,
-          name: d.name,
-          icon: d.icon,
-          color: d.color,
-        }))
+  const addMutation = useMutation({
+    mutationFn: ({ name, icon, color }: { name: string; icon: string; color: string }) =>
+      customDrinkTypeService.addCustomDrinkType(user!.id, name, icon, color),
+    onSuccess: (newType) => {
+      queryClient.setQueryData<CustomDrinkType[]>(
+        queryKeys.customDrinkTypes.list(user!.id),
+        (old = []) => [...old, newType]
       );
-    }
-    setIsLoading(false);
-  }, [user]);
+    },
+  });
 
-  useEffect(() => {
-    fetchCustomTypes();
-  }, [fetchCustomTypes]);
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      updates,
+    }: {
+      id: string;
+      updates: { name?: string; icon?: string; color?: string };
+    }) => customDrinkTypeService.updateCustomDrinkType(id, updates),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<CustomDrinkType[]>(
+        queryKeys.customDrinkTypes.list(user!.id),
+        (old = []) =>
+          old.map((t) => (t.id === updated.id ? updated : t))
+      );
+    },
+  });
 
-  const addCustomType = async (name: string, icon: string = '🍹', color: string = '#8B5CF6') => {
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => customDrinkTypeService.deleteCustomDrinkType(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.customDrinkTypes.list(user!.id),
+      });
+      const previous = queryClient.getQueryData<CustomDrinkType[]>(
+        queryKeys.customDrinkTypes.list(user!.id)
+      );
+      queryClient.setQueryData<CustomDrinkType[]>(
+        queryKeys.customDrinkTypes.list(user!.id),
+        (old = []) => old.filter((t) => t.id !== id)
+      );
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          queryKeys.customDrinkTypes.list(user!.id),
+          context.previous
+        );
+      }
+    },
+  });
+
+  const addCustomType = async (
+    name: string,
+    icon = '🍹',
+    color = '#8B5CF6'
+  ) => {
     if (!user) return null;
 
-    // Check if already exists
     const exists = customTypes.some(
       (t) => t.name.toLowerCase() === name.toLowerCase()
     );
@@ -56,37 +87,20 @@ export function useCustomDrinkTypes() {
       return { error: 'A drink type with this name already exists' };
     }
 
-    const { data, error } = await supabase
-      .from('custom_drink_types')
-      .insert({
-        user_id: user.id,
-        name: name.trim(),
-        icon,
-        color,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error adding custom drink type:', error);
+    try {
+      const data = await addMutation.mutateAsync({ name, icon, color });
+      return { data };
+    } catch (error: any) {
       return { error: error.message };
     }
-
-    const newType: CustomDrinkType = {
-      id: data.id,
-      name: data.name,
-      icon: data.icon,
-      color: data.color,
-    };
-
-    setCustomTypes((prev) => [...prev, newType]);
-    return { data: newType };
   };
 
-  const updateCustomType = async (id: string, updates: { name?: string; icon?: string; color?: string }) => {
+  const updateCustomType = async (
+    id: string,
+    updates: { name?: string; icon?: string; color?: string }
+  ) => {
     if (!user) return { error: 'Not authenticated' };
 
-    // Check if name already exists (if updating name)
     if (updates.name) {
       const exists = customTypes.some(
         (t) => t.id !== id && t.name.toLowerCase() === updates.name!.toLowerCase()
@@ -96,41 +110,21 @@ export function useCustomDrinkTypes() {
       }
     }
 
-    const { data, error } = await supabase
-      .from('custom_drink_types')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating custom drink type:', error);
+    try {
+      const data = await updateMutation.mutateAsync({ id, updates });
+      return { data };
+    } catch (error: any) {
       return { error: error.message };
     }
-
-    setCustomTypes((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? { ...t, name: data.name, icon: data.icon, color: data.color }
-          : t
-      )
-    );
-    return { data };
   };
 
   const deleteCustomType = async (id: string) => {
-    const { error } = await supabase
-      .from('custom_drink_types')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting custom drink type:', error);
+    try {
+      await deleteMutation.mutateAsync(id);
+      return { data: true };
+    } catch (error: any) {
       return { error: error.message };
     }
-
-    setCustomTypes((prev) => prev.filter((t) => t.id !== id));
-    return { data: true };
   };
 
   return {
@@ -139,6 +133,9 @@ export function useCustomDrinkTypes() {
     addCustomType,
     updateCustomType,
     deleteCustomType,
-    refetch: fetchCustomTypes,
+    refetch: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.customDrinkTypes.list(user?.id ?? ''),
+      }),
   };
 }

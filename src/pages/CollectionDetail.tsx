@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCollections } from '@/hooks/useCollections';
 import { useDrinks } from '@/hooks/useDrinks';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { DrinkListItem } from '@/components/DrinkListItem';
+import { DrinkListItem } from '@/components/MemoizedDrinkListItem';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
 import { StorageImage } from '@/components/StorageImage';

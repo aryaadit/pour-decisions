@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Drink, DrinkType, drinkTypeIcons } from '@/types/drink';
+import { Drink } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { DrinkTypeBadge } from './DrinkTypeBadge';
 import { WishlistToggle } from './WishlistToggle';
 import { AddToCollectionModal } from './AddToCollectionModal';
-import { StorageImage } from './StorageImage';
+import { DrinkImageViewer } from './drink-detail/DrinkImageViewer';
+import { DrinkMetadata } from './drink-detail/DrinkMetadata';
+import { DrinkActionBar } from './drink-detail/DrinkActionBar';
 import { useCollections } from '@/hooks/useCollections';
-import { useSignedUrl } from '@/hooks/useSignedUrl';
-import { format } from 'date-fns';
-import { MapPin, DollarSign, Calendar, X, Pencil, Trash2, ZoomIn, FolderPlus, Folder, Loader2 } from 'lucide-react';
+import { fetchDrinkById } from '@/services/drinkService';
+import { X, Folder, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -22,21 +23,10 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface DrinkOwner {
   username: string;
@@ -67,8 +57,6 @@ export function DrinkDetailModal({
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { collections, getDrinkCollections } = useCollections();
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showImagePreview, setShowImagePreview] = useState(false);
   const [showAddToCollection, setShowAddToCollection] = useState(false);
   const [drinkCollectionIds, setDrinkCollectionIds] = useState<string[]>([]);
   const [fullDrink, setFullDrink] = useState<Drink | null>(null);
@@ -76,39 +64,20 @@ export function DrinkDetailModal({
 
   // Fetch full drink data when modal opens with partial data (from feed/profile)
   useEffect(() => {
-    const fetchFullDrink = async () => {
+    const loadFullDrink = async () => {
       if (!open || !drink) {
         setFullDrink(null);
         return;
       }
 
-      // Check if we have partial data (missing notes, location, etc.)
       const isPartialData = drink.notes === undefined && drink.location === undefined && drink.price === undefined;
-      
+
       if (isPartialData && drink.id) {
         setIsLoadingFull(true);
-        const { data, error } = await supabase
-          .from('drinks')
-          .select('*')
-          .eq('id', drink.id)
-          .maybeSingle();
-
-        if (!error && data) {
-          setFullDrink({
-            id: data.id,
-            name: data.name,
-            type: data.type as DrinkType,
-            brand: data.brand || undefined,
-            rating: data.rating || 0,
-            notes: data.notes || undefined,
-            location: data.location || undefined,
-            price: data.price || undefined,
-            dateAdded: new Date(data.date_added),
-            imageUrl: data.image_url || undefined,
-            isWishlist: data.is_wishlist || false,
-          });
-        } else {
-          // Fall back to the partial drink if fetch fails
+        try {
+          const data = await fetchDrinkById(drink.id);
+          setFullDrink(data || drink);
+        } catch {
           setFullDrink(drink);
         }
         setIsLoadingFull(false);
@@ -117,10 +86,9 @@ export function DrinkDetailModal({
       }
     };
 
-    fetchFullDrink();
+    loadFullDrink();
   }, [open, drink]);
 
-  // Use full drink data if available, otherwise use the passed drink
   const displayDrink = fullDrink || drink;
 
   useEffect(() => {
@@ -138,66 +106,29 @@ export function DrinkDetailModal({
 
   const drinkCollections = collections.filter((c) => drinkCollectionIds.includes(c.id));
 
-  // Get signed URL for image preview - must be called unconditionally (before any returns)
-  const { signedUrl: imageSignedUrl } = useSignedUrl(displayDrink?.imageUrl);
-
-  // Handler functions - defined before early return so they can be used in content
   const handleEdit = () => {
     if (!displayDrink) return;
     onOpenChange(false);
     onEdit?.(displayDrink);
   };
 
-  const handleDeleteClick = () => {
-    setShowDeleteConfirm(true);
-  };
-
   const handleConfirmDelete = () => {
     if (!displayDrink) return;
-    setShowDeleteConfirm(false);
     onOpenChange(false);
     onDelete?.(displayDrink.id);
   };
 
-  // Loading state content
-  const loadingContent = (
+  if (!displayDrink) return null;
+
+  const content = isLoadingFull ? (
     <div className="flex items-center justify-center py-12">
       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
     </div>
-  );
-
-  if (!displayDrink) return null;
-
-  const content = isLoadingFull ? loadingContent : (
+  ) : (
     <div className="space-y-6">
-      {/* Image */}
-      {displayDrink.imageUrl ? (
-        <button
-          type="button"
-          onClick={() => setShowImagePreview(true)}
-          className="relative w-full aspect-video rounded-xl overflow-hidden group cursor-pointer bg-muted/50"
-        >
-          <StorageImage
-            storagePath={displayDrink.imageUrl}
-            alt={`Photo of ${displayDrink.name}`}
-            className="w-full h-full object-contain"
-            fallback={
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="text-6xl">{drinkTypeIcons[displayDrink.type]}</span>
-              </div>
-            }
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-            <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-        </button>
-      ) : (
-        <div className="w-full aspect-video rounded-xl bg-primary/10 flex items-center justify-center">
-          <span className="text-6xl">{drinkTypeIcons[displayDrink.type]}</span>
-        </div>
-      )}
+      <DrinkImageViewer drink={displayDrink} />
 
-      {/* Owner Info - shown when viewing from feed/profile */}
+      {/* Owner Info */}
       {owner && (
         <button
           type="button"
@@ -208,9 +139,7 @@ export function DrinkDetailModal({
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <span>Logged by</span>
-          <span className="font-medium text-foreground">
-            @{owner.username}
-          </span>
+          <span className="font-medium text-foreground">@{owner.username}</span>
         </button>
       )}
 
@@ -277,126 +206,26 @@ export function DrinkDetailModal({
         </div>
       )}
 
-      {/* Metadata */}
-      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-        {displayDrink.location && (
-          <span className="flex items-center gap-1.5">
-            <MapPin className="h-4 w-4" />
-            {displayDrink.location}
-          </span>
-        )}
-        {displayDrink.price && (
-          <span className="flex items-center gap-1.5">
-            <DollarSign className="h-4 w-4" />
-            {String(displayDrink.price).replace(/^\$/, '')}
-          </span>
-        )}
-        <span className="flex items-center gap-1.5">
-          <Calendar className="h-4 w-4" />
-          {format(displayDrink.dateAdded, 'MMMM d, yyyy')}
-        </span>
-      </div>
+      <DrinkMetadata drink={displayDrink} />
 
-      {/* Actions - hidden in read-only mode */}
       {!readOnly && (
-        <div className="flex gap-3 pt-2">
-          {onEdit && (
-            <Button variant="outline" className="flex-1" onClick={handleEdit}>
-              <Pencil className="h-4 w-4 mr-2" />
-              {displayDrink.isWishlist ? 'Log It' : 'Edit'}
-            </Button>
-          )}
-          <Button variant="outline" size="icon" onClick={() => setShowAddToCollection(true)} title="Add to collection">
-            <FolderPlus className="h-4 w-4" />
-          </Button>
-          {onDelete && (
-            <Button variant="destructive" size="icon" onClick={handleDeleteClick}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+        <DrinkActionBar
+          drink={displayDrink}
+          onEdit={onEdit ? handleEdit : undefined}
+          onDelete={onDelete ? handleConfirmDelete : undefined}
+          onAddToCollection={() => setShowAddToCollection(true)}
+        />
       )}
     </div>
   );
 
-  const deleteConfirmDialog = (
-    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete "{displayDrink.name}"?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently remove this drink from your collection.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirmDelete}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-
-  const handleImagePreviewClose = () => {
-    setShowImagePreview(false);
-  };
-
-  const imagePreviewDialog = displayDrink.imageUrl && showImagePreview && (
-    <Dialog 
-      open={true} 
-      onOpenChange={(isOpen) => {
-        if (!isOpen) {
-          handleImagePreviewClose();
-        }
-      }}
-      modal={true}
-    >
-      <DialogContent 
-        className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none"
-        onPointerDownOutside={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleImagePreviewClose();
-        }}
-        onEscapeKeyDown={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleImagePreviewClose();
-        }}
-        onInteractOutside={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      >
-        <DialogHeader className="sr-only">
-          <DialogTitle>Photo of {displayDrink.name}</DialogTitle>
-        </DialogHeader>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-2 top-2 z-10 text-white hover:bg-white/20"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleImagePreviewClose();
-          }}
-        >
-          <X className="h-5 w-5" />
-        </Button>
-        <div className="flex items-center justify-center p-4">
-          {imageSignedUrl && (
-            <img
-              src={imageSignedUrl}
-              alt={`Photo of ${displayDrink.name}`}
-              className="max-w-full max-h-[85vh] object-contain rounded-lg"
-            />
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+  const addToCollectionModal = displayDrink && (
+    <AddToCollectionModal
+      open={showAddToCollection}
+      onOpenChange={setShowAddToCollection}
+      drinkId={displayDrink.id}
+      drinkName={displayDrink.name}
+    />
   );
 
   if (isMobile) {
@@ -412,16 +241,7 @@ export function DrinkDetailModal({
             </div>
           </DrawerContent>
         </Drawer>
-        {deleteConfirmDialog}
-        {imagePreviewDialog}
-        {displayDrink && (
-          <AddToCollectionModal
-            open={showAddToCollection}
-            onOpenChange={setShowAddToCollection}
-            drinkId={displayDrink.id}
-            drinkName={displayDrink.name}
-          />
-        )}
+        {addToCollectionModal}
       </>
     );
   }
@@ -446,16 +266,7 @@ export function DrinkDetailModal({
           </ScrollArea>
         </DialogContent>
       </Dialog>
-      {deleteConfirmDialog}
-      {imagePreviewDialog}
-      {displayDrink && (
-        <AddToCollectionModal
-          open={showAddToCollection}
-          onOpenChange={setShowAddToCollection}
-          drinkId={displayDrink.id}
-          drinkName={displayDrink.name}
-        />
-      )}
+      {addToCollectionModal}
     </>
   );
 }

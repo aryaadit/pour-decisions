@@ -1,59 +1,134 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Collection, Drink, DrinkType } from '@/types/drink';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { queryKeys } from '@/lib/queryKeys';
+import * as collectionService from '@/services/collectionService';
 
 export function useCollections() {
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
+  const queryClient = useQueryClient();
 
-  const fetchCollections = useCallback(async () => {
-    if (!user) {
-      setCollections([]);
-      setIsLoading(false);
-      return;
-    }
+  const { data: collections = [], isLoading } = useQuery({
+    queryKey: queryKeys.collections.list(user?.id ?? ''),
+    queryFn: () => collectionService.fetchCollections(user!.id),
+    enabled: !!user,
+  });
 
-    setIsLoading(true);
-    
-    // Fetch collections with drink counts
-    const { data, error } = await supabase
-      .from('collections')
-      .select(`
-        *,
-        collection_drinks(count)
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching collections:', error);
-    } else {
-      setCollections(
-        (data || []).map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          description: c.description || undefined,
-          icon: c.icon,
-          coverColor: c.cover_color,
-          shareId: c.share_id,
-          isPublic: c.is_public,
-          isSystem: c.is_system || false,
-          createdAt: new Date(c.created_at),
-          updatedAt: new Date(c.updated_at),
-          drinkCount: c.collection_drinks?.[0]?.count || 0,
-        }))
+  const createMutation = useMutation({
+    mutationFn: ({
+      name,
+      description,
+      icon,
+      coverColor,
+    }: {
+      name: string;
+      description?: string;
+      icon?: string;
+      coverColor?: string;
+    }) => collectionService.createCollection(user!.id, name, description, icon, coverColor),
+    onSuccess: (newCollection) => {
+      queryClient.setQueryData<Collection[]>(
+        queryKeys.collections.list(user!.id),
+        (old = []) => [newCollection, ...old]
       );
-    }
-    setIsLoading(false);
-  }, [user]);
+      trackEvent('collection_created', 'action', { name: newCollection.name });
+    },
+    onError: (error: Error) => {
+      trackEvent('collection_create_error', 'error', { error: error.message });
+    },
+  });
 
-  useEffect(() => {
-    fetchCollections();
-  }, [fetchCollections]);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Collection> }) =>
+      collectionService.updateCollection(id, updates),
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.collections.list(user!.id) });
+      const previous = queryClient.getQueryData<Collection[]>(
+        queryKeys.collections.list(user!.id)
+      );
+      queryClient.setQueryData<Collection[]>(
+        queryKeys.collections.list(user!.id),
+        (old = []) =>
+          old.map((c) =>
+            c.id === id ? { ...c, ...updates, updatedAt: new Date() } : c
+          )
+      );
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          queryKeys.collections.list(user!.id),
+          context.previous
+        );
+      }
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => collectionService.deleteCollection(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.collections.list(user!.id) });
+      const previous = queryClient.getQueryData<Collection[]>(
+        queryKeys.collections.list(user!.id)
+      );
+      queryClient.setQueryData<Collection[]>(
+        queryKeys.collections.list(user!.id),
+        (old = []) => old.filter((c) => c.id !== id)
+      );
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          queryKeys.collections.list(user!.id),
+          context.previous
+        );
+      }
+    },
+    onSuccess: () => {
+      trackEvent('collection_deleted', 'action');
+    },
+  });
+
+  const addDrinkMutation = useMutation({
+    mutationFn: ({ collectionId, drinkId }: { collectionId: string; drinkId: string }) =>
+      collectionService.addDrinkToCollection(collectionId, drinkId),
+    onSuccess: (added, { collectionId }) => {
+      if (added) {
+        queryClient.setQueryData<Collection[]>(
+          queryKeys.collections.list(user!.id),
+          (old = []) =>
+            old.map((c) =>
+              c.id === collectionId
+                ? { ...c, drinkCount: (c.drinkCount || 0) + 1 }
+                : c
+            )
+        );
+        trackEvent('drink_added_to_collection', 'action', { collectionId });
+      }
+    },
+  });
+
+  const removeDrinkMutation = useMutation({
+    mutationFn: ({ collectionId, drinkId }: { collectionId: string; drinkId: string }) =>
+      collectionService.removeDrinkFromCollection(collectionId, drinkId),
+    onSuccess: (_, { collectionId }) => {
+      queryClient.setQueryData<Collection[]>(
+        queryKeys.collections.list(user!.id),
+        (old = []) =>
+          old.map((c) =>
+            c.id === collectionId
+              ? { ...c, drinkCount: Math.max(0, (c.drinkCount || 0) - 1) }
+              : c
+          )
+      );
+      trackEvent('drink_removed_from_collection', 'action', { collectionId });
+    },
+  });
 
   const createCollection = async (
     name: string,
@@ -62,78 +137,29 @@ export function useCollections() {
     coverColor = '#8B5CF6'
   ) => {
     if (!user) return null;
-
-    const { data, error } = await supabase
-      .from('collections')
-      .insert({
-        user_id: user.id,
-        name,
-        description: description || null,
-        icon,
-        cover_color: coverColor,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating collection:', error);
-      trackEvent('collection_create_error', 'error', { error: error.message });
+    try {
+      return await createMutation.mutateAsync({ name, description, icon, coverColor });
+    } catch {
       return null;
     }
-
-    const newCollection: Collection = {
-      id: data.id,
-      name: data.name,
-      description: data.description || undefined,
-      icon: data.icon,
-      coverColor: data.cover_color,
-      shareId: data.share_id,
-      isPublic: data.is_public,
-      isSystem: data.is_system || false,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-      drinkCount: 0,
-    };
-
-    setCollections((prev) => [newCollection, ...prev]);
-    trackEvent('collection_created', 'action', { name });
-    return newCollection;
   };
 
   const updateCollection = async (id: string, updates: Partial<Collection>) => {
-    const { error } = await supabase
-      .from('collections')
-      .update({
-        name: updates.name,
-        description: updates.description || null,
-        icon: updates.icon,
-        cover_color: updates.coverColor,
-        is_public: updates.isPublic,
-      })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error updating collection:', error);
+    try {
+      await updateMutation.mutateAsync({ id, updates });
+      return true;
+    } catch {
       return false;
     }
-
-    setCollections((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updates, updatedAt: new Date() } : c))
-    );
-    return true;
   };
 
   const deleteCollection = async (id: string) => {
-    const { error } = await supabase.from('collections').delete().eq('id', id);
-
-    if (error) {
-      console.error('Error deleting collection:', error);
+    try {
+      await deleteMutation.mutateAsync(id);
+      return true;
+    } catch {
       return false;
     }
-
-    setCollections((prev) => prev.filter((c) => c.id !== id));
-    trackEvent('collection_deleted', 'action');
-    return true;
   };
 
   const togglePublic = async (id: string) => {
@@ -142,189 +168,59 @@ export function useCollections() {
 
     const newIsPublic = !collection.isPublic;
     const success = await updateCollection(id, { isPublic: newIsPublic });
-    
+
     if (success) {
-      trackEvent(newIsPublic ? 'collection_shared' : 'collection_unshared', 'action');
+      trackEvent(
+        newIsPublic ? 'collection_shared' : 'collection_unshared',
+        'action'
+      );
     }
     return success;
   };
 
   const addDrinkToCollection = async (collectionId: string, drinkId: string) => {
-    const { error } = await supabase
-      .from('collection_drinks')
-      .insert({ collection_id: collectionId, drink_id: drinkId });
-
-    if (error) {
-      if (error.code === '23505') {
-        // Already in collection
-        return false;
-      }
-      console.error('Error adding drink to collection:', error);
+    try {
+      return await addDrinkMutation.mutateAsync({ collectionId, drinkId });
+    } catch {
       return false;
     }
-
-    // Update local count
-    setCollections((prev) =>
-      prev.map((c) =>
-        c.id === collectionId ? { ...c, drinkCount: (c.drinkCount || 0) + 1 } : c
-      )
-    );
-    
-    trackEvent('drink_added_to_collection', 'action', { collectionId });
-    return true;
   };
 
-  const removeDrinkFromCollection = async (collectionId: string, drinkId: string) => {
-    const { error } = await supabase
-      .from('collection_drinks')
-      .delete()
-      .eq('collection_id', collectionId)
-      .eq('drink_id', drinkId);
-
-    if (error) {
-      console.error('Error removing drink from collection:', error);
+  const removeDrinkFromCollection = async (
+    collectionId: string,
+    drinkId: string
+  ) => {
+    try {
+      await removeDrinkMutation.mutateAsync({ collectionId, drinkId });
+      return true;
+    } catch {
       return false;
     }
-
-    setCollections((prev) =>
-      prev.map((c) =>
-        c.id === collectionId ? { ...c, drinkCount: Math.max(0, (c.drinkCount || 0) - 1) } : c
-      )
-    );
-    
-    trackEvent('drink_removed_from_collection', 'action', { collectionId });
-    return true;
   };
 
-  const getCollectionDrinks = async (collectionId: string): Promise<Drink[]> => {
-    const { data, error } = await supabase
-      .from('collection_drinks')
-      .select(`
-        drink_id,
-        position,
-        drinks (*)
-      `)
-      .eq('collection_id', collectionId)
-      .order('position', { ascending: true });
+  const getCollectionDrinks = useCallback(
+    async (collectionId: string): Promise<Drink[]> => {
+      return collectionService.getCollectionDrinks(collectionId);
+    },
+    []
+  );
 
-    if (error) {
-      console.error('Error fetching collection drinks:', error);
-      return [];
+  const getPublicCollection = async (
+    shareId: string
+  ): Promise<{ collection: Collection; drinks: Drink[] } | null> => {
+    const result = await collectionService.getPublicCollection(shareId);
+    if (result) {
+      trackEvent('shared_collection_viewed', 'page_view', { shareId });
     }
-
-    return (data || [])
-      .filter((cd: any) => cd.drinks)
-      .map((cd: any) => ({
-        id: cd.drinks.id,
-        name: cd.drinks.name,
-        type: cd.drinks.type as DrinkType,
-        brand: cd.drinks.brand || undefined,
-        rating: cd.drinks.rating || 0,
-        notes: cd.drinks.notes || undefined,
-        location: cd.drinks.location || undefined,
-        price: cd.drinks.price || undefined,
-        dateAdded: new Date(cd.drinks.date_added),
-        imageUrl: cd.drinks.image_url || undefined,
-        isWishlist: cd.drinks.is_wishlist || false,
-      }));
+    return result;
   };
 
-  const getPublicCollection = async (shareId: string): Promise<{ collection: Collection; drinks: Drink[] } | null> => {
-    // Use the collections_public view to prevent user_id exposure
-    const { data: collectionData, error: collectionError } = await supabase
-      .from('collections_public')
-      .select('*')
-      .eq('share_id', shareId)
-      .single();
-
-    if (collectionError || !collectionData) {
-      console.error('Error fetching public collection:', collectionError);
-      return null;
-    }
-
-    // Use the collection_drinks_public view for secure access to public collection drinks
-    // Then join with drinks_public view to get drink details safely
-    const { data: collectionDrinksData, error: collectionDrinksError } = await supabase
-      .from('collection_drinks_public')
-      .select('drink_id, position')
-      .eq('collection_id', collectionData.id)
-      .order('position', { ascending: true });
-
-    if (collectionDrinksError) {
-      console.error('Error fetching public collection drinks:', collectionDrinksError);
-      return null;
-    }
-
-    // Fetch drink details using the drinks_public view
-    const drinkIds = (collectionDrinksData || []).map(cd => cd.drink_id);
-    let drinksData: any[] = [];
-    
-    if (drinkIds.length > 0) {
-      const { data: drinksResult, error: drinksError } = await supabase
-        .from('drinks_public')
-        .select('*')
-        .in('id', drinkIds);
-      
-      if (drinksError) {
-        console.error('Error fetching drink details:', drinksError);
-        return null;
-      }
-      drinksData = drinksResult || [];
-    }
-
-    // Create a map for quick lookup and maintain position order
-    const drinksMap = new Map(drinksData.map(d => [d.id, d]));
-    const orderedDrinks = (collectionDrinksData || [])
-      .map(cd => drinksMap.get(cd.drink_id))
-      .filter(Boolean);
-
-    const collection: Collection = {
-      id: collectionData.id,
-      name: collectionData.name,
-      description: collectionData.description || undefined,
-      icon: collectionData.icon,
-      coverColor: collectionData.cover_color,
-      shareId: collectionData.share_id,
-      isPublic: collectionData.is_public,
-      isSystem: false, // Public view doesn't expose is_system
-      createdAt: new Date(collectionData.created_at),
-      updatedAt: new Date(collectionData.updated_at),
-      drinkCount: orderedDrinks.length,
-    };
-
-    const drinks: Drink[] = orderedDrinks.map((d: any) => ({
-      id: d.id,
-      name: d.name,
-      type: d.type as DrinkType,
-      brand: d.brand || undefined,
-      rating: d.rating || 0,
-      notes: undefined, // Not exposed in drinks_public view
-      location: undefined, // Not exposed in drinks_public view  
-      price: undefined, // Not exposed in drinks_public view
-      dateAdded: new Date(d.date_added),
-      imageUrl: d.image_url || undefined,
-      isWishlist: d.is_wishlist || false,
-    }));
-
-    trackEvent('shared_collection_viewed', 'page_view', { shareId });
-    
-    return { collection, drinks };
-  };
-
-  const getDrinkCollections = useCallback(async (drinkId: string): Promise<string[]> => {
-    const { data, error } = await supabase
-      .from('collection_drinks')
-      .select('collection_id')
-      .eq('drink_id', drinkId);
-
-    if (error) {
-      console.error('Error fetching drink collections:', error);
-      return [];
-    }
-
-    return (data || []).map((cd) => cd.collection_id);
-  }, []);
-
+  const getDrinkCollections = useCallback(
+    async (drinkId: string): Promise<string[]> => {
+      return collectionService.getDrinkCollections(drinkId);
+    },
+    []
+  );
 
   return {
     collections,
@@ -338,6 +234,9 @@ export function useCollections() {
     getCollectionDrinks,
     getPublicCollection,
     getDrinkCollections,
-    refetch: fetchCollections,
+    refetch: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.collections.list(user?.id ?? ''),
+      }),
   };
 }

@@ -1,11 +1,26 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Drink, DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons, isBuiltInDrinkType } from '@/types/drink';
 import { StarRating } from './StarRating';
-import { StorageImage } from './StorageImage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useHaptics } from '@/hooks/useHaptics';
+import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
+import { Loader2, Search, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
+import * as drinkService from '@/services/drinkService';
+import { DrinkImageUploader } from '@/components/drink-form/DrinkImageUploader';
+import { LookupResultsPanel, LookupInfo } from '@/components/drink-form/LookupResultsPanel';
+import { DrinkDetailsForm } from '@/components/drink-form/DrinkDetailsForm';
 import {
   Dialog,
   DialogContent,
@@ -18,34 +33,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { Switch } from '@/components/ui/switch';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useHaptics } from '@/hooks/useHaptics';
-import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
-import { Camera, X, Loader2, ImagePlus, Search, Sparkles, ChevronDown } from 'lucide-react';
-import { takePhoto, pickFromGallery, dataUrlToBlob } from '@/hooks/useCamera';
-import { Capacitor } from '@capacitor/core';
-import { toast } from 'sonner';
 
 interface AddDrinkDialogProps {
   open: boolean;
@@ -56,7 +43,6 @@ interface AddDrinkDialogProps {
 }
 
 export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultType = 'whiskey' }: AddDrinkDialogProps) {
-  const { user } = useAuth();
   const isMobile = useIsMobile();
   const { impact, notification, ImpactStyle, NotificationType } = useHaptics();
   const { customTypes } = useCustomDrinkTypes();
@@ -71,24 +57,14 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
   const [isWishlist, setIsWishlist] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLookingUp, setIsLookingUp] = useState(false);
-  const [lookupInfo, setLookupInfo] = useState<{
-    tastingNotes?: string | null;
-    brandInfo?: string | null;
-    priceRange?: string | null;
-    suggestions?: string | null;
-  } | null>(null);
+  const [lookupInfo, setLookupInfo] = useState<LookupInfo | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const prevOpenRef = useRef(false);
   const isCameraActiveRef = useRef(false);
 
   useEffect(() => {
-    // Skip form reset if camera is active (app was just backgrounded/resumed)
-    if (isCameraActiveRef.current) {
-      return;
-    }
-    
-    // Only initialize form when dialog transitions from closed to open
+    if (isCameraActiveRef.current) return;
+
     const justOpened = open && !prevOpenRef.current;
     prevOpenRef.current = open;
 
@@ -103,7 +79,6 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         setPrice(editDrink.price || '');
         setImageUrl(editDrink.imageUrl);
         setIsWishlist(editDrink.isWishlist || false);
-        // Expand details if any optional field has data
         setDetailsOpen(!!(editDrink.brand || editDrink.notes || editDrink.location || editDrink.price));
       } else {
         setName('');
@@ -137,7 +112,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
   const handleLookup = async (useImage = false) => {
     const hasName = name.trim();
     const hasImage = useImage && imageUrl;
-    
+
     if (!hasName && !hasImage) {
       toast.error('Enter a drink name or add a photo first');
       return;
@@ -148,44 +123,24 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     setLookupInfo(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('lookup-drink', {
-        body: { 
-          drinkName: hasName ? name.trim() : undefined, 
-          drinkType: type, 
-          brand: brand.trim() || undefined,
-          imageUrl: hasImage ? imageUrl : undefined
-        }
+      const data = await drinkService.lookupDrink({
+        drinkName: hasName ? name.trim() : undefined,
+        drinkType: type,
+        brand: brand.trim() || undefined,
+        imageUrl: hasImage ? imageUrl : undefined,
       });
-
-      if (error) {
-        console.error('Lookup error:', error);
-        toast.error('Failed to look up drink info');
-        return;
-      }
-
-      if (data?.error) {
-        toast.error(data.error);
-        return;
-      }
 
       if (data?.success && data?.data) {
         notification(NotificationType.Success);
         const info = data.data;
         setLookupInfo(info);
-        
-        // Auto-fill name, brand, and type if identified from image
+
         if (useImage) {
-          if (info.drinkName && !name.trim()) {
-            setName(info.drinkName);
-          }
-          if (info.drinkBrand && !brand.trim()) {
-            setBrand(info.drinkBrand);
-          }
-          if (info.drinkType) {
-            setType(info.drinkType);
-          }
+          if (info.drinkName && !name.trim()) setName(info.drinkName);
+          if (info.drinkBrand && !brand.trim()) setBrand(info.drinkBrand);
+          if (info.drinkType) setType(info.drinkType);
         }
-        
+
         toast.success(useImage ? 'Identified drink from photo!' : 'Found drink information!');
       }
     } catch (err) {
@@ -197,109 +152,28 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
   };
 
   const applyLookupInfo = (field: 'notes' | 'price' | 'all') => {
-    impact(ImpactStyle.Light);
     if (!lookupInfo) return;
-    
+
     if (field === 'notes' || field === 'all') {
       const combinedNotes = [
         lookupInfo.tastingNotes,
         lookupInfo.brandInfo,
-        lookupInfo.suggestions
+        lookupInfo.suggestions,
       ].filter(Boolean).join('\n\n');
       if (combinedNotes) setNotes(combinedNotes);
     }
-    
+
     if (field === 'price' || field === 'all') {
       if (lookupInfo.priceRange) setPrice(lookupInfo.priceRange);
     }
-    
-    if (field === 'all') {
-      setLookupInfo(null);
-      toast.success('Applied drink info');
-    }
+
+    if (field === 'all') setLookupInfo(null);
   };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    await uploadFile(file);
-  };
-
-  const uploadFile = async (file: File | Blob) => {
-    if (!user) return;
-    
-    setIsUploading(true);
-    const fileExt = file instanceof File ? file.name.split('.').pop() : 'jpg';
-    const filePath = `${user.id}/${Date.now()}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('drink-images')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error('Error uploading image:', uploadError);
-      setIsUploading(false);
-      return;
-    }
-
-    // Store the path in format "bucket/path" for signed URL generation
-    const storagePath = `drink-images/${filePath}`;
-
-    setImageUrl(storagePath);
-    setIsUploading(false);
-  };
-
-  const handleTakePhoto = async () => {
-    impact(ImpactStyle.Light);
-    isCameraActiveRef.current = true;
-    try {
-      const photo = await takePhoto();
-      if (photo) {
-        const blob = dataUrlToBlob(photo.dataUrl);
-        await uploadFile(blob);
-      }
-    } catch (error: any) {
-      console.error('Camera error:', error);
-      toast.error(error?.message || 'Failed to take photo. Please check camera permissions.');
-    } finally {
-      // Small delay to ensure component has re-stabilized after camera return
-      setTimeout(() => {
-        isCameraActiveRef.current = false;
-      }, 500);
-    }
-  };
-
-  const handlePickFromGallery = async () => {
-    impact(ImpactStyle.Light);
-    isCameraActiveRef.current = true;
-    try {
-      const photo = await pickFromGallery();
-      if (photo) {
-        const blob = dataUrlToBlob(photo.dataUrl);
-        await uploadFile(blob);
-      }
-    } catch (error: any) {
-      console.error('Gallery error:', error);
-      toast.error(error?.message || 'Failed to access photos. Please check photo library permissions.');
-    } finally {
-      setTimeout(() => {
-        isCameraActiveRef.current = false;
-      }, 500);
-    }
-  };
-
-  const removeImage = () => {
-    setImageUrl(undefined);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const isNative = Capacitor.isNativePlatform();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    // Haptic feedback for successful form submission
     notification(NotificationType.Success);
 
     onSave({
@@ -320,74 +194,16 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
 
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Essential Fields */}
       <div className="space-y-2">
         <Label htmlFor="name">Name *</Label>
         <div className="flex gap-2 items-center">
-          {/* Photo Button */}
-          {imageUrl ? (
-            <div className="relative flex-shrink-0">
-              <StorageImage
-                storagePath={imageUrl}
-                alt="Drink preview"
-                className="w-10 h-10 object-cover rounded-lg border border-border"
-              />
-              <button
-                type="button"
-                onClick={removeImage}
-                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:bg-destructive/90"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          ) : isNative ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  disabled={isUploading}
-                  className="w-10 h-10 flex-shrink-0 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
-                >
-                  {isUploading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Camera className="w-4 h-4" />
-                  )}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="bg-popover z-[60]">
-                <DropdownMenuItem onClick={handleTakePhoto}>
-                  <Camera className="w-4 h-4 mr-2" />
-                  Take Photo
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handlePickFromGallery}>
-                  <ImagePlus className="w-4 h-4 mr-2" />
-                  Choose from Gallery
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="w-10 h-10 flex-shrink-0 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
-            >
-              {isUploading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Camera className="w-4 h-4" />
-              )}
-            </button>
-          )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
+          <DrinkImageUploader
+            imageUrl={imageUrl}
+            onImageChange={setImageUrl}
+            isUploading={isUploading}
+            onUploadingChange={setIsUploading}
+            isCameraActiveRef={isCameraActiveRef}
           />
-          
           <Input
             id="name"
             value={name}
@@ -402,7 +218,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
             size="icon"
             onClick={() => handleLookup(!!imageUrl)}
             disabled={isLookingUp || (!name.trim() && !imageUrl)}
-            title={imageUrl ? "Identify drink from photo" : "Look up drink info"}
+            title={imageUrl ? 'Identify drink from photo' : 'Look up drink info'}
           >
             {isLookingUp ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -447,21 +263,14 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         </Select>
       </div>
 
-      {/* Wishlist Toggle */}
       <div className="flex items-center justify-between py-2 px-1">
         <div className="space-y-0.5">
           <Label htmlFor="wishlist-toggle" className="text-sm font-medium cursor-pointer">
             Want to try
           </Label>
-          <p className="text-xs text-muted-foreground">
-            Save for later without rating
-          </p>
+          <p className="text-xs text-muted-foreground">Save for later without rating</p>
         </div>
-        <Switch
-          id="wishlist-toggle"
-          checked={isWishlist}
-          onCheckedChange={setIsWishlist}
-        />
+        <Switch id="wishlist-toggle" checked={isWishlist} onCheckedChange={setIsWishlist} />
       </div>
 
       {!isWishlist && (
@@ -473,108 +282,25 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         </div>
       )}
 
-      {/* Lookup Results */}
       {lookupInfo && (
-        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-medium text-primary">
-              <Sparkles className="w-4 h-4" />
-              Found Info
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => applyLookupInfo('all')}
-              className="text-xs h-7"
-            >
-              Apply All
-            </Button>
-          </div>
-          {lookupInfo.tastingNotes && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              <strong>Taste:</strong> {lookupInfo.tastingNotes}
-            </p>
-          )}
-          {lookupInfo.priceRange && (
-            <p className="text-xs text-muted-foreground">
-              <strong>Price:</strong> {lookupInfo.priceRange}
-            </p>
-          )}
-        </div>
+        <LookupResultsPanel lookupInfo={lookupInfo} onApply={applyLookupInfo} />
       )}
 
-      {/* Collapsible More Details */}
-      <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full py-2"
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform ${detailsOpen ? 'rotate-180' : ''}`} />
-            <span>{detailsOpen ? 'Less details' : 'More details'}</span>
-            {!detailsOpen && (brand || notes || location || price) && (
-              <span className="text-xs text-primary">(has data)</span>
-            )}
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label htmlFor="brand">Brand / Producer</Label>
-            <Input
-              id="brand"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              placeholder="e.g., Lagavulin, The Alchemist"
-              className="bg-secondary/50"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Tasting Notes</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="What did you like about it? Flavor profile, aromas..."
-              rows={2}
-              className="bg-secondary/50 resize-none"
-            />
-          </div>
-
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="location">Where did you have it?</Label>
-              <Input
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Bar, restaurant, city..."
-                className="bg-secondary/50"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="price">Price</Label>
-              <Input
-                id="price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="$15/glass, $45/bottle..."
-                className="bg-secondary/50"
-              />
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      <DrinkDetailsForm
+        brand={brand}
+        onBrandChange={setBrand}
+        notes={notes}
+        onNotesChange={setNotes}
+        location={location}
+        onLocationChange={setLocation}
+        price={price}
+        onPriceChange={setPrice}
+        detailsOpen={detailsOpen}
+        onDetailsOpenChange={setDetailsOpen}
+      />
 
       <div className="flex gap-3 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          className="flex-1"
-          onClick={() => onOpenChange(false)}
-        >
+        <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
           Cancel
         </Button>
         <Button type="submit" variant="glow" className="flex-1">
@@ -584,18 +310,16 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     </form>
   );
 
+  const title = editDrink ? 'Edit Drink' : 'Add New Drink';
+
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[90vh]">
           <DrawerHeader className="text-left pb-2">
-            <DrawerTitle className="font-display text-xl">
-              {editDrink ? 'Edit Drink' : 'Add New Drink'}
-            </DrawerTitle>
+            <DrawerTitle className="font-display text-xl">{title}</DrawerTitle>
           </DrawerHeader>
-          <div className="px-4 pb-6 overflow-y-auto">
-            {formContent}
-          </div>
+          <div className="px-4 pb-6 overflow-y-auto">{formContent}</div>
         </DrawerContent>
       </Drawer>
     );
@@ -605,13 +329,9 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">
-            {editDrink ? 'Edit Drink' : 'Add New Drink'}
-          </DialogTitle>
+          <DialogTitle className="font-display text-2xl">{title}</DialogTitle>
         </DialogHeader>
-        <div className="mt-2">
-          {formContent}
-        </div>
+        <div className="mt-2">{formContent}</div>
       </DialogContent>
     </Dialog>
   );

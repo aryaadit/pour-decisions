@@ -5,22 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerFooter,
-} from '@/components/ui/drawer';
+import { ResponsiveModal } from '@/components/ResponsiveModal';
 import { Plus, Loader2, FolderPlus } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
 import { toast } from 'sonner';
 
@@ -37,7 +23,6 @@ export function AddToCollectionModal({
   drinkId,
   drinkName,
 }: AddToCollectionModalProps) {
-  const isMobile = useIsMobile();
   const { impact, notification, ImpactStyle, NotificationType } = useHaptics();
   const {
     collections,
@@ -235,29 +220,14 @@ export function AddToCollectionModal({
     </div>
   );
 
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Add to Collection</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-4">{content}</div>
-          <DrawerFooter>{footer}</DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add to Collection</DialogTitle>
-        </DialogHeader>
-        {content}
-        <DialogFooter>{footer}</DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Add to Collection"
+      footer={footer}
+    >
+      {content}
+    </ResponsiveModal>
   );
 }

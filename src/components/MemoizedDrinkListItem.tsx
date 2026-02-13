@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 interface MemoizedDrinkListItemProps {
   drink: Drink;
-  onClick: () => void;
+  onClick?: () => void;
   onWishlistToggle?: (drinkId: string, isWishlist: boolean) => void;
   style?: React.CSSProperties;
 }
@@ -121,3 +121,5 @@ export const MemoizedDrinkListItem = memo(function MemoizedDrinkListItem({
     prevProps.drink.price === nextProps.drink.price
   );
 });
+
+export const DrinkListItem = MemoizedDrinkListItem;

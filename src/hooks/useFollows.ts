@@ -1,185 +1,149 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { Follow, FollowCounts, PublicProfile } from '@/types/social';
+import { FollowCounts, PublicProfile } from '@/types/social';
+import { queryKeys } from '@/lib/queryKeys';
+import * as followService from '@/services/followService';
 
 export function useFollows(targetUserId?: string) {
   const { user } = useAuth();
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [followCounts, setFollowCounts] = useState<FollowCounts>({ followers: 0, following: 0 });
-  const [followers, setFollowers] = useState<PublicProfile[]>([]);
-  const [following, setFollowing] = useState<PublicProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const userId = targetUserId || user?.id;
 
-  const checkFollowStatus = useCallback(async () => {
-    if (!user || !targetUserId || user.id === targetUserId) {
-      setIsFollowing(false);
-      return;
-    }
+  const { data: isFollowing = false, isLoading: statusLoading } = useQuery({
+    queryKey: queryKeys.follows.status(user?.id ?? '', targetUserId ?? ''),
+    queryFn: () => followService.checkFollowStatus(user!.id, targetUserId!),
+    enabled: !!user && !!targetUserId && user.id !== targetUserId,
+  });
 
-    const { data } = await supabase
-      .from('follows')
-      .select('id')
-      .eq('follower_id', user.id)
-      .eq('following_id', targetUserId)
-      .eq('status', 'accepted')
-      .maybeSingle();
-
-    setIsFollowing(!!data);
-  }, [user, targetUserId]);
-
-  const fetchFollowCounts = useCallback(async (userId: string) => {
-    const [followersResult, followingResult] = await Promise.all([
-      supabase
-        .from('follows')
-        .select('id', { count: 'exact', head: true })
-        .eq('following_id', userId)
-        .eq('status', 'accepted'),
-      supabase
-        .from('follows')
-        .select('id', { count: 'exact', head: true })
-        .eq('follower_id', userId)
-        .eq('status', 'accepted'),
-    ]);
-
-    setFollowCounts({
-      followers: followersResult.count || 0,
-      following: followingResult.count || 0,
+  const { data: followCounts = { followers: 0, following: 0 }, isLoading: countsLoading } =
+    useQuery({
+      queryKey: queryKeys.follows.counts(userId ?? ''),
+      queryFn: () => followService.fetchFollowCounts(userId!),
+      enabled: !!userId,
     });
-  }, []);
 
-  const fetchFollowers = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from('follows')
-      .select('follower_id')
-      .eq('following_id', userId)
-      .eq('status', 'accepted');
+  const { data: followers = [] } = useQuery({
+    queryKey: queryKeys.follows.followers(userId ?? ''),
+    queryFn: () => followService.fetchFollowers(userId!),
+    enabled: false, // Only fetch on demand
+  });
 
-    if (!data || data.length === 0) {
-      setFollowers([]);
-      return;
-    }
+  const { data: following = [] } = useQuery({
+    queryKey: queryKeys.follows.following(userId ?? ''),
+    queryFn: () => followService.fetchFollowing(userId!),
+    enabled: false, // Only fetch on demand
+  });
 
-    const followerIds = data.map(f => f.follower_id);
-    const { data: profiles } = await supabase
-      .from('profiles_public')
-      .select('*')
-      .in('user_id', followerIds);
+  const followMutation = useMutation({
+    mutationFn: (userIdToFollow: string) =>
+      followService.followUser(user!.id, userIdToFollow),
+    onMutate: async (userIdToFollow) => {
+      // Optimistic update for follow status
+      queryClient.setQueryData(
+        queryKeys.follows.status(user!.id, userIdToFollow),
+        true
+      );
+      // Optimistic update for counts of the target user
+      queryClient.setQueryData<FollowCounts>(
+        queryKeys.follows.counts(userIdToFollow),
+        (old) =>
+          old
+            ? { ...old, followers: old.followers + 1 }
+            : { followers: 1, following: 0 }
+      );
+    },
+    onError: (_, userIdToFollow) => {
+      queryClient.setQueryData(
+        queryKeys.follows.status(user!.id, userIdToFollow),
+        false
+      );
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.follows.counts(userIdToFollow),
+      });
+    },
+  });
 
-    if (profiles) {
-      setFollowers(profiles.map(p => ({
-        userId: p.user_id,
-        username: p.username,
-        displayName: p.display_name,
-        avatarUrl: p.avatar_url,
-        bio: p.bio,
-        isPublic: p.is_public || false,
-        activityVisibility: (p.activity_visibility as 'private' | 'followers' | 'public') || 'private',
-        createdAt: new Date(p.created_at || Date.now()),
-      })));
-    }
-  }, []);
-
-  const fetchFollowing = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from('follows')
-      .select('following_id')
-      .eq('follower_id', userId)
-      .eq('status', 'accepted');
-
-    if (!data || data.length === 0) {
-      setFollowing([]);
-      return;
-    }
-
-    const followingIds = data.map(f => f.following_id);
-    const { data: profiles } = await supabase
-      .from('profiles_public')
-      .select('*')
-      .in('user_id', followingIds);
-
-    if (profiles) {
-      setFollowing(profiles.map(p => ({
-        userId: p.user_id,
-        username: p.username,
-        displayName: p.display_name,
-        avatarUrl: p.avatar_url,
-        bio: p.bio,
-        isPublic: p.is_public || false,
-        activityVisibility: (p.activity_visibility as 'private' | 'followers' | 'public') || 'private',
-        createdAt: new Date(p.created_at || Date.now()),
-      })));
-    }
-  }, []);
+  const unfollowMutation = useMutation({
+    mutationFn: (userIdToUnfollow: string) =>
+      followService.unfollowUser(user!.id, userIdToUnfollow),
+    onMutate: async (userIdToUnfollow) => {
+      queryClient.setQueryData(
+        queryKeys.follows.status(user!.id, userIdToUnfollow),
+        false
+      );
+      queryClient.setQueryData<FollowCounts>(
+        queryKeys.follows.counts(userIdToUnfollow),
+        (old) =>
+          old
+            ? { ...old, followers: Math.max(0, old.followers - 1) }
+            : { followers: 0, following: 0 }
+      );
+    },
+    onError: (_, userIdToUnfollow) => {
+      queryClient.setQueryData(
+        queryKeys.follows.status(user!.id, userIdToUnfollow),
+        true
+      );
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.follows.counts(userIdToUnfollow),
+      });
+    },
+  });
 
   const follow = async (userIdToFollow: string) => {
     if (!user) return { error: new Error('Not authenticated') };
-
-    const { error } = await supabase
-      .from('follows')
-      .insert({
-        follower_id: user.id,
-        following_id: userIdToFollow,
-        status: 'accepted',
-      });
-
-    if (!error) {
-      setIsFollowing(true);
-      setFollowCounts(prev => ({ ...prev, following: prev.following + 1 }));
+    try {
+      await followMutation.mutateAsync(userIdToFollow);
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
     }
-
-    return { error };
   };
 
   const unfollow = async (userIdToUnfollow: string) => {
     if (!user) return { error: new Error('Not authenticated') };
-
-    const { error } = await supabase
-      .from('follows')
-      .delete()
-      .eq('follower_id', user.id)
-      .eq('following_id', userIdToUnfollow);
-
-    if (!error) {
-      setIsFollowing(false);
-      setFollowCounts(prev => ({ ...prev, following: prev.following - 1 }));
+    try {
+      await unfollowMutation.mutateAsync(userIdToUnfollow);
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
     }
-
-    return { error };
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      const userId = targetUserId || user?.id;
-      
-      if (userId) {
-        await Promise.all([
-          checkFollowStatus(),
-          fetchFollowCounts(userId),
-        ]);
-      }
-      setIsLoading(false);
-    };
+  const fetchFollowers = async (id: string) => {
+    await queryClient.fetchQuery({
+      queryKey: queryKeys.follows.followers(id),
+      queryFn: () => followService.fetchFollowers(id),
+    });
+  };
 
-    loadData();
-  }, [user, targetUserId, checkFollowStatus, fetchFollowCounts]);
+  const fetchFollowing = async (id: string) => {
+    await queryClient.fetchQuery({
+      queryKey: queryKeys.follows.following(id),
+      queryFn: () => followService.fetchFollowing(id),
+    });
+  };
 
   return {
     isFollowing,
     followCounts,
     followers,
     following,
-    isLoading,
+    isLoading: statusLoading || countsLoading,
     follow,
     unfollow,
     fetchFollowers,
     fetchFollowing,
     refetch: () => {
-      const userId = targetUserId || user?.id;
       if (userId) {
-        checkFollowStatus();
-        fetchFollowCounts(userId);
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.follows.counts(userId),
+        });
+      }
+      if (user && targetUserId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.follows.status(user.id, targetUserId),
+        });
       }
     },
   };

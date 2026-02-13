@@ -4,28 +4,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerFooter,
-} from '@/components/ui/drawer';
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Loader2 } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
 import { Collection } from '@/types/drink';
+import { ResponsiveModal } from '@/components/ResponsiveModal';
 
 interface CreateCollectionDialogProps {
   open: boolean;
@@ -46,7 +32,6 @@ export function CreateCollectionDialog({
   onSave,
   editCollection,
 }: CreateCollectionDialogProps) {
-  const isMobile = useIsMobile();
   const { notification, NotificationType } = useHaptics();
   const [name, setName] = useState(editCollection?.name || '');
   const [description, setDescription] = useState(editCollection?.description || '');
@@ -166,29 +151,14 @@ export function CreateCollectionDialog({
     </div>
   );
 
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{editCollection ? 'Edit Collection' : 'Create Collection'}</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-4">{content}</div>
-          <DrawerFooter>{footer}</DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{editCollection ? 'Edit Collection' : 'Create Collection'}</DialogTitle>
-        </DialogHeader>
-        {content}
-        <DialogFooter>{footer}</DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ResponsiveModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={editCollection ? 'Edit Collection' : 'Create Collection'}
+      footer={footer}
+    >
+      {content}
+    </ResponsiveModal>
   );
 }

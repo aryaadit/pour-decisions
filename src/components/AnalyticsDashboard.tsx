@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import * as adminService from '@/services/adminService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ import {
   ChevronDown, ChevronRight, Clock, Monitor, Smartphone, 
   Globe, Search, User, Activity, Filter, X
 } from 'lucide-react';
-import { format, subDays, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import type { Json } from '@/integrations/supabase/types';
 
 interface AnalyticsEvent {
@@ -337,33 +337,23 @@ export function AnalyticsDashboard() {
 
   const fetchAnalytics = async () => {
     setIsLoading(true);
-    const startDate = subDays(new Date(), dateRange).toISOString();
 
     try {
-      const { data, error } = await supabase
-        .from('analytics_events')
-        .select('*')
-        .gte('created_at', startDate)
-        .order('created_at', { ascending: false })
-        .limit(1000);
+      const data = await adminService.fetchAnalyticsEvents(dateRange, 1000) as AnalyticsEvent[];
 
-      if (error) throw error;
+      setEvents(data);
 
-      if (data) {
-        setEvents(data as AnalyticsEvent[]);
-        
-        const uniqueUserIds = new Set(data.filter(e => e.user_id).map(e => e.user_id));
-        const uniqueSessionIds = new Set(data.map(e => e.session_id));
-        
-        setSummary({
-          totalEvents: data.length,
-          uniqueUsers: uniqueUserIds.size,
-          uniqueSessions: uniqueSessionIds.size,
-          pageViews: data.filter(e => e.event_category === 'page_view').length,
-          actions: data.filter(e => e.event_category === 'action').length,
-          errors: data.filter(e => e.event_category === 'error').length,
-        });
-      }
+      const uniqueUserIds = new Set(data.filter(e => e.user_id).map(e => e.user_id));
+      const uniqueSessionIds = new Set(data.map(e => e.session_id));
+
+      setSummary({
+        totalEvents: data.length,
+        uniqueUsers: uniqueUserIds.size,
+        uniqueSessions: uniqueSessionIds.size,
+        pageViews: data.filter(e => e.event_category === 'page_view').length,
+        actions: data.filter(e => e.event_category === 'action').length,
+        errors: data.filter(e => e.event_category === 'error').length,
+      });
     } catch (err) {
       console.error('Failed to fetch analytics:', err);
     } finally {

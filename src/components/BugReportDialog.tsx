@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { MessageSquare, Loader2, ImagePlus, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import * as storageService from '@/services/storageService';
+import * as adminService from '@/services/adminService';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import {
@@ -111,20 +112,12 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
   const uploadImage = async (file: File): Promise<string | null> => {
     if (!user) return null;
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('bug-attachments')
-      .upload(fileName, file);
-
-    if (uploadError) {
-      console.error('Error uploading image:', uploadError);
+    try {
+      return await storageService.uploadImage('bug-attachments', user.id, file);
+    } catch (error) {
+      console.error('Error uploading image:', error);
       return null;
     }
-
-    // Store the path in format "bucket/path" for signed URL generation
-    return `bug-attachments/${fileName}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,15 +147,13 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
         }
       }
 
-      const { error } = await supabase.from('bug_reports').insert({
-        user_id: user.id,
-        title: title.trim(),
-        description: description.trim(),
-        category: category,
-        image_url: imageUrl,
-      });
-
-      if (error) throw error;
+      await adminService.insertBugReport(
+        user.id,
+        title.trim(),
+        description.trim(),
+        category,
+        imageUrl,
+      );
 
       toast.success('Feedback submitted', {
         description: 'Thank you for your input!',

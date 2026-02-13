@@ -1,0 +1,210 @@
+import { supabase } from '@/integrations/supabase/client';
+import { Drink, Collection, DrinkType } from '@/types/drink';
+import { mapCollectionRow, mapDrinkRow, mapPublicDrinkRow } from '@/lib/mappers';
+
+export async function fetchCollections(userId: string): Promise<Collection[]> {
+  const { data, error } = await supabase
+    .from('collections')
+    .select(`
+      *,
+      collection_drinks(count)
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []).map(mapCollectionRow);
+}
+
+export async function createCollection(
+  userId: string,
+  name: string,
+  description?: string,
+  icon = '📚',
+  coverColor = '#8B5CF6'
+): Promise<Collection> {
+  const { data, error } = await supabase
+    .from('collections')
+    .insert({
+      user_id: userId,
+      name,
+      description: description || null,
+      icon,
+      cover_color: coverColor,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description || undefined,
+    icon: data.icon,
+    coverColor: data.cover_color,
+    shareId: data.share_id,
+    isPublic: data.is_public,
+    isSystem: data.is_system || false,
+    createdAt: new Date(data.created_at),
+    updatedAt: new Date(data.updated_at),
+    drinkCount: 0,
+  };
+}
+
+export async function updateCollection(
+  id: string,
+  updates: Partial<Collection>
+): Promise<void> {
+  const { error } = await supabase
+    .from('collections')
+    .update({
+      name: updates.name,
+      description: updates.description || null,
+      icon: updates.icon,
+      cover_color: updates.coverColor,
+      is_public: updates.isPublic,
+    })
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+export async function deleteCollection(id: string): Promise<void> {
+  const { error } = await supabase.from('collections').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function addDrinkToCollection(
+  collectionId: string,
+  drinkId: string
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('collection_drinks')
+    .insert({ collection_id: collectionId, drink_id: drinkId });
+
+  if (error) {
+    if (error.code === '23505') return false; // Already in collection
+    throw error;
+  }
+  return true;
+}
+
+export async function removeDrinkFromCollection(
+  collectionId: string,
+  drinkId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('collection_drinks')
+    .delete()
+    .eq('collection_id', collectionId)
+    .eq('drink_id', drinkId);
+
+  if (error) throw error;
+}
+
+export async function getCollectionDrinks(collectionId: string): Promise<Drink[]> {
+  const { data, error } = await supabase
+    .from('collection_drinks')
+    .select(`
+      drink_id,
+      position,
+      drinks (*)
+    `)
+    .eq('collection_id', collectionId)
+    .order('position', { ascending: true });
+
+  if (error) throw error;
+  return (data || [])
+    .filter((cd: any) => cd.drinks)
+    .map((cd: any) => mapDrinkRow(cd.drinks));
+}
+
+export async function getPublicCollection(
+  shareId: string
+): Promise<{ collection: Collection; drinks: Drink[] } | null> {
+  const { data: collectionData, error: collectionError } = await supabase
+    .from('collections_public')
+    .select('*')
+    .eq('share_id', shareId)
+    .single();
+
+  if (collectionError || !collectionData) return null;
+
+  const { data: collectionDrinksData, error: collectionDrinksError } = await supabase
+    .from('collection_drinks_public')
+    .select('drink_id, position')
+    .eq('collection_id', collectionData.id)
+    .order('position', { ascending: true });
+
+  if (collectionDrinksError) return null;
+
+  const drinkIds = (collectionDrinksData || []).map((cd) => cd.drink_id);
+  let drinksData: any[] = [];
+
+  if (drinkIds.length > 0) {
+    const { data: drinksResult, error: drinksError } = await supabase
+      .from('drinks_public')
+      .select('*')
+      .in('id', drinkIds);
+
+    if (drinksError) return null;
+    drinksData = drinksResult || [];
+  }
+
+  const drinksMap = new Map(drinksData.map((d) => [d.id, d]));
+  const orderedDrinks = (collectionDrinksData || [])
+    .map((cd) => drinksMap.get(cd.drink_id))
+    .filter(Boolean);
+
+  const collection: Collection = {
+    id: collectionData.id,
+    name: collectionData.name,
+    description: collectionData.description || undefined,
+    icon: collectionData.icon,
+    coverColor: collectionData.cover_color,
+    shareId: collectionData.share_id,
+    isPublic: collectionData.is_public,
+    isSystem: false,
+    createdAt: new Date(collectionData.created_at),
+    updatedAt: new Date(collectionData.updated_at),
+    drinkCount: orderedDrinks.length,
+  };
+
+  const drinks: Drink[] = orderedDrinks.map((d: any) => mapPublicDrinkRow(d));
+
+  return { collection, drinks };
+}
+
+export async function getDrinkCollections(drinkId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('collection_drinks')
+    .select('collection_id')
+    .eq('drink_id', drinkId);
+
+  if (error) throw error;
+  return (data || []).map((cd) => cd.collection_id);
+}
+
+export async function fetchPublicCollections(userId: string): Promise<Collection[]> {
+  const { data, error } = await supabase
+    .from('collections')
+    .select('*, collection_drinks(count)')
+    .eq('user_id', userId)
+    .eq('is_public', true)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []).map((c: any) => ({
+    id: c.id,
+    name: c.name,
+    description: c.description || undefined,
+    icon: c.icon || '📚',
+    coverColor: c.cover_color || '#8B5CF6',
+    shareId: c.share_id || '',
+    isPublic: c.is_public || false,
+    isSystem: c.is_system || false,
+    createdAt: new Date(c.created_at),
+    updatedAt: new Date(c.updated_at),
+    drinkCount: (c.collection_drinks as { count: number }[])?.[0]?.count || 0,
+  }));
+}
