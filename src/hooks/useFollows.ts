@@ -57,6 +57,8 @@ export function useFollows(targetUserId?: string) {
       queryClient.invalidateQueries({ queryKey: queryKeys.follows.followers(userIdToFollow) });
       queryClient.invalidateQueries({ queryKey: queryKeys.follows.following(user!.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.follows.counts(user!.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileStats.detail(userIdToFollow) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed.userActivities(userIdToFollow) });
     },
     onError: (_, userIdToFollow) => {
       queryClient.setQueryData(
@@ -90,6 +92,8 @@ export function useFollows(targetUserId?: string) {
       queryClient.invalidateQueries({ queryKey: queryKeys.follows.followers(userIdToUnfollow) });
       queryClient.invalidateQueries({ queryKey: queryKeys.follows.following(user!.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.follows.counts(user!.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileStats.detail(userIdToUnfollow) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed.userActivities(userIdToUnfollow) });
     },
     onError: (_, userIdToUnfollow) => {
       queryClient.setQueryData(

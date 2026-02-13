@@ -44,6 +44,8 @@ export function useProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.profile.byUserId(user!.id) });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'byUsername'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'search'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
     },
     onError: (_, __, context) => {

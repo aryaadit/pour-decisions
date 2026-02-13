@@ -58,6 +58,9 @@ export function useCollections() {
       );
       return { previous };
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections.publicForUser(user!.id) });
+    },
     onError: (_, __, context) => {
       if (context?.previous) {
         queryClient.setQueryData(
@@ -90,6 +93,8 @@ export function useCollections() {
       }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections.publicForUser(user!.id) });
+      queryClient.invalidateQueries({ queryKey: ['collections', 'forDrink'] });
       trackEvent('collection_deleted', 'action');
     },
   });
@@ -109,6 +114,7 @@ export function useCollections() {
             )
         );
         queryClient.invalidateQueries({ queryKey: queryKeys.collections.forDrink(drinkId) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.collections.publicForUser(user!.id) });
         trackEvent('drink_added_to_collection', 'action', { collectionId });
       }
     },
@@ -128,6 +134,7 @@ export function useCollections() {
           )
       );
       queryClient.invalidateQueries({ queryKey: queryKeys.collections.forDrink(drinkId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections.publicForUser(user!.id) });
       trackEvent('drink_removed_from_collection', 'action', { collectionId });
     },
   });
