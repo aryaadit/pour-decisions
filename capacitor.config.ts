@@ -4,6 +4,11 @@ const config: CapacitorConfig = {
   appId: 'com.pourdecisions.barkeeply',
   appName: 'Pour Decisions',
   webDir: 'dist',
+  plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+  },
   // server: {
   //   url: 'https://83dab526-5dce-4cd6-b467-9c007e9792e6.lovableproject.com?forceHideBadge=true',
   //   cleartext: true

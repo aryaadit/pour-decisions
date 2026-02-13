@@ -25,10 +25,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useDrinks } from '@/hooks/useDrinks';
+import * as drinkService from '@/services/drinkService';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { Camera, X, Loader2, ImagePlus, Search, Sparkles, ChevronDown, ChevronLeft } from 'lucide-react';
 import { takePhoto, pickFromGallery, dataUrlToBlob } from '@/hooks/useCamera';
@@ -98,25 +98,12 @@ export default function AddDrink() {
     setLookupInfo(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('lookup-drink', {
-        body: { 
-          drinkName: hasName ? name.trim() : undefined, 
-          drinkType: type, 
-          brand: brand.trim() || undefined,
-          imageUrl: hasImage ? imageUrl : undefined
-        }
+      const data = await drinkService.lookupDrink({
+        drinkName: hasName ? name.trim() : undefined,
+        drinkType: type,
+        brand: brand.trim() || undefined,
+        imageUrl: hasImage ? imageUrl : undefined,
       });
-
-      if (error) {
-        console.error('Lookup error:', error);
-        toast.error('Failed to look up drink info');
-        return;
-      }
-
-      if (data?.error) {
-        toast.error(data.error);
-        return;
-      }
 
       if (data?.success && data?.data) {
         notification(NotificationType.Success);
@@ -170,26 +157,16 @@ export default function AddDrink() {
 
   const uploadFile = async (file: File | Blob) => {
     if (!user) return;
-    
+
     setIsUploading(true);
-    const fileExt = file instanceof File ? file.name.split('.').pop() : 'jpg';
-    const filePath = `${user.id}/${Date.now()}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('drink-images')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error('Error uploading image:', uploadError);
+    try {
+      const storagePath = await drinkService.uploadDrinkImage(user.id, file);
+      setImageUrl(storagePath);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    } finally {
       setIsUploading(false);
-      return;
     }
-
-    // Store the path in format "bucket/path" for signed URL generation
-    const storagePath = `drink-images/${filePath}`;
-
-    setImageUrl(storagePath);
-    setIsUploading(false);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

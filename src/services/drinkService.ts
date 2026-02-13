@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Drink, DrinkType } from '@/types/drink';
+import { Drink, DrinkType, isBuiltInDrinkType } from '@/types/drink';
 import { mapDrinkRow, mapPublicDrinkRow } from '@/lib/mappers';
 
 export async function fetchDrinks(userId: string): Promise<Drink[]> {
@@ -100,14 +100,60 @@ export async function migrateDrinksToType(typeName: string): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * Convert a storage path like "drink-images/userId/file.jpg" to a signed URL.
+ * Returns undefined if the conversion fails.
+ */
+async function resolveStorageUrl(storagePath: string): Promise<string | undefined> {
+  // Already a full URL — use as-is
+  if (storagePath.startsWith('http')) return storagePath;
+
+  // Parse "bucket/path" format
+  const slashIndex = storagePath.indexOf('/');
+  if (slashIndex === -1) return undefined;
+
+  const bucket = storagePath.substring(0, slashIndex);
+  const path = storagePath.substring(slashIndex + 1);
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(path, 300); // 5 min — enough for the AI to fetch
+
+  if (error) {
+    console.error('Failed to create signed URL for lookup:', error);
+    return undefined;
+  }
+
+  return data.signedUrl;
+}
+
 export async function lookupDrink(params: {
   drinkName?: string;
   drinkType: DrinkType;
   brand?: string;
   imageUrl?: string;
 }) {
+  // Convert storage path to a signed URL the edge function & AI can access
+  let resolvedImageUrl = params.imageUrl
+    ? await resolveStorageUrl(params.imageUrl)
+    : undefined;
+
+  if (params.imageUrl && !resolvedImageUrl) {
+    console.warn('[lookup] Could not resolve image URL:', params.imageUrl);
+  }
+
+  // Edge function only accepts built-in types; map custom types to "other"
+  const safeType = isBuiltInDrinkType(params.drinkType)
+    ? params.drinkType
+    : 'other';
+
   const { data, error } = await supabase.functions.invoke('lookup-drink', {
-    body: params,
+    body: {
+      drinkName: params.drinkName,
+      drinkType: safeType,
+      brand: params.brand,
+      imageUrl: resolvedImageUrl,
+    },
   });
 
   if (error) throw error;
