@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { PageTransition } from '@/components/PageTransition';
 
 const SHORT_DESCRIPTION = "Your personal drink journal. Track, rate & discover your favorite drinks.";
 
@@ -96,7 +95,6 @@ export default function StoreListing() {
   };
 
   return (
-    <PageTransition>
       <div className="min-h-screen bg-background pb-8">
         {/* Header */}
         <div className="bg-gradient-to-b from-primary/20 to-background pt-[env(safe-area-inset-top)] pb-8">
@@ -369,6 +367,5 @@ export default function StoreListing() {
           </Tabs>
         </div>
       </div>
-    </PageTransition>
   );
 }

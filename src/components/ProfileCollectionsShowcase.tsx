@@ -28,50 +28,64 @@ export function ProfileCollectionsShowcase({ collections, isLoading, userId }: P
   const [collectionsWithPreviews, setCollectionsWithPreviews] = useState<CollectionWithPreview[]>([]);
   const [previewsLoading, setPreviewsLoading] = useState(false);
 
-  // Fetch preview drinks for each collection
+  // Fetch preview drinks for all collections in 2 batched queries (not 2N)
   useEffect(() => {
     const fetchPreviews = async () => {
       if (collections.length === 0) return;
-      
+
       setPreviewsLoading(true);
-      
-      const enrichedCollections = await Promise.all(
-        collections.map(async (collection) => {
-          // Get top 3 drinks from this collection with their details
-          const { data: collectionDrinks } = await supabase
-            .from('collection_drinks')
-            .select('drink_id')
-            .eq('collection_id', collection.id)
-            .order('added_at', { ascending: false })
-            .limit(3);
 
-          if (!collectionDrinks || collectionDrinks.length === 0) {
-            return { ...collection, previewDrinks: [], avgRating: undefined };
-          }
+      const allCollectionIds = collections.map(c => c.id);
 
-          const drinkIds = collectionDrinks.map(cd => cd.drink_id);
-          
-          const { data: drinks } = await supabase
-            .from('drinks_public')
-            .select('id, name, image_url, rating')
-            .in('id', drinkIds);
+      // Query 1: Get all collection_drinks for these collections
+      const { data: allCollectionDrinks } = await supabase
+        .from('collection_drinks')
+        .select('collection_id, drink_id, added_at')
+        .in('collection_id', allCollectionIds)
+        .order('added_at', { ascending: false });
 
-          const previewDrinks = (drinks || []).map(d => ({
+      // Group by collection, take top 3 each
+      const drinkIdsByCollection = new Map<string, string[]>();
+      const allDrinkIds = new Set<string>();
+      for (const cd of (allCollectionDrinks || [])) {
+        const existing = drinkIdsByCollection.get(cd.collection_id) || [];
+        if (existing.length < 3) {
+          existing.push(cd.drink_id);
+          drinkIdsByCollection.set(cd.collection_id, existing);
+          allDrinkIds.add(cd.drink_id);
+        }
+      }
+
+      // Query 2: Fetch all needed drinks in one query
+      let drinksMap = new Map<string, any>();
+      if (allDrinkIds.size > 0) {
+        const { data: allDrinks } = await supabase
+          .from('drinks_public')
+          .select('id, name, image_url, rating')
+          .in('id', [...allDrinkIds]);
+        drinksMap = new Map((allDrinks || []).map(d => [d.id, d]));
+      }
+
+      // Build enriched collections
+      const enrichedCollections = collections.map(collection => {
+        const drinkIds = drinkIdsByCollection.get(collection.id) || [];
+        const previewDrinks = drinkIds
+          .map(id => drinksMap.get(id))
+          .filter(Boolean)
+          .map((d: any) => ({
             id: d.id || '',
             name: d.name || '',
             imageUrl: d.image_url || undefined,
             rating: d.rating || undefined,
           }));
 
-          // Calculate average rating
-          const ratedDrinks = previewDrinks.filter(d => d.rating && d.rating > 0);
-          const avgRating = ratedDrinks.length > 0
-            ? ratedDrinks.reduce((sum, d) => sum + (d.rating || 0), 0) / ratedDrinks.length
-            : undefined;
+        const ratedDrinks = previewDrinks.filter(d => d.rating && d.rating > 0);
+        const avgRating = ratedDrinks.length > 0
+          ? ratedDrinks.reduce((sum, d) => sum + (d.rating || 0), 0) / ratedDrinks.length
+          : undefined;
 
-          return { ...collection, previewDrinks, avgRating };
-        })
-      );
+        return { ...collection, previewDrinks, avgRating };
+      });
 
       setCollectionsWithPreviews(enrichedCollections);
       setPreviewsLoading(false);

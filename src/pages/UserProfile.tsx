@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { useFollows } from '@/hooks/useFollows';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useProfileStats, TopDrink } from '@/hooks/useProfileStats';
+import { queryKeys } from '@/lib/queryKeys';
 
 import { PageHeader } from '@/components/PageHeader';
 import { FollowListModal } from '@/components/FollowListModal';
@@ -31,8 +33,6 @@ export default function UserProfile() {
   const isMobile = useIsMobile();
 
   const [profile, setProfile] = useState<PublicProfile | null>(null);
-  const [activities, setActivities] = useState<ActivityFeedItem[]>([]);
-  const [activitiesLoading, setActivitiesLoading] = useState(false);
   const [followListType, setFollowListType] = useState<'Followers' | 'Following' | null>(null);
   const [followListLoading, setFollowListLoading] = useState(false);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
@@ -64,6 +64,15 @@ export default function UserProfile() {
     profile?.createdAt || null
   );
 
+  const { data: activities = [], isLoading: activitiesLoading } = useQuery({
+    queryKey: queryKeys.feed.userActivities(profile?.userId ?? ''),
+    queryFn: async () => {
+      const items = await feedService.fetchUserActivities(profile!.userId);
+      return items.map((item) => ({ ...item, user: profile! }));
+    },
+    enabled: !!profile?.userId && canViewActivity(),
+  });
+
   useEffect(() => {
     const loadProfile = async () => {
       if (!username) return;
@@ -72,25 +81,6 @@ export default function UserProfile() {
     };
     loadProfile();
   }, [username, getProfileByUsername]);
-
-  useEffect(() => {
-    const loadActivities = async () => {
-      if (!profile?.userId || activeTab !== 'activity') return;
-      if (!canViewActivity()) return;
-
-      setActivitiesLoading(true);
-      try {
-        const items = await feedService.fetchUserActivities(profile.userId);
-        setActivities(items.map((item) => ({ ...item, user: profile })));
-      } catch (error) {
-        console.error('Error loading activities:', error);
-      } finally {
-        setActivitiesLoading(false);
-      }
-    };
-
-    loadActivities();
-  }, [profile, activeTab]);
 
   const ownerFromProfile = profile
     ? { username: profile.username || '', displayName: profile.displayName || undefined }

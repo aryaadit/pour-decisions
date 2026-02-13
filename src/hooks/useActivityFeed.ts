@@ -3,9 +3,8 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { ActivityFeedItem } from '@/types/social';
 import { queryKeys } from '@/lib/queryKeys';
-import { mapPublicProfileRow, mapActivityFeedItem } from '@/lib/mappers';
+import { mapActivityFeedItem } from '@/lib/mappers';
 import * as feedService from '@/services/feedService';
-import { supabase } from '@/integrations/supabase/client';
 
 export function useActivityFeed(limit = 20) {
   const { user } = useAuth();
@@ -42,14 +41,9 @@ export function useActivityFeed(limit = 20) {
     if (!user) return;
 
     const subscription = feedService.subscribeToFeed(async (newActivity) => {
-      // Fetch profile for this user
-      const { data: profile } = await supabase
-        .from('profiles_public')
-        .select('*')
-        .eq('user_id', newActivity.user_id)
-        .single();
-
-      const userProfile = profile ? mapPublicProfileRow(profile) : undefined;
+      // Batch-fetch profile (reuses existing helper)
+      const profileMap = await feedService.fetchProfilesForActivities([newActivity.user_id]);
+      const userProfile = profileMap.get(newActivity.user_id);
       const mappedActivity = mapActivityFeedItem(newActivity, userProfile);
 
       // Prepend to first page

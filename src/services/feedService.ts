@@ -15,7 +15,7 @@ export async function fetchFeedPage(
 ): Promise<FeedPage> {
   let query = supabase
     .from('activity_feed')
-    .select('*')
+    .select('id, user_id, activity_type, drink_id, metadata, created_at')
     .order('created_at', { ascending: false })
     .limit(limit + 1);
 
@@ -57,7 +57,7 @@ export async function fetchProfilesForActivities(
 
   const { data: profiles } = await supabase
     .from('profiles_public')
-    .select('*')
+    .select('user_id, username, display_name, avatar_url, bio, is_public, activity_visibility, created_at')
     .in('user_id', userIds);
 
   if (profiles) {
@@ -75,7 +75,7 @@ export async function fetchUserActivities(
 ): Promise<ActivityFeedItem[]> {
   const { data, error } = await supabase
     .from('activity_feed')
-    .select('*')
+    .select('id, user_id, activity_type, drink_id, metadata, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(limit);

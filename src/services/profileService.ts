@@ -76,7 +76,7 @@ export async function fetchProfileByUsername(
 ): Promise<PublicProfile | null> {
   const { data, error } = await supabase
     .from('profiles_public')
-    .select('*')
+    .select('user_id, username, display_name, avatar_url, bio, is_public, activity_visibility, created_at')
     .ilike('username', username)
     .maybeSingle();
 
@@ -89,7 +89,7 @@ export async function fetchProfileByUserId(
 ): Promise<PublicProfile | null> {
   const { data, error } = await supabase
     .from('profiles_public')
-    .select('*')
+    .select('user_id, username, display_name, avatar_url, bio, is_public, activity_visibility, created_at')
     .eq('user_id', userId)
     .maybeSingle();
 
@@ -108,7 +108,7 @@ export async function searchUsers(
 
   const { data, error } = await supabase
     .from('profiles_public')
-    .select('*')
+    .select('user_id, username, display_name, avatar_url, bio, is_public, activity_visibility, created_at')
     .eq('is_public', true)
     .or(searchFilter)
     .limit(limit);

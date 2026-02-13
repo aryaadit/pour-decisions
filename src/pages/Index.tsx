@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDrinks } from '@/hooks/useDrinks';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,6 +21,7 @@ import { WelcomeCarousel } from '@/components/WelcomeCarousel';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { OnboardingSection } from '@/components/home/OnboardingSection';
 import { SearchAndFilterBar } from '@/components/home/SearchAndFilterBar';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { toast } from 'sonner';
 
 const Index = () => {
@@ -119,6 +120,21 @@ const Index = () => {
   const drinkCountByType = useMemo(() => getDrinkCountByType(), [drinks]);
   const totalDrinks = drinks.length;
   const hasFilters = !!selectedType || !!searchQuery;
+
+  // Virtualized list setup
+  const listContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  useLayoutEffect(() => {
+    setScrollMargin(listContainerRef.current?.offsetTop ?? 0);
+  });
+
+  const virtualizer = useWindowVirtualizer({
+    count: filteredDrinks.length,
+    estimateSize: () => 92,
+    overscan: 5,
+    scrollMargin,
+  });
 
   const handleSave = async (drinkData: Omit<Drink, 'id' | 'dateAdded'>) => {
     if (editingDrink) {
@@ -278,15 +294,35 @@ const Index = () => {
         )}
 
         {filteredDrinks.length > 0 ? (
-          <div className="flex flex-col gap-3 max-w-2xl mx-auto">
-            {filteredDrinks.map((drink) => (
-              <MemoizedDrinkListItem
-                key={drink.id}
-                drink={drink}
-                onClick={() => setViewingDrink(drink)}
-                onWishlistToggle={handleWishlistToggle}
-              />
-            ))}
+          <div
+            ref={listContainerRef}
+            className="max-w-2xl mx-auto"
+            style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}
+          >
+            {virtualizer.getVirtualItems().map((virtualItem) => {
+              const drink = filteredDrinks[virtualItem.index];
+              return (
+                <div
+                  key={drink.id}
+                  data-index={virtualItem.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualItem.start - (virtualizer.options.scrollMargin ?? 0)}px)`,
+                  }}
+                  className="pb-3"
+                >
+                  <MemoizedDrinkListItem
+                    drink={drink}
+                    onClick={() => setViewingDrink(drink)}
+                    onWishlistToggle={handleWishlistToggle}
+                  />
+                </div>
+              );
+            })}
           </div>
         ) : (
           <EmptyState

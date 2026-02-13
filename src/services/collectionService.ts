@@ -130,7 +130,7 @@ export async function getPublicCollection(
 ): Promise<{ collection: Collection; drinks: Drink[] } | null> {
   const { data: collectionData, error: collectionError } = await supabase
     .from('collections_public')
-    .select('*')
+    .select('id, name, description, icon, cover_color, share_id, is_public, created_at, updated_at')
     .eq('share_id', shareId)
     .single();
 
@@ -150,7 +150,7 @@ export async function getPublicCollection(
   if (drinkIds.length > 0) {
     const { data: drinksResult, error: drinksError } = await supabase
       .from('drinks_public')
-      .select('*')
+      .select('id, name, type, brand, rating, date_added, image_url, is_wishlist')
       .in('id', drinkIds);
 
     if (drinksError) return null;
