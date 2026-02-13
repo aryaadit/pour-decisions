@@ -185,13 +185,6 @@ const Index = () => {
     setSearchQuery('');
   };
 
-  const handleWishlistToggle = async (drinkId: string, isWishlist: boolean) => {
-    await updateDrink(drinkId, { isWishlist });
-    if (viewingDrink?.id === drinkId) {
-      setViewingDrink(prev => prev ? { ...prev, isWishlist } : null);
-    }
-  };
-
   const handleDialogClose = (open: boolean) => {
     setDialogOpen(open);
     if (!open) setEditingDrink(null);
@@ -324,7 +317,6 @@ const Index = () => {
                   <MemoizedDrinkListItem
                     drink={drink}
                     onClick={() => setViewingDrink(drink)}
-                    onWishlistToggle={handleWishlistToggle}
                   />
                 </div>
               );
@@ -357,7 +349,6 @@ const Index = () => {
         onOpenChange={(open) => { if (!open) setViewingDrink(null); }}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onWishlistToggle={handleWishlistToggle}
       />
     </div>
   );

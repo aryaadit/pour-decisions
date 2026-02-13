@@ -53,7 +53,6 @@ export async function insertDrink(
       location: drink.location || null,
       price: priceValue,
       image_url: drink.imageUrl || null,
-      is_wishlist: drink.isWishlist || false,
     })
     .select()
     .single();
@@ -77,7 +76,6 @@ export async function updateDrink(
   if ('location' in updates) dbUpdates.location = updates.location || null;
   if ('price' in updates) dbUpdates.price = updates.price?.trim() || null;
   if ('imageUrl' in updates) dbUpdates.image_url = updates.imageUrl || null;
-  if ('isWishlist' in updates) dbUpdates.is_wishlist = updates.isWishlist;
 
   const { error } = await supabase
     .from('drinks')

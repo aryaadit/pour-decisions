@@ -14,7 +14,6 @@ export interface Drink {
   price?: string;
   dateAdded: Date;
   imageUrl?: string;
-  isWishlist?: boolean;
 }
 
 export interface Collection {

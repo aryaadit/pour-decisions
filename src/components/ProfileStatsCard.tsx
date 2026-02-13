@@ -1,4 +1,4 @@
-import { Wine, Star, Clock, Calendar } from 'lucide-react';
+import { Wine, Star, Layers, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProfileStats } from '@/hooks/useProfileStats';
@@ -7,10 +7,10 @@ import { format } from 'date-fns';
 interface ProfileStatsCardProps {
   stats: ProfileStats | null;
   isLoading: boolean;
-  personalityLabel?: string;
+  categoriesCount?: number;
 }
 
-export function ProfileStatsCard({ stats, isLoading, personalityLabel }: ProfileStatsCardProps) {
+export function ProfileStatsCard({ stats, isLoading, categoriesCount = 0 }: ProfileStatsCardProps) {
   if (isLoading) {
     return (
       <Card className="bg-card/50 border-border/50">
@@ -37,11 +37,7 @@ export function ProfileStatsCard({ stats, isLoading, personalityLabel }: Profile
             <Wine className="h-5 w-5 text-primary" />
             <span className="text-3xl font-bold text-foreground">{stats.totalDrinks}</span>
           </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {personalityLabel
-              ? `drinks logged · ${personalityLabel}`
-              : 'drinks logged'}
-          </p>
+          <p className="text-sm text-muted-foreground mt-0.5">drinks logged</p>
         </div>
 
         {/* Secondary stats row */}
@@ -64,20 +60,20 @@ export function ProfileStatsCard({ stats, isLoading, personalityLabel }: Profile
             </div>
             <p className="text-xs text-muted-foreground truncate">
               {stats.favoriteType
-                ? stats.favoriteType.type.charAt(0).toUpperCase() + stats.favoriteType.type.slice(1)
+                ? `Favorite`
                 : 'No fave'}
             </p>
           </div>
 
-          {/* Wishlist */}
+          {/* Categories */}
           <div className="text-center">
             <div className="flex items-center justify-center gap-1">
-              <Clock className="h-4 w-4 text-amber-500" />
+              <Layers className="h-4 w-4 text-primary" />
               <span className="text-lg font-semibold text-foreground">
-                {stats.wishlistCount}
+                {categoriesCount}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">Wishlist</p>
+            <p className="text-xs text-muted-foreground">Categories</p>
           </div>
         </div>
 

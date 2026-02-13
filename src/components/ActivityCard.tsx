@@ -1,19 +1,11 @@
 import { formatDistanceToNow } from 'date-fns';
-import { Wine, Star, Heart, Bookmark, MapPin } from 'lucide-react';
+import { Wine, Star, MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { ActivityFeedItem } from '@/types/social';
 import { DrinkTypeBadge } from '@/components/DrinkTypeBadge';
 import { StorageImage } from '@/components/StorageImage';
-import { LikeButton } from '@/components/LikeButton';
 import { useNavigate } from 'react-router-dom';
-import { useDrinks } from '@/hooks/useDrinks';
-import { useHaptics } from '@/hooks/useHaptics';
-import { ImpactStyle } from '@capacitor/haptics';
-import { toast } from 'sonner';
-import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { Drink, DrinkType, isBuiltInDrinkType, drinkTypeIcons } from '@/types/drink';
 import { DrinkOwner } from './DrinkDetailModal';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
@@ -21,25 +13,10 @@ import { useSignedUrl } from '@/hooks/useSignedUrl';
 interface ActivityCardProps {
   activity: ActivityFeedItem;
   onDrinkClick?: (drink: Drink, owner: DrinkOwner) => void;
-  likeCount?: number;
-  isLikedByMe?: boolean;
-  onToggleLike?: () => void;
-  onLikeCountClick?: () => void;
 }
 
-export function ActivityCard({
-  activity,
-  onDrinkClick,
-  likeCount = 0,
-  isLikedByMe = false,
-  onToggleLike,
-  onLikeCountClick,
-}: ActivityCardProps) {
+export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
   const navigate = useNavigate();
-  const { user: authUser } = useAuth();
-  const { addDrink } = useDrinks();
-  const { impact } = useHaptics();
-  const [isSaving, setIsSaving] = useState(false);
 
   const { user, metadata, activityType, createdAt, drinkId } = activity;
 
@@ -49,8 +26,6 @@ export function ActivityCard({
         return <Wine className="h-3 w-3 text-primary" />;
       case 'drink_rated':
         return <Star className="h-3 w-3 text-yellow-500" />;
-      case 'wishlist_added':
-        return <Heart className="h-3 w-3 text-pink-500" />;
       default:
         return <Wine className="h-3 w-3" />;
     }
@@ -62,8 +37,6 @@ export function ActivityCard({
         return 'logged';
       case 'drink_rated':
         return metadata.old_rating ? 'updated' : 'rated';
-      case 'wishlist_added':
-        return 'wants to try';
       default:
         return 'interacted with';
     }
@@ -76,33 +49,6 @@ export function ActivityCard({
 
   const getDrinkTypeIcon = (type: string) => {
     return isBuiltInDrinkType(type) ? drinkTypeIcons[type] : '🍹';
-  };
-
-  const handleSaveToWishlist = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!metadata.name || !metadata.type || !authUser) return;
-
-    setIsSaving(true);
-    impact(ImpactStyle.Light);
-
-    try {
-      await addDrink({
-        name: metadata.name,
-        type: metadata.type,
-        brand: undefined,
-        rating: 0,
-        notes: undefined,
-        location: undefined,
-        price: undefined,
-        imageUrl: metadata.image_url || undefined,
-        isWishlist: true,
-      });
-      toast.success(`Added "${metadata.name}" to your wishlist`);
-    } catch (error) {
-      toast.error('Failed to save to wishlist');
-    }
-
-    setIsSaving(false);
   };
 
   const handleProfileClick = (e: React.MouseEvent) => {
@@ -125,7 +71,6 @@ export function ActivityCard({
         price: undefined,
         dateAdded: createdAt,
         imageUrl: metadata.image_url || undefined,
-        isWishlist: activityType === 'wishlist_added',
       };
       const owner: DrinkOwner = {
         username: user.username,
@@ -203,7 +148,7 @@ export function ActivityCard({
                     <h4 className="font-medium text-sm text-foreground truncate">
                       {metadata.name}
                     </h4>
-                    {metadata.rating && activityType !== 'wishlist_added' && (
+                    {metadata.rating && (
                       <span className="text-xs font-medium text-amber-500 shrink-0">
                         {metadata.rating}★
                       </span>
@@ -232,30 +177,6 @@ export function ActivityCard({
                 </div>
               </div>
             )}
-
-            {/* Footer with like + save */}
-            <div className="mt-2 flex items-center justify-between">
-              {onToggleLike ? (
-                <LikeButton
-                  isLiked={isLikedByMe}
-                  count={likeCount}
-                  onToggle={onToggleLike}
-                  onCountClick={onLikeCountClick}
-                />
-              ) : (
-                <div />
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSaveToWishlist}
-                disabled={isSaving}
-                className="h-7 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <Bookmark className="h-3 w-3 mr-1" />
-                Save
-              </Button>
-            </div>
           </div>
         </div>
       </CardContent>

@@ -29,7 +29,7 @@ export function DrinkActionBar({ drink, onEdit, onDelete, onAddToCollection }: D
         {onEdit && (
           <Button variant="outline" className="flex-1" onClick={onEdit}>
             <Pencil className="h-4 w-4 mr-2" />
-            {drink.isWishlist ? 'Log It' : 'Edit'}
+            Edit
           </Button>
         )}
         <Button variant="outline" size="icon" onClick={onAddToCollection} title="Add to collection">

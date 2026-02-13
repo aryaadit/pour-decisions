@@ -131,10 +131,6 @@ export function useDrinks() {
     );
 
     if (existingDrink) {
-      if (drink.isWishlist && !existingDrink.isWishlist) {
-        await updateMutation.mutateAsync({ id: existingDrink.id, updates: { isWishlist: true } });
-        return existingDrink;
-      }
       return { ...existingDrink, isDuplicate: true } as Drink & { isDuplicate?: boolean };
     }
 

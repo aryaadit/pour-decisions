@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, Users, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
-import { useLikes } from '@/hooks/useLikes';
 import { useDiscovery } from '@/hooks/useDiscovery';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -13,7 +12,6 @@ import { ActivityCard } from '@/components/ActivityCard';
 import { UserSearch } from '@/components/UserSearch';
 import { UsernameSetup } from '@/components/UsernameSetup';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
-import { LikedBySheet } from '@/components/LikedBySheet';
 import { DiscoverySection } from '@/components/DiscoverySection';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,14 +28,6 @@ export default function Feed() {
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
   const [viewingOwner, setViewingOwner] = useState<DrinkOwner | null>(null);
-  const [likedByActivityId, setLikedByActivityId] = useState<string | null>(null);
-
-  // Likes integration
-  const activityIds = useMemo(
-    () => activities.map((a) => a.id),
-    [activities]
-  );
-  const { getLikeInfo, toggleLike } = useLikes(activityIds);
 
   // Discovery
   const { circlePopular, trending, isLoading: discoveryLoading } = useDiscovery();
@@ -131,22 +121,13 @@ export default function Feed() {
           </div>
         ) : (
           <div className="space-y-2">
-            {activities.map((activity) => {
-              const likeInfo = getLikeInfo(activity.id);
-              return (
-                <ActivityCard
-                  key={activity.id}
-                  activity={activity}
-                  onDrinkClick={handleDrinkClick}
-                  likeCount={likeInfo.count}
-                  isLikedByMe={likeInfo.isLikedByMe}
-                  onToggleLike={() =>
-                    toggleLike(activity.id, likeInfo.isLikedByMe)
-                  }
-                  onLikeCountClick={() => setLikedByActivityId(activity.id)}
-                />
-              );
-            })}
+            {activities.map((activity) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                onDrinkClick={handleDrinkClick}
+              />
+            ))}
 
             {hasMore && (
               <div className="text-center py-4">
@@ -171,15 +152,6 @@ export default function Feed() {
         }}
         readOnly={true}
         owner={viewingOwner}
-      />
-
-      {/* Liked By Sheet */}
-      <LikedBySheet
-        activityId={likedByActivityId}
-        open={!!likedByActivityId}
-        onOpenChange={(open) => {
-          if (!open) setLikedByActivityId(null);
-        }}
       />
 
       {/* Username Setup Modal */}

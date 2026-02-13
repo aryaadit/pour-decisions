@@ -57,10 +57,10 @@ export default function PrivacyPolicy() {
               </p>
             </div>
             <div>
-              <h4 className="font-medium text-foreground mb-2">Collections & Wishlists</h4>
+              <h4 className="font-medium text-foreground mb-2">Collections</h4>
               <p>
-                We store the collections you create and drinks you add to your wishlist 
-                to help you organize and track beverages you want to try.
+                We store the collections you create to help you organize and
+                track your beverages.
               </p>
             </div>
             <div>

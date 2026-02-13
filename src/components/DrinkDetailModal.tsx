@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Drink } from '@/types/drink';
 import { StarRating } from './StarRating';
 import { DrinkTypeBadge } from './DrinkTypeBadge';
-import { WishlistToggle } from './WishlistToggle';
 import { AddToCollectionModal } from './AddToCollectionModal';
 import { DrinkImageViewer } from './drink-detail/DrinkImageViewer';
 import { DrinkMetadata } from './drink-detail/DrinkMetadata';
@@ -39,7 +38,6 @@ interface DrinkDetailModalProps {
   onOpenChange: (open: boolean) => void;
   onEdit?: (drink: Drink) => void;
   onDelete?: (id: string) => void;
-  onWishlistToggle?: (drinkId: string, isWishlist: boolean) => void;
   readOnly?: boolean;
   owner?: DrinkOwner | null;
 }
@@ -50,7 +48,6 @@ export function DrinkDetailModal({
   onOpenChange,
   onEdit,
   onDelete,
-  onWishlistToggle,
   readOnly = false,
   owner,
 }: DrinkDetailModalProps) {
@@ -154,22 +151,10 @@ export function DrinkDetailModal({
               <p className="text-muted-foreground">{displayDrink.brand}</p>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {onWishlistToggle && (
-              <WishlistToggle
-                isWishlist={displayDrink.isWishlist || false}
-                onToggle={(isWishlist) => onWishlistToggle(displayDrink.id, isWishlist)}
-              />
-            )}
-            <DrinkTypeBadge type={displayDrink.type} />
-          </div>
+          <DrinkTypeBadge type={displayDrink.type} />
         </div>
 
-        {displayDrink.isWishlist ? (
-          <p className="text-sm text-orange-500 italic">Want to try this drink</p>
-        ) : (
-          <StarRating rating={displayDrink.rating} readonly size="md" />
-        )}
+        <StarRating rating={displayDrink.rating} readonly size="md" />
       </div>
 
       {/* Notes */}

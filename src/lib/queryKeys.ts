@@ -43,12 +43,6 @@ export const queryKeys = {
     all: ['profileStats'] as const,
     detail: (userId: string) => ['profileStats', 'detail', userId] as const,
   },
-  likes: {
-    all: ['likes'] as const,
-    forActivities: (activityIds: string[]) =>
-      ['likes', 'forActivities', ...activityIds.sort()] as const,
-    likedBy: (activityId: string) => ['likes', 'likedBy', activityId] as const,
-  },
   discovery: {
     all: ['discovery'] as const,
     circle: (userId: string) => ['discovery', 'circle', userId] as const,

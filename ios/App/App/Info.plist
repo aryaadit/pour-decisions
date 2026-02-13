@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>NSCameraUsageDescription</key>
-	<string>We need camera access to take photos of wishlist items</string>
+	<string>We need camera access to take photos of your drinks</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need gallery access to select photos of wishlist items</string>
+	<string>We need gallery access to select photos of your drinks</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>We need permission to save photos to your library</string>
 	<key>CFBundleDevelopmentRegion</key>

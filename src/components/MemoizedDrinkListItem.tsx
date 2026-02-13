@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { format } from 'date-fns';
-import { Clock } from 'lucide-react';
 import { Drink, drinkTypeIcons, drinkTypeLabels } from '@/types/drink';
 import { StarRating } from '@/components/StarRating';
 import { StorageImage } from '@/components/StorageImage';
@@ -9,15 +8,13 @@ import { cn } from '@/lib/utils';
 interface MemoizedDrinkListItemProps {
   drink: Drink;
   onClick?: () => void;
-  onWishlistToggle?: (drinkId: string, isWishlist: boolean) => void;
   style?: React.CSSProperties;
 }
 
-export const MemoizedDrinkListItem = memo(function MemoizedDrinkListItem({ 
-  drink, 
-  onClick, 
-  onWishlistToggle, 
-  style 
+export const MemoizedDrinkListItem = memo(function MemoizedDrinkListItem({
+  drink,
+  onClick,
+  style
 }: MemoizedDrinkListItemProps) {
   return (
     <div
@@ -27,19 +24,10 @@ export const MemoizedDrinkListItem = memo(function MemoizedDrinkListItem({
         "hover:bg-card hover:border-primary/30 hover:shadow-glow",
         "transition-all duration-300 cursor-pointer",
         "animate-fade-in text-left",
-        "card-hover gradient-border",
-        drink.isWishlist && "border-primary/30 bg-primary/5"
+        "card-hover gradient-border"
       )}
       style={style}
     >
-      {/* Wishlist indicator */}
-      {drink.isWishlist && (
-        <div className="absolute top-2 right-2 flex items-center gap-1 text-orange-500 pointer-events-none">
-          <Clock className="w-3.5 h-3.5" />
-          <span className="text-xs font-medium">Want to try</span>
-        </div>
-      )}
-      
       {/* Clickable area */}
       <button
         onClick={onClick}
@@ -79,7 +67,7 @@ export const MemoizedDrinkListItem = memo(function MemoizedDrinkListItem({
 
         {/* Meta: Rating, Type Badge, Price */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {!drink.isWishlist && drink.rating && (
+          {drink.rating > 0 && (
             <StarRating rating={drink.rating} readonly size="sm" animated />
           )}
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground transition-colors duration-300">
@@ -114,7 +102,6 @@ export const MemoizedDrinkListItem = memo(function MemoizedDrinkListItem({
     prevProps.drink.id === nextProps.drink.id &&
     prevProps.drink.name === nextProps.drink.name &&
     prevProps.drink.rating === nextProps.drink.rating &&
-    prevProps.drink.isWishlist === nextProps.drink.isWishlist &&
     prevProps.drink.imageUrl === nextProps.drink.imageUrl &&
     prevProps.drink.notes === nextProps.drink.notes &&
     prevProps.drink.type === nextProps.drink.type &&

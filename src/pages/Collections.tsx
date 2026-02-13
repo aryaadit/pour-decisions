@@ -18,13 +18,11 @@ const Collections = () => {
   const isMobile = useIsMobile();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  // Sort collections: Wishlist (system) first, then by created date
+  // Sort collections: system first, then by created date
   const sortedCollections = useMemo(() => {
     return [...collections].sort((a, b) => {
-      // System collections (Wishlist) always first
       if (a.isSystem && !b.isSystem) return -1;
       if (!a.isSystem && b.isSystem) return 1;
-      // Then by creation date (newest first)
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [collections]);

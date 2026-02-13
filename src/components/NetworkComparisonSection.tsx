@@ -66,15 +66,13 @@ export function NetworkComparisonSection({ onDrinkClick }: NetworkComparisonSect
         const { data: myDrinksData } = await supabase
           .from('drinks')
           .select('id, name, type, brand, rating, image_url')
-          .eq('user_id', user.id)
-          .eq('is_wishlist', false);
+          .eq('user_id', user.id);
 
         // 3. Get all public drinks from people I follow
         const { data: networkDrinksData } = await supabase
           .from('drinks_public')
           .select('id, name, type, brand, rating, image_url, user_id')
-          .in('user_id', followingIds)
-          .eq('is_wishlist', false);
+          .in('user_id', followingIds);
 
         // 4. Get profiles for followed users to show avatars
         const { data: profilesData } = await supabase
@@ -186,7 +184,6 @@ export function NetworkComparisonSection({ onDrinkClick }: NetworkComparisonSect
       rating: drink.rating || 0,
       imageUrl: drink.imageUrl,
       dateAdded: new Date(),
-      isWishlist: false,
     };
     onDrinkClick(fullDrink);
   };

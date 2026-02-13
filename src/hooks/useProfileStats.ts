@@ -6,7 +6,6 @@ import * as profileStatsService from '@/services/profileStatsService';
 
 export interface ProfileStats {
   totalDrinks: number;
-  wishlistCount: number;
   averageRating: number | null;
   favoriteType: { type: DrinkType; count: number; icon: string } | null;
   topRatedDrink: { name: string; rating: number } | null;

@@ -150,7 +150,7 @@ export async function getPublicCollection(
   if (drinkIds.length > 0) {
     const { data: drinksResult, error: drinksError } = await supabase
       .from('drinks_public')
-      .select('id, name, type, brand, rating, date_added, image_url, is_wishlist')
+      .select('id, name, type, brand, rating, date_added, image_url')
       .in('id', drinkIds);
 
     if (drinksError) return null;

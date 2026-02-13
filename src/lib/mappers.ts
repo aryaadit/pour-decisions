@@ -14,7 +14,6 @@ export function mapDrinkRow(d: any): Drink {
     price: d.price || undefined,
     dateAdded: new Date(d.date_added),
     imageUrl: d.image_url || undefined,
-    isWishlist: d.is_wishlist || false,
   };
 }
 
@@ -30,7 +29,6 @@ export function mapPublicDrinkRow(d: any): Drink {
     price: undefined,
     dateAdded: new Date(d.date_added),
     imageUrl: d.image_url || undefined,
-    isWishlist: d.is_wishlist || false,
   };
 }
 
@@ -88,7 +86,7 @@ export function mapActivityFeedItem(item: any, user?: PublicProfile): ActivityFe
   return {
     id: item.id,
     userId: item.user_id,
-    activityType: item.activity_type as 'drink_added' | 'drink_rated' | 'wishlist_added',
+    activityType: item.activity_type as 'drink_added' | 'drink_rated',
     drinkId: item.drink_id,
     metadata: item.metadata as ActivityFeedItem['metadata'],
     createdAt: new Date(item.created_at),

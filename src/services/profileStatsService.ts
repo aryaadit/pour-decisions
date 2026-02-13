@@ -23,7 +23,6 @@ interface DrinkRow {
   rating: number | null;
   image_url: string | null;
   brand: string | null;
-  is_wishlist: boolean | null;
 }
 
 export function computeTasteSignature(loggedDrinks: DrinkRow[]): TasteSignature {
@@ -94,13 +93,12 @@ export async function fetchProfileStats(
 ): Promise<ProfileStatsResult> {
   const { data: allDrinks, error } = await supabase
     .from('drinks_public')
-    .select('id, name, type, rating, image_url, brand, is_wishlist')
+    .select('id, name, type, rating, image_url, brand')
     .eq('user_id', userId);
 
   if (error) throw error;
 
-  const loggedDrinks = (allDrinks || []).filter((d) => !d.is_wishlist);
-  const wishlistCount = (allDrinks || []).filter((d) => d.is_wishlist).length;
+  const loggedDrinks = allDrinks || [];
   const totalDrinks = loggedDrinks.length;
 
   const ratedDrinks = loggedDrinks.filter((d) => d.rating && d.rating > 0);
@@ -147,7 +145,6 @@ export async function fetchProfileStats(
   return {
     stats: {
       totalDrinks,
-      wishlistCount,
       averageRating,
       favoriteType,
       topRatedDrink,

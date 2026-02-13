@@ -16,9 +16,6 @@ Save ratings (1-5 stars), tasting notes, prices, and locations for every drink y
 📚 STAY ORGANIZED
 Create custom collections to group your drinks for any occasion—"Summer Favorites," "Gift Ideas," "Date Night Picks," or "Bucket List Bottles."
 
-💫 WISHLIST
-Keep track of bottles you want to try with the built-in Wishlist. Spot something at a bar or store? Add it instantly for later.
-
 👥 SOCIAL DISCOVERY
 Follow friends to see their latest ratings and discoveries. Your feed shows what people in your circle are drinking.
 
@@ -47,7 +44,7 @@ const FEATURES = [
   {
     icon: FolderHeart,
     title: "Custom Collections",
-    description: "Organize drinks into themed groups. Built-in Wishlist tracks bottles you want to try."
+    description: "Organize drinks into themed groups for any occasion."
   },
   {
     icon: Users,

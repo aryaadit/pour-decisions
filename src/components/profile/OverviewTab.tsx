@@ -51,7 +51,7 @@ export function OverviewTab({
       <ProfileStatsCard
         stats={stats}
         isLoading={statsLoading}
-        personalityLabel={tasteSignature?.personalityLabel}
+        categoriesCount={tasteSignature?.breakdown.length ?? 0}
       />
       <TasteSignatureCard signature={tasteSignature} isLoading={statsLoading} />
       <CategoryTopDrinksShowcase

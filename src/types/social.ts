@@ -1,6 +1,6 @@
 export type ActivityVisibility = 'private' | 'followers' | 'public';
 export type FollowStatus = 'pending' | 'accepted';
-export type ActivityType = 'drink_added' | 'drink_rated' | 'wishlist_added';
+export type ActivityType = 'drink_added' | 'drink_rated';
 
 export interface Follow {
   id: string;
@@ -27,9 +27,6 @@ export interface ActivityFeedItem {
   createdAt: Date;
   // Joined data
   user?: PublicProfile;
-  // Likes data (populated after fetch)
-  likeCount?: number;
-  isLikedByMe?: boolean;
 }
 
 export interface PublicProfile {

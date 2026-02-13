@@ -64,15 +64,13 @@ export function CollectionCompareSection({
         const { data: myDrinksData } = await supabase
           .from('drinks')
           .select('id, name, type, brand, rating, image_url')
-          .eq('user_id', user.id)
-          .eq('is_wishlist', false);
+          .eq('user_id', user.id);
 
         // Fetch profile user's public drinks
         const { data: theirDrinksData } = await supabase
           .from('drinks_public')
           .select('id, name, type, brand, rating, image_url')
-          .eq('user_id', profileUserId)
-          .eq('is_wishlist', false);
+          .eq('user_id', profileUserId);
 
         if (!myDrinksData || !theirDrinksData) {
           setComparison(null);
@@ -142,7 +140,6 @@ export function CollectionCompareSection({
       rating: drink.rating || 0,
       imageUrl: drink.imageUrl,
       dateAdded: new Date(),
-      isWishlist: false,
     };
     onDrinkClick(fullDrink);
   };
