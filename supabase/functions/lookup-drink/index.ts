@@ -18,7 +18,7 @@ const MAX_BRAND_LENGTH = 100;
 const MAX_URL_LENGTH = 500;
 
 // Supabase storage URL prefix for validation
-const SUPABASE_STORAGE_PREFIX = "https://kvsfwvxlmrtbzafznczd.supabase.co/storage/";
+const SUPABASE_STORAGE_PREFIX = "https://vfveigsnfatlmiiunprc.supabase.co/storage/";
 
 function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") || "";
@@ -170,9 +170,9 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY is not configured");
       return new Response(
         JSON.stringify({ error: "AI service not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -188,7 +188,7 @@ serve(async (req) => {
 
 Return your response as a JSON object with these fields:
 - drinkName: The identified name of the drink (only include if identifying from an image)
-- drinkBrand: The identified brand/producer (only include if identifying from an image)  
+- drinkBrand: The identified brand/producer (only include if identifying from an image)
 - drinkType: The type of drink - must be one of: whiskey, beer, wine, cocktail, other (only include if identifying from an image)
 - tastingNotes: A brief description of flavor profile, aromas, and characteristics (2-3 sentences max)
 - brandInfo: Information about the producer/brand, origin, and any notable background (2-3 sentences max)
@@ -197,47 +197,61 @@ Return your response as a JSON object with these fields:
 
 If you don't have reliable information for a field, set it to null.`;
 
-    // Build messages based on whether we have an image
-    const userContent = imageUrl 
-      ? [
-          { type: "text", text: `Please identify this drink from the image and provide information about it.${typeContext ? ` Context: ${typeContext}` : ''}${drinkName ? ` The user thinks it might be "${searchQuery}".` : ''}` },
-          { type: "image_url", image_url: { url: imageUrl } }
-        ]
-      : `Please provide information about this drink: "${searchQuery}". ${typeContext}`;
+    // Build parts for the Gemini request
+    const userParts: Array<Record<string, unknown>> = [];
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    if (imageUrl) {
+      userParts.push({
+        text: `Please identify this drink from the image and provide information about it.${typeContext ? ` Context: ${typeContext}` : ''}${drinkName ? ` The user thinks it might be "${searchQuery}".` : ''}`,
+      });
+
+      // Fetch the image and convert to base64 for Gemini
+      try {
+        const imgResponse = await fetch(imageUrl);
+        if (imgResponse.ok) {
+          const imgBuffer = await imgResponse.arrayBuffer();
+          const base64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
+          const contentType = imgResponse.headers.get("content-type") || "image/jpeg";
+          userParts.push({
+            inlineData: { mimeType: contentType, data: base64 },
+          });
+        } else {
+          console.warn("Failed to fetch image for AI, proceeding with text only");
+        }
+      } catch (imgErr) {
+        console.warn("Error fetching image for AI:", imgErr);
+      }
+    } else {
+      userParts.push({
+        text: `Please provide information about this drink: "${searchQuery}". ${typeContext}`,
+      });
+    }
+
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    const response = await fetch(geminiUrl, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent }
-        ],
-        response_format: { type: "json_object" },
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: "user", parts: userParts }],
+        generationConfig: {
+          responseMimeType: "application/json",
+        },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      
+      console.error("Gemini API error:", response.status, errorText);
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI service quota exceeded." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      
+
       return new Response(
         JSON.stringify({ error: "Failed to lookup drink information" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -245,7 +259,7 @@ If you don't have reliable information for a field, set it to null.`;
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!content) {
       console.error("No content in AI response");

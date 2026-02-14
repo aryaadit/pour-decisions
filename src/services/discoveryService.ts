@@ -30,7 +30,7 @@ export async function fetchCirclePopular(
     .from('activity_feed')
     .select('metadata')
     .in('user_id', followingIds)
-    .eq('activity_type', 'new_drink')
+    .eq('activity_type', 'drink_added')
     .gte('created_at', sevenDaysAgo);
 
   if (error) throw error;
