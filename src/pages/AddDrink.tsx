@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Drink, DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons, isBuiltInDrinkType } from '@/types/drink';
 import { StarRating } from '@/components/StarRating';
-import { StorageImage } from '@/components/StorageImage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,12 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -30,22 +23,22 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useDrinks } from '@/hooks/useDrinks';
 import * as drinkService from '@/services/drinkService';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
-import { Camera, X, Loader2, ImagePlus, Search, Sparkles, ChevronDown, ArrowLeft } from 'lucide-react';
-import { takePhoto, pickFromGallery, dataUrlToBlob } from '@/hooks/useCamera';
-import { Capacitor } from '@capacitor/core';
+import { Loader2, Search, Sparkles, ChevronDown, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { PhotoCaptureArea } from '@/components/drink-form/PhotoCaptureArea';
+import { detectDrinkType } from '@/lib/drinkTypeKeywords';
 
 export default function AddDrink() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const defaultTypeParam = searchParams.get('type') as DrinkType | null;
-  
+
   const { user } = useAuth();
   const { drinks, addDrink, updateDrink } = useDrinks();
   const { impact, notification, ImpactStyle, NotificationType } = useHaptics();
   const { customTypes } = useCustomDrinkTypes();
-  
+
   const [name, setName] = useState('');
   const [type, setType] = useState<DrinkType>(defaultTypeParam || 'whiskey');
   const [brand, setBrand] = useState('');
@@ -62,9 +55,12 @@ export default function AddDrink() {
     brandInfo?: string | null;
     priceRange?: string | null;
     suggestions?: string | null;
+    drinkName?: string;
+    drinkBrand?: string;
+    drinkType?: string;
   } | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const userSetTypeRef = useRef(false);
 
   // Load edit drink data
   useEffect(() => {
@@ -80,14 +76,83 @@ export default function AddDrink() {
         setPrice(editDrink.price || '');
         setImageUrl(editDrink.imageUrl);
         setDetailsOpen(!!(editDrink.brand || editDrink.notes || editDrink.location || editDrink.price));
+        userSetTypeRef.current = true;
       }
     }
   }, [editId, drinks]);
 
+  // Auto-trigger AI lookup when image is uploaded
+  const handleImageChange = useCallback((url: string | undefined) => {
+    setImageUrl(url);
+    if (url) {
+      // Trigger auto-lookup after image uploads
+      setTimeout(() => {
+        autoLookupFromImage(url);
+      }, 100);
+    }
+  }, []);
+
+  const autoLookupFromImage = async (imgUrl: string) => {
+    impact(ImpactStyle.Light);
+    setIsLookingUp(true);
+    setLookupInfo(null);
+
+    try {
+      const data = await drinkService.lookupDrink({
+        drinkName: name.trim() || undefined,
+        drinkType: type,
+        brand: brand.trim() || undefined,
+        imageUrl: imgUrl,
+      });
+
+      if (data?.success && data?.data) {
+        notification(NotificationType.Success);
+        const info = data.data;
+
+        // Auto-fill empty fields
+        if (info.drinkName && !name.trim()) {
+          setName(info.drinkName);
+        }
+        if (info.drinkBrand && !brand.trim()) {
+          setBrand(info.drinkBrand);
+        }
+        if (info.drinkType && !userSetTypeRef.current) {
+          setType(info.drinkType);
+        }
+
+        // Auto-fill notes and price from lookup
+        const combinedNotes = [
+          info.tastingNotes,
+          info.brandInfo,
+          info.suggestions,
+        ].filter(Boolean).join('\n\n');
+        if (combinedNotes && !notes.trim()) {
+          setNotes(combinedNotes);
+        }
+        if (info.priceRange && !price.trim()) {
+          setPrice(info.priceRange);
+        }
+
+        // Auto-expand details if AI populated them
+        if ((info.drinkBrand && !brand.trim()) || combinedNotes || info.priceRange) {
+          setDetailsOpen(true);
+        }
+
+        setLookupInfo(info);
+        toast.success(`Identified: ${info.drinkName || 'drink'}!`);
+      }
+    } catch (err) {
+      console.error('Lookup error:', err);
+      toast.error('Failed to identify drink');
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
+
   const handleLookup = async (useImage = false) => {
     const hasName = name.trim();
     const hasImage = useImage && imageUrl;
-    
+
     if (!hasName && !hasImage) {
       toast.error('Enter a drink name or add a photo first');
       return;
@@ -109,7 +174,7 @@ export default function AddDrink() {
         notification(NotificationType.Success);
         const info = data.data;
         setLookupInfo(info);
-        
+
         if (useImage) {
           if (info.drinkName && !name.trim()) {
             setName(info.drinkName);
@@ -117,11 +182,11 @@ export default function AddDrink() {
           if (info.drinkBrand && !brand.trim()) {
             setBrand(info.drinkBrand);
           }
-          if (info.drinkType) {
+          if (info.drinkType && !userSetTypeRef.current) {
             setType(info.drinkType);
           }
         }
-        
+
         toast.success(useImage ? 'Identified drink from photo!' : 'Found drink information!');
       }
     } catch (err) {
@@ -135,7 +200,7 @@ export default function AddDrink() {
   const applyLookupInfo = (field: 'notes' | 'price' | 'all') => {
     impact(ImpactStyle.Light);
     if (!lookupInfo) return;
-    
+
     if (field === 'notes' || field === 'all') {
       const combinedNotes = [
         lookupInfo.tastingNotes,
@@ -144,72 +209,30 @@ export default function AddDrink() {
       ].filter(Boolean).join('\n\n');
       if (combinedNotes) setNotes(combinedNotes);
     }
-    
+
     if (field === 'price' || field === 'all') {
       if (lookupInfo.priceRange) setPrice(lookupInfo.priceRange);
     }
-    
+
     if (field === 'all') {
+      setDetailsOpen(true);
       setLookupInfo(null);
       toast.success('Applied drink info');
     }
   };
 
-  const uploadFile = async (file: File | Blob) => {
-    if (!user) return;
-
-    setIsUploading(true);
-    try {
-      const storagePath = await drinkService.uploadDrinkImage(user.id, file);
-      setImageUrl(storagePath);
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
-    } finally {
-      setIsUploading(false);
+  const handleNameBlur = () => {
+    if (!name.trim() || userSetTypeRef.current) return;
+    const detected = detectDrinkType(name);
+    if (detected) {
+      setType(detected);
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    await uploadFile(file);
+  const handleTypeChange = (v: string) => {
+    userSetTypeRef.current = true;
+    setType(v as DrinkType);
   };
-
-  const handleTakePhoto = async () => {
-    impact(ImpactStyle.Light);
-    try {
-      const photo = await takePhoto();
-      if (photo) {
-        const blob = dataUrlToBlob(photo.dataUrl);
-        await uploadFile(blob);
-      }
-    } catch (error: any) {
-      console.error('Camera error:', error);
-      toast.error(error?.message || 'Failed to take photo. Please check camera permissions.');
-    }
-  };
-
-  const handlePickFromGallery = async () => {
-    impact(ImpactStyle.Light);
-    try {
-      const photo = await pickFromGallery();
-      if (photo) {
-        const blob = dataUrlToBlob(photo.dataUrl);
-        await uploadFile(blob);
-      }
-    } catch (error: any) {
-      console.error('Gallery error:', error);
-      toast.error(error?.message || 'Failed to access photos. Please check photo library permissions.');
-    }
-  };
-
-  const removeImage = () => {
-    setImageUrl(undefined);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const isNative = Capacitor.isNativePlatform();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,7 +259,7 @@ export default function AddDrink() {
         navigate(-1);
       } else {
         const result = await addDrink(drinkData);
-        
+
         if (result && 'isDuplicate' in result && result.isDuplicate) {
           toast.error('This drink already exists in your collection', {
             description: 'You can edit the existing drink or use a different name.',
@@ -245,7 +268,7 @@ export default function AddDrink() {
           setIsSaving(false);
           return;
         }
-        
+
         toast.success('Drink added');
         navigate(-1);
       }
@@ -284,84 +307,31 @@ export default function AddDrink() {
           <h1 className="text-lg font-semibold">
             {editId ? 'Edit Drink' : 'Add Drink'}
           </h1>
-          <div className="w-11" /> {/* Spacer for centering */}
+          <div className="w-11" />
         </div>
       </header>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="flex-1 overflow-auto">
         <div className="p-4 space-y-5">
-          {/* Name with Photo */}
+          {/* Photo Capture Area */}
+          <PhotoCaptureArea
+            imageUrl={imageUrl}
+            onImageChange={handleImageChange}
+            isUploading={isUploading}
+            onUploadingChange={setIsUploading}
+            isAnalyzing={isLookingUp && !!imageUrl}
+          />
+
+          {/* Name with Lookup */}
           <div className="space-y-2">
             <Label htmlFor="name">Name *</Label>
             <div className="flex gap-2 items-center">
-              {imageUrl ? (
-                <div className="relative flex-shrink-0">
-                  <StorageImage
-                    storagePath={imageUrl}
-                    alt="Drink preview"
-                    className="w-12 h-12 object-cover rounded-lg border border-border"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:bg-destructive/90"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ) : isNative ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      disabled={isUploading}
-                      className="w-12 h-12 flex-shrink-0 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
-                    >
-                      {isUploading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Camera className="w-5 h-5" />
-                      )}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="bg-popover z-[60]">
-                    <DropdownMenuItem onClick={handleTakePhoto} className="min-h-[44px]">
-                      <Camera className="w-4 h-4 mr-2" />
-                      Take Photo
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handlePickFromGallery} className="min-h-[44px]">
-                      <ImagePlus className="w-4 h-4 mr-2" />
-                      Choose from Gallery
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="w-12 h-12 flex-shrink-0 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
-                >
-                  {isUploading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Camera className="w-5 h-5" />
-                  )}
-                </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                onBlur={handleNameBlur}
                 placeholder="e.g., Lagavulin 16"
                 required
                 autoCapitalize="words"
@@ -379,10 +349,8 @@ export default function AddDrink() {
               >
                 {isLookingUp ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
-                ) : imageUrl ? (
-                  <Sparkles className="w-4 h-4" />
                 ) : (
-                  <Search className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4" />
                 )}
               </Button>
             </div>
@@ -391,7 +359,7 @@ export default function AddDrink() {
           {/* Type */}
           <div className="space-y-2">
             <Label htmlFor="type">Type</Label>
-            <Select value={type} onValueChange={(v) => setType(v as DrinkType)}>
+            <Select value={type} onValueChange={handleTypeChange}>
               <SelectTrigger className="bg-secondary/50 h-12">
                 <SelectValue>
                   <span className="flex items-center gap-2">

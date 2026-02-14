@@ -14,12 +14,13 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
-import { Loader2, Search, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import * as drinkService from '@/services/drinkService';
-import { DrinkImageUploader } from '@/components/drink-form/DrinkImageUploader';
+import { PhotoCaptureArea } from '@/components/drink-form/PhotoCaptureArea';
 import { LookupResultsPanel, LookupInfo } from '@/components/drink-form/LookupResultsPanel';
 import { DrinkDetailsForm } from '@/components/drink-form/DrinkDetailsForm';
+import { detectDrinkType } from '@/lib/drinkTypeKeywords';
 import {
   Dialog,
   DialogContent,
@@ -59,6 +60,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
   const [detailsOpen, setDetailsOpen] = useState(false);
   const prevOpenRef = useRef(false);
   const isCameraActiveRef = useRef(false);
+  const userSetTypeRef = useRef(false);
 
   useEffect(() => {
     if (isCameraActiveRef.current) return;
@@ -67,6 +69,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     prevOpenRef.current = open;
 
     if (justOpened) {
+      userSetTypeRef.current = false;
       if (editDrink) {
         setName(editDrink.name);
         setType(editDrink.type);
@@ -77,6 +80,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         setPrice(editDrink.price || '');
         setImageUrl(editDrink.imageUrl);
         setDetailsOpen(!!(editDrink.brand || editDrink.notes || editDrink.location || editDrink.price));
+        userSetTypeRef.current = true;
       } else {
         setName('');
         setType(defaultType);
@@ -86,6 +90,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         setLocation('');
         setPrice('');
         setImageUrl(undefined);
+        setLookupInfo(null);
         setDetailsOpen(false);
       }
     }
@@ -102,7 +107,75 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     setImageUrl(undefined);
     setLookupInfo(null);
     setDetailsOpen(false);
+    userSetTypeRef.current = false;
   }, [defaultType]);
+
+  // Auto-trigger AI lookup when image is uploaded
+  const handleImageChange = useCallback((url: string | undefined) => {
+    setImageUrl(url);
+    if (url) {
+      setTimeout(() => {
+        autoLookupFromImage(url);
+      }, 100);
+    }
+  }, []);
+
+  const autoLookupFromImage = async (imgUrl: string) => {
+    impact(ImpactStyle.Light);
+    setIsLookingUp(true);
+    setLookupInfo(null);
+
+    try {
+      const data = await drinkService.lookupDrink({
+        drinkName: name.trim() || undefined,
+        drinkType: type,
+        brand: brand.trim() || undefined,
+        imageUrl: imgUrl,
+      });
+
+      if (data?.success && data?.data) {
+        notification(NotificationType.Success);
+        const info = data.data;
+
+        // Auto-fill empty fields
+        if (info.drinkName && !name.trim()) {
+          setName(info.drinkName);
+        }
+        if (info.drinkBrand && !brand.trim()) {
+          setBrand(info.drinkBrand);
+        }
+        if (info.drinkType && !userSetTypeRef.current) {
+          setType(info.drinkType as DrinkType);
+        }
+
+        // Auto-fill notes and price
+        const combinedNotes = [
+          info.tastingNotes,
+          info.brandInfo,
+          info.suggestions,
+        ].filter(Boolean).join('\n\n');
+        if (combinedNotes && !notes.trim()) {
+          setNotes(combinedNotes);
+        }
+        if (info.priceRange && !price.trim()) {
+          setPrice(info.priceRange);
+        }
+
+        // Auto-expand details if AI populated them
+        if ((info.drinkBrand && !brand.trim()) || combinedNotes || info.priceRange) {
+          setDetailsOpen(true);
+        }
+
+        setLookupInfo(info);
+        toast.success(`Identified: ${info.drinkName || 'drink'}!`);
+      }
+    } catch (err) {
+      console.error('Lookup error:', err);
+      toast.error('Failed to identify drink');
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
 
   const handleLookup = async (useImage = false) => {
     const hasName = name.trim();
@@ -133,7 +206,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         if (useImage) {
           if (info.drinkName && !name.trim()) setName(info.drinkName);
           if (info.drinkBrand && !brand.trim()) setBrand(info.drinkBrand);
-          if (info.drinkType) setType(info.drinkType);
+          if (info.drinkType && !userSetTypeRef.current) setType(info.drinkType as DrinkType);
         }
 
         toast.success(useImage ? 'Identified drink from photo!' : 'Found drink information!');
@@ -162,7 +235,23 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
       if (lookupInfo.priceRange) setPrice(lookupInfo.priceRange);
     }
 
-    if (field === 'all') setLookupInfo(null);
+    if (field === 'all') {
+      setDetailsOpen(true);
+      setLookupInfo(null);
+    }
+  };
+
+  const handleNameBlur = () => {
+    if (!name.trim() || userSetTypeRef.current) return;
+    const detected = detectDrinkType(name);
+    if (detected) {
+      setType(detected);
+    }
+  };
+
+  const handleTypeChange = (v: string) => {
+    userSetTypeRef.current = true;
+    setType(v as DrinkType);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -188,20 +277,25 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
 
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Photo Capture Area */}
+      <PhotoCaptureArea
+        imageUrl={imageUrl}
+        onImageChange={handleImageChange}
+        isUploading={isUploading}
+        onUploadingChange={setIsUploading}
+        isAnalyzing={isLookingUp && !!imageUrl}
+        isCameraActiveRef={isCameraActiveRef}
+      />
+
+      {/* Name with Lookup */}
       <div className="space-y-2">
         <Label htmlFor="name">Name *</Label>
         <div className="flex gap-2 items-center">
-          <DrinkImageUploader
-            imageUrl={imageUrl}
-            onImageChange={setImageUrl}
-            isUploading={isUploading}
-            onUploadingChange={setIsUploading}
-            isCameraActiveRef={isCameraActiveRef}
-          />
           <Input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onBlur={handleNameBlur}
             placeholder="e.g., Lagavulin 16"
             required
             className="bg-secondary/50 flex-1"
@@ -216,10 +310,8 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
           >
             {isLookingUp ? (
               <Loader2 className="w-4 h-4 animate-spin" />
-            ) : imageUrl ? (
-              <Sparkles className="w-4 h-4" />
             ) : (
-              <Search className="w-4 h-4" />
+              <Sparkles className="w-4 h-4" />
             )}
           </Button>
         </div>
@@ -227,7 +319,7 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
 
       <div className="space-y-2">
         <Label htmlFor="type">Type</Label>
-        <Select value={type} onValueChange={(v) => setType(v as DrinkType)}>
+        <Select value={type} onValueChange={handleTypeChange}>
           <SelectTrigger className="bg-secondary/50">
             <SelectValue>
               <span className="flex items-center gap-2">
