@@ -184,11 +184,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const showWelcomeCarousel = !derivedState.hasSeenWelcome;
   const isLoading = user ? profileLoading : false;
 
-  // Don't render children until we know the onboarding state for logged-in users
-  if (user && profileLoading) {
-    return null;
-  }
-
   return (
     <OnboardingContext.Provider value={{
       state: derivedState,

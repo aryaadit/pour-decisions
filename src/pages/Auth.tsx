@@ -1,9 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useSocialProfile } from '@/hooks/useSocialProfile';
+import { useProfile } from '@/hooks/useProfile';
 import { useDebounce } from '@/hooks/useDebounce';
+
+const WelcomeCarousel = lazy(() =>
+  import('@/components/WelcomeCarousel').then(mod => ({ default: mod.WelcomeCarousel }))
+);
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +33,7 @@ const Auth = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [serverError, setServerError] = useState<{ field: 'email' | 'password' | 'general'; message: string } | null>(null);
   const [resetSent, setResetSent] = useState(false);
-  const [profileSetup, setProfileSetup] = useState(false);
+  const [signupStep, setSignupStep] = useState<'auth' | 'carousel' | 'profile-setup'>('auth');
 
   // Profile setup state
   const [username, setUsername] = useState('');
@@ -39,21 +44,22 @@ const Auth = () => {
 
   const { signIn, signUp, resetPassword, user, isLoading } = useAuth();
   const { trackEvent } = useAnalytics();
-  const { checkUsernameAvailable, updateSocialProfile } = useSocialProfile();
+  const { checkUsernameAvailable } = useSocialProfile();
+  const { updateProfile } = useProfile();
   const navigate = useNavigate();
 
   const debouncedUsername = useDebounce(username, 300);
   const isValidUsernameFormat = /^[a-z0-9_]{3,26}$/.test(username);
 
   useEffect(() => {
-    if (user && !profileSetup) {
+    if (user && signupStep === 'auth') {
       navigate('/');
     }
-  }, [user, navigate, profileSetup]);
+  }, [user, navigate, signupStep]);
 
   // Check username availability
   useEffect(() => {
-    if (!profileSetup) return;
+    if (signupStep !== 'profile-setup') return;
 
     if (debouncedUsername.length < 3 || !isValidUsernameFormat) {
       setIsUsernameAvailable(null);
@@ -71,7 +77,7 @@ const Auth = () => {
     });
 
     return () => { cancelled = true; };
-  }, [debouncedUsername, profileSetup, checkUsernameAvailable, isValidUsernameFormat]);
+  }, [debouncedUsername, signupStep, checkUsernameAvailable, isValidUsernameFormat]);
 
   const validateForm = (checkPassword = true) => {
     const newErrors: { email?: string; password?: string } = {};
@@ -142,7 +148,7 @@ const Auth = () => {
           }
         } else {
           trackEvent('sign_up', 'action', { method: 'email' });
-          setProfileSetup(true);
+          setSignupStep('carousel');
         }
       }
     } finally {
@@ -154,11 +160,12 @@ const Auth = () => {
     if (!isUsernameAvailable || !isValidUsernameFormat) return;
 
     setIsSavingProfile(true);
-    const { error } = await updateSocialProfile({
+    const { error } = await updateProfile({
       username,
-      bio: bio.trim() || undefined,
+      bio: bio.trim() || null,
       isPublic: true,
       activityVisibility: 'followers',
+      hasSeenWelcome: true,
     });
 
     if (error) {
@@ -168,7 +175,6 @@ const Auth = () => {
     }
 
     toast.success('Profile set up successfully!');
-    setProfileSetup(false);
     navigate('/');
   };
 
@@ -180,7 +186,15 @@ const Auth = () => {
     );
   }
 
-  if (profileSetup) {
+  if (signupStep === 'carousel') {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-background" />}>
+        <WelcomeCarousel onComplete={() => setSignupStep('profile-setup')} />
+      </Suspense>
+    );
+  }
+
+  if (signupStep === 'profile-setup') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         <div className="w-full max-w-md">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDrinks } from '@/hooks/useDrinks';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,9 +17,6 @@ import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { AddDrinkDialog } from '@/components/AddDrinkDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { TestFlightBanner } from '@/components/TestFlightBanner';
-const WelcomeCarousel = lazy(() =>
-  import('@/components/WelcomeCarousel').then(mod => ({ default: mod.WelcomeCarousel }))
-);
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { OnboardingSection } from '@/components/home/OnboardingSection';
 import { SearchAndFilterBar } from '@/components/home/SearchAndFilterBar';
@@ -34,7 +31,7 @@ const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const appInfo = useAppInfo();
-  const { isStepVisible, dismissStep, showWelcomeCarousel, completeWelcome } = useOnboarding();
+  const { isStepVisible, dismissStep } = useOnboarding();
   const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther, refetch } = useDrinks();
   const { customTypes } = useCustomDrinkTypes();
   const [selectedType, setSelectedType] = useState<DrinkType | null>(null);
@@ -239,14 +236,6 @@ const Index = () => {
   }
 
   if (!user) return null;
-
-  if (showWelcomeCarousel) {
-    return (
-      <Suspense fallback={<div className="min-h-screen bg-background" />}>
-        <WelcomeCarousel onComplete={completeWelcome} />
-      </Suspense>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
