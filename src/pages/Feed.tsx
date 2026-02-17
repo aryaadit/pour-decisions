@@ -11,7 +11,6 @@ import { PageHeader } from '@/components/PageHeader';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { ActivityCard } from '@/components/ActivityCard';
 import { UserSearch } from '@/components/UserSearch';
-import { UsernameSetup } from '@/components/UsernameSetup';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { DiscoverySection } from '@/components/DiscoverySection';
 import { Button } from '@/components/ui/button';
@@ -22,11 +21,10 @@ import { DrinkOwner } from '@/components/DrinkDetailModal';
 export default function Feed() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  const { profile, isLoading: profileLoading, refetch: refetchProfile } = useProfile();
+  const { isLoading: profileLoading } = useProfile();
   const { activities, isLoading: feedLoading, hasMore, loadMore, refetch: refetchFeed } = useActivityFeed();
   const isMobile = useIsMobile();
 
-  const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
   const [viewingOwner, setViewingOwner] = useState<DrinkOwner | null>(null);
 
@@ -40,18 +38,6 @@ export default function Feed() {
       navigate('/auth');
     }
   }, [authLoading, user, navigate]);
-
-  // Show username setup if user hasn't set one
-  useEffect(() => {
-    if (!profileLoading && profile && !(profile as any).username) {
-      setShowUsernameSetup(true);
-    }
-  }, [profile, profileLoading]);
-
-  const handleUsernameSetupComplete = () => {
-    setShowUsernameSetup(false);
-    refetchProfile();
-  };
 
   const handleDrinkClick = (drink: Drink, owner: DrinkOwner) => {
     setViewingDrink(drink);
@@ -155,12 +141,6 @@ export default function Feed() {
         }}
         readOnly={true}
         owner={viewingOwner}
-      />
-
-      {/* Username Setup Modal */}
-      <UsernameSetup
-        open={showUsernameSetup}
-        onComplete={handleUsernameSetupComplete}
       />
 
       {/* Spacer for bottom nav */}

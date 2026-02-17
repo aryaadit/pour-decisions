@@ -2,13 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useSocialProfile } from '@/hooks/useSocialProfile';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassWater, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import { GlassWater, Mail, Lock, Loader2, Eye, EyeOff, AtSign, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { cn } from '@/lib/utils';
 
 const emailSchema = z.string().email('Please enter a valid email');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -24,16 +28,50 @@ const Auth = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [serverError, setServerError] = useState<{ field: 'email' | 'password' | 'general'; message: string } | null>(null);
   const [resetSent, setResetSent] = useState(false);
-  
+  const [profileSetup, setProfileSetup] = useState(false);
+
+  // Profile setup state
+  const [username, setUsername] = useState('');
+  const [bio, setBio] = useState('');
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
   const { signIn, signUp, resetPassword, user, isLoading } = useAuth();
   const { trackEvent } = useAnalytics();
+  const { checkUsernameAvailable, updateSocialProfile } = useSocialProfile();
   const navigate = useNavigate();
 
+  const debouncedUsername = useDebounce(username, 300);
+  const isValidUsernameFormat = /^[a-z0-9_]{3,26}$/.test(username);
+
   useEffect(() => {
-    if (user) {
+    if (user && !profileSetup) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, profileSetup]);
+
+  // Check username availability
+  useEffect(() => {
+    if (!profileSetup) return;
+
+    if (debouncedUsername.length < 3 || !isValidUsernameFormat) {
+      setIsUsernameAvailable(null);
+      return;
+    }
+
+    let cancelled = false;
+    setIsCheckingUsername(true);
+
+    checkUsernameAvailable(debouncedUsername).then((available) => {
+      if (!cancelled) {
+        setIsUsernameAvailable(available);
+        setIsCheckingUsername(false);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [debouncedUsername, profileSetup, checkUsernameAvailable, isValidUsernameFormat]);
 
   const validateForm = (checkPassword = true) => {
     const newErrors: { email?: string; password?: string } = {};
@@ -104,7 +142,7 @@ const Auth = () => {
           }
         } else {
           trackEvent('sign_up', 'action', { method: 'email' });
-          toast.success('Account created!', { description: 'You have successfully signed up.' });
+          setProfileSetup(true);
         }
       }
     } finally {
@@ -112,10 +150,126 @@ const Auth = () => {
     }
   };
 
+  const handleProfileSetup = async () => {
+    if (!isUsernameAvailable || !isValidUsernameFormat) return;
+
+    setIsSavingProfile(true);
+    const { error } = await updateSocialProfile({
+      username,
+      bio: bio.trim() || undefined,
+      isPublic: true,
+      activityVisibility: 'followers',
+    });
+
+    if (error) {
+      toast.error('Failed to save profile');
+      setIsSavingProfile(false);
+      return;
+    }
+
+    toast.success('Profile set up successfully!');
+    setProfileSetup(false);
+    navigate('/');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (profileSetup) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
+        <div className="w-full max-w-md">
+          <Card className="gradient-card border-border/50">
+            <CardHeader className="text-center">
+              <CardTitle className="font-display text-xl">Set up your profile</CardTitle>
+              <CardDescription>Choose a username so friends can find you</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Username Input */}
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <div className="relative">
+                  <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="username"
+                    placeholder="drinkexplorer"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="next"
+                    className={cn(
+                      "pl-10 pr-10",
+                      isUsernameAvailable === true && "border-green-500 focus-visible:ring-green-500",
+                      isUsernameAvailable === false && "border-destructive focus-visible:ring-destructive"
+                    )}
+                    maxLength={26}
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {isCheckingUsername && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    {!isCheckingUsername && isUsernameAvailable === true && <Check className="h-4 w-4 text-green-500" />}
+                    {!isCheckingUsername && isUsernameAvailable === false && <X className="h-4 w-4 text-destructive" />}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {username.length === 0
+                    ? "3-26 characters: letters, numbers, underscores"
+                    : username.length < 3
+                      ? "Must be at least 3 characters"
+                      : !isValidUsernameFormat
+                        ? "Only lowercase letters, numbers, and underscores"
+                        : isCheckingUsername
+                          ? "Checking availability..."
+                          : isUsernameAvailable === false
+                            ? "This username is taken"
+                            : isUsernameAvailable === true
+                              ? "Username is available!"
+                              : ""}
+                </p>
+              </div>
+
+              {/* Bio Input */}
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio (optional)</Label>
+                <Textarea
+                  id="bio"
+                  placeholder="Wine lover, craft beer enthusiast..."
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={3}
+                  maxLength={160}
+                  autoCapitalize="sentences"
+                  enterKeyHint="done"
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {bio.length}/160
+                </p>
+              </div>
+
+              <Button
+                variant="glow"
+                className="w-full"
+                onClick={handleProfileSetup}
+                disabled={!isUsernameAvailable || !isValidUsernameFormat || isSavingProfile}
+              >
+                {isSavingProfile ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Setting up...
+                  </>
+                ) : (
+                  'Continue'
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
