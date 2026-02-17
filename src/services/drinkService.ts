@@ -108,7 +108,7 @@ export async function migrateDrinksToType(typeName: string): Promise<void> {
  * Convert a storage path like "drink-images/userId/file.jpg" to a signed URL.
  * Returns undefined if the conversion fails.
  */
-async function resolveStorageUrl(storagePath: string): Promise<string | undefined> {
+function resolveStorageUrl(storagePath: string): string | undefined {
   // Already a full URL — use as-is
   if (storagePath.startsWith('http')) return storagePath;
 
@@ -119,16 +119,11 @@ async function resolveStorageUrl(storagePath: string): Promise<string | undefine
   const bucket = storagePath.substring(0, slashIndex);
   const path = storagePath.substring(slashIndex + 1);
 
-  const { data, error } = await supabase.storage
+  const { data } = supabase.storage
     .from(bucket)
-    .createSignedUrl(path, 300); // 5 min — enough for the AI to fetch
+    .getPublicUrl(path);
 
-  if (error) {
-    console.error('Failed to create signed URL for lookup:', error);
-    return undefined;
-  }
-
-  return data.signedUrl;
+  return data.publicUrl;
 }
 
 export async function lookupDrink(params: {
@@ -137,9 +132,9 @@ export async function lookupDrink(params: {
   brand?: string;
   imageUrl?: string;
 }) {
-  // Convert storage path to a signed URL the edge function & AI can access
+  // Convert storage path to a public URL the edge function & AI can access
   let resolvedImageUrl = params.imageUrl
-    ? await resolveStorageUrl(params.imageUrl)
+    ? resolveStorageUrl(params.imageUrl)
     : undefined;
 
   if (params.imageUrl && !resolvedImageUrl) {
