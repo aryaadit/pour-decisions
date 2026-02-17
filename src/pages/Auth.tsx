@@ -22,6 +22,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [serverError, setServerError] = useState<{ field: 'email' | 'password' | 'general'; message: string } | null>(null);
   const [resetSent, setResetSent] = useState(false);
   
   const { signIn, signUp, resetPassword, user, isLoading } = useAuth();
@@ -84,7 +85,7 @@ const Auth = () => {
         if (error) {
           trackEvent('sign_in_error', 'error', { error: error.message });
           if (error.message.includes('Invalid login credentials')) {
-            toast.error('Login failed', { description: 'Invalid email or password. Please try again.' });
+            setServerError({ field: 'password', message: 'Invalid email or password' });
           } else {
             toast.error('Login failed', { description: error.message });
           }
@@ -97,7 +98,7 @@ const Auth = () => {
         if (error) {
           trackEvent('sign_up_error', 'error', { error: error.message });
           if (error.message.includes('User already registered')) {
-            toast.error('Account exists', { description: 'An account with this email already exists. Try logging in instead.' });
+            setServerError({ field: 'email', message: 'An account with this email already exists' });
           } else {
             toast.error('Sign up failed', { description: error.message });
           }
@@ -136,7 +137,7 @@ const Auth = () => {
         <Card className="gradient-card border-border/50">
           <CardHeader className="text-center">
             <CardTitle className="font-display text-xl">
-              {mode === 'login' ? 'Welcome back' : mode === 'signup' ? 'Create an account' : 'Reset password'}
+              {mode === 'login' ? 'Welcome' : mode === 'signup' ? 'Create an account' : 'Reset password'}
             </CardTitle>
             <CardDescription>
               {mode === 'login'
@@ -178,7 +179,7 @@ const Auth = () => {
                       type="email"
                       placeholder="you@example.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => { setEmail(e.target.value); setServerError(null); }}
                       className="pl-10"
                       autoComplete="email"
                       autoCorrect="off"
@@ -188,6 +189,9 @@ const Auth = () => {
                   </div>
                   {errors.email && (
                     <p className="text-sm text-destructive">{errors.email}</p>
+                  )}
+                  {serverError?.field === 'email' && (
+                    <p className="text-sm text-destructive">{serverError.message}</p>
                   )}
                 </div>
 
@@ -201,7 +205,7 @@ const Auth = () => {
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => { setPassword(e.target.value); setServerError(null); }}
                         className="pl-10 pr-10"
                         autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                         enterKeyHint="go"
@@ -216,6 +220,9 @@ const Auth = () => {
                     </div>
                     {errors.password && (
                       <p className="text-sm text-destructive">{errors.password}</p>
+                    )}
+                    {serverError?.field === 'password' && (
+                      <p className="text-sm text-destructive">{serverError.message}</p>
                     )}
                   </div>
                 )}
@@ -260,24 +267,32 @@ const Auth = () => {
                   onClick={() => {
                     setMode('login');
                     setErrors({});
+                    setServerError(null);
                   }}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Back to login
                 </button>
               ) : mode !== 'forgot' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode(mode === 'login' ? 'signup' : 'login');
-                    setErrors({});
-                  }}
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {mode === 'login'
-                    ? "Don't have an account? Sign up"
-                    : 'Already have an account? Sign in'}
-                </button>
+                <>
+                  <div className="flex items-center gap-3 my-2">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-sm text-muted-foreground">or</span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setMode(mode === 'login' ? 'signup' : 'login');
+                      setErrors({});
+                      setServerError(null);
+                    }}
+                  >
+                    {mode === 'login' ? 'Create an account' : 'Sign in instead'}
+                  </Button>
+                </>
               )}
             </div>
           </CardContent>
