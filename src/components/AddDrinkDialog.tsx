@@ -110,16 +110,6 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     userSetTypeRef.current = false;
   }, [defaultType]);
 
-  // Auto-trigger AI lookup when image is uploaded
-  const handleImageChange = useCallback((url: string | undefined) => {
-    setImageUrl(url);
-    if (url) {
-      setTimeout(() => {
-        autoLookupFromImage(url);
-      }, 100);
-    }
-  }, []);
-
   const autoLookupFromImage = async (imgUrl: string) => {
     impact(ImpactStyle.Light);
     setIsLookingUp(true);
@@ -176,6 +166,20 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
       setIsLookingUp(false);
     }
   };
+
+  // Keep a ref to the latest autoLookup so the stable callback always calls it
+  const autoLookupRef = useRef(autoLookupFromImage);
+  autoLookupRef.current = autoLookupFromImage;
+
+  // Auto-trigger AI lookup when image is uploaded
+  const handleImageChange = useCallback((url: string | undefined) => {
+    setImageUrl(url);
+    if (url) {
+      setTimeout(() => {
+        autoLookupRef.current(url);
+      }, 100);
+    }
+  }, []);
 
   const handleLookup = async (useImage = false) => {
     const hasName = name.trim();

@@ -210,16 +210,25 @@ If you don't have reliable information for a field, set it to null.`;
         const imgResponse = await fetch(imageUrl);
         if (imgResponse.ok) {
           const imgBuffer = await imgResponse.arrayBuffer();
-          const base64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
+          // Convert to base64 in chunks to avoid call stack overflow with large images
+          const bytes = new Uint8Array(imgBuffer);
+          let binary = "";
+          const chunkSize = 8192;
+          for (let i = 0; i < bytes.length; i += chunkSize) {
+            const chunk = bytes.subarray(i, i + chunkSize);
+            binary += String.fromCharCode(...chunk);
+          }
+          const base64 = btoa(binary);
           const contentType = imgResponse.headers.get("content-type") || "image/jpeg";
+          console.log(`Image fetched: ${bytes.length} bytes, type: ${contentType}`);
           userParts.push({
             inlineData: { mimeType: contentType, data: base64 },
           });
         } else {
-          console.warn("Failed to fetch image for AI, proceeding with text only");
+          console.error(`Failed to fetch image: ${imgResponse.status} ${imgResponse.statusText}`);
         }
       } catch (imgErr) {
-        console.warn("Error fetching image for AI:", imgErr);
+        console.error("Error processing image for AI:", imgErr);
       }
     } else {
       userParts.push({
