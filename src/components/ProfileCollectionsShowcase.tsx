@@ -59,7 +59,8 @@ export function ProfileCollectionsShowcase({ collections, isLoading, userId, isO
       }
 
       // Query 2: Fetch all needed drinks in one query
-      let drinksMap = new Map<string, any>();
+      interface DrinkPreviewRow { id: string; name: string; image_url: string | null; rating: number | null }
+      let drinksMap = new Map<string, DrinkPreviewRow>();
       if (allDrinkIds.size > 0) {
         const { data: allDrinks } = await supabase
           .from('drinks_public')
@@ -74,9 +75,9 @@ export function ProfileCollectionsShowcase({ collections, isLoading, userId, isO
         const previewDrinks = drinkIds
           .map(id => drinksMap.get(id))
           .filter(Boolean)
-          .map((d: any) => ({
-            id: d.id || '',
-            name: d.name || '',
+          .map((d) => ({
+            id: d.id,
+            name: d.name,
             imageUrl: d.image_url || undefined,
             rating: d.rating || undefined,
           }));

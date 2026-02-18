@@ -4,7 +4,7 @@ import { useDrinks } from '@/hooks/useDrinks';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { useAppInfo } from '@/hooks/useAppInfo';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { useOnboarding } from '@/hooks/useOnboarding';

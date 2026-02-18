@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCollections } from '@/hooks/useCollections';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { CollectionCard } from '@/components/CollectionCard';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';

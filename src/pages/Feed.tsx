@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
 import { useDiscovery } from '@/hooks/useDiscovery';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 
 import { PageHeader } from '@/components/PageHeader';
 import { PullToRefresh } from '@/components/PullToRefresh';

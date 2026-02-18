@@ -7,9 +7,10 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/ThemeProvider";
 import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import { OnboardingProvider } from "@/hooks/useOnboarding";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/useMobile";
 import BottomNavigation from "@/components/BottomNavigation";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient, setupCachePersistence } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 
@@ -53,30 +54,32 @@ function AppRoutes() {
 
   return (
     <div className="relative min-h-screen bg-background">
-      <Suspense fallback={<LazyFallback />}>
-        <Routes>
-          {/* Core tabs — eagerly loaded */}
-          <Route path="/" element={<Index />} />
-          <Route path="/collections" element={<Collections />} />
-          <Route path="/feed" element={<Feed />} />
+      <ErrorBoundary>
+        <Suspense fallback={<LazyFallback />}>
+          <Routes>
+            {/* Core tabs — eagerly loaded */}
+            <Route path="/" element={<ErrorBoundary><Index /></ErrorBoundary>} />
+            <Route path="/collections" element={<ErrorBoundary><Collections /></ErrorBoundary>} />
+            <Route path="/feed" element={<ErrorBoundary><Feed /></ErrorBoundary>} />
 
-          {/* Lazy-loaded routes */}
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/add-drink" element={<AddDrink />} />
-          <Route path="/u/:username" element={<UserProfile />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/collections/:id" element={<CollectionDetail />} />
-          <Route path="/collections/:id/settings" element={<CollectionSettings />} />
-          <Route path="/share/:shareId" element={<SharedCollection />} />
-          <Route path="/c/:shareId" element={<SharedCollection />} />
-          <Route path="/store-listing" element={<StoreListing />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
+            {/* Lazy-loaded routes */}
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
+            <Route path="/add-drink" element={<ErrorBoundary><AddDrink /></ErrorBoundary>} />
+            <Route path="/u/:username" element={<ErrorBoundary><UserProfile /></ErrorBoundary>} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/collections/:id" element={<ErrorBoundary><CollectionDetail /></ErrorBoundary>} />
+            <Route path="/collections/:id/settings" element={<ErrorBoundary><CollectionSettings /></ErrorBoundary>} />
+            <Route path="/share/:shareId" element={<SharedCollection />} />
+            <Route path="/c/:shareId" element={<SharedCollection />} />
+            <Route path="/store-listing" element={<StoreListing />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
 
       {/* Persistent bottom navigation - always visible on mobile */}
       {shouldShowNav && <BottomNavigation />}

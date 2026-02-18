@@ -47,7 +47,7 @@ const triggerHaptic = async (style: ImpactStyle = ImpactStyle.Light) => {
   if (!isNative) return;
   try {
     await Haptics.impact({ style });
-  } catch (e) {
+  } catch (error: unknown) {
     // Silently fail
   }
 };

@@ -97,7 +97,7 @@ export async function fetchUserActivities(
 
 export function subscribeToFeed(
   currentUserId: string,
-  onInsert: (item: any) => void
+  onInsert: (item: Record<string, unknown>) => void
 ): { unsubscribe: () => void } {
   const channel: RealtimeChannel = supabase
     .channel('activity_feed_realtime')

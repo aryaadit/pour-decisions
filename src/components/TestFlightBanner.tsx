@@ -1,7 +1,7 @@
 import { Apple, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 
 const TESTFLIGHT_URL = 'https://testflight.apple.com/join/ySRegsMR';
 

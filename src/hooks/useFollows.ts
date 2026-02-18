@@ -111,8 +111,8 @@ export function useFollows(targetUserId?: string) {
     try {
       await followMutation.mutateAsync(userIdToFollow);
       return { error: null };
-    } catch (error) {
-      return { error: error as Error };
+    } catch (error: unknown) {
+      return { error: error instanceof Error ? error : new Error('Unknown error') };
     }
   };
 
@@ -121,8 +121,8 @@ export function useFollows(targetUserId?: string) {
     try {
       await unfollowMutation.mutateAsync(userIdToUnfollow);
       return { error: null };
-    } catch (error) {
-      return { error: error as Error };
+    } catch (error: unknown) {
+      return { error: error instanceof Error ? error : new Error('Unknown error') };
     }
   };
 

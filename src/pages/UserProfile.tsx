@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSocialProfile } from '@/hooks/useSocialProfile';
 import { useFollows } from '@/hooks/useFollows';
 import { useAuth } from '@/hooks/useAuth';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { useProfileStats } from '@/hooks/useProfileStats';
 import { TopDrinkEntry } from '@/types/taste';
 import { queryKeys } from '@/lib/queryKeys';

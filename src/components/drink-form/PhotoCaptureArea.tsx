@@ -37,7 +37,7 @@ export function PhotoCaptureArea({
     try {
       const storagePath = await drinkService.uploadDrinkImage(user.id, file);
       onImageChange(storagePath);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload image');
     } finally {
@@ -60,9 +60,10 @@ export function PhotoCaptureArea({
         const blob = dataUrlToBlob(photo.dataUrl);
         await uploadFile(blob);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Camera error:', error);
-      toast.error(error?.message || 'Failed to take photo. Please check camera permissions.');
+      const message = error instanceof Error ? error.message : 'Failed to take photo. Please check camera permissions.';
+      toast.error(message);
     } finally {
       if (isCameraActiveRef) {
         setTimeout(() => {
@@ -81,9 +82,10 @@ export function PhotoCaptureArea({
         const blob = dataUrlToBlob(photo.dataUrl);
         await uploadFile(blob);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Gallery error:', error);
-      toast.error(error?.message || 'Failed to access photos. Please check photo library permissions.');
+      const message = error instanceof Error ? error.message : 'Failed to access photos. Please check photo library permissions.';
+      toast.error(message);
     } finally {
       if (isCameraActiveRef) {
         setTimeout(() => {

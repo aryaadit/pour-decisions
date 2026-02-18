@@ -1,6 +1,25 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Drink, Collection, DrinkType } from '@/types/drink';
+import { Drink, Collection } from '@/types/drink';
 import { mapCollectionRow, mapDrinkRow, mapPublicDrinkRow } from '@/lib/mappers';
+import type { Database } from '@/integrations/supabase/types';
+
+type DrinkRow = Database['public']['Tables']['drinks']['Row'];
+
+interface CollectionDrinkJoin {
+  drink_id: string;
+  position: number | null;
+  drinks: DrinkRow | null;
+}
+
+interface PublicDrinkRow {
+  id: string;
+  name: string;
+  type: string;
+  brand: string | null;
+  rating: number | null;
+  date_added: string;
+  image_url: string | null;
+}
 
 export async function fetchCollections(userId: string): Promise<Collection[]> {
   const { data, error } = await supabase
@@ -119,9 +138,9 @@ export async function getCollectionDrinks(collectionId: string): Promise<Drink[]
     .order('position', { ascending: true });
 
   if (error) throw error;
-  return (data || [])
-    .filter((cd: any) => cd.drinks)
-    .map((cd: any) => mapDrinkRow(cd.drinks));
+  return (data as CollectionDrinkJoin[] || [])
+    .filter((cd) => cd.drinks)
+    .map((cd) => mapDrinkRow(cd.drinks!));
 }
 
 export async function getPublicCollection(
@@ -144,7 +163,7 @@ export async function getPublicCollection(
   if (collectionDrinksError) return null;
 
   const drinkIds = (collectionDrinksData || []).map((cd) => cd.drink_id);
-  let drinksData: any[] = [];
+  let drinksData: PublicDrinkRow[] = [];
 
   if (drinkIds.length > 0) {
     const { data: drinksResult, error: drinksError } = await supabase
@@ -174,7 +193,7 @@ export async function getPublicCollection(
     drinkCount: orderedDrinks.length,
   };
 
-  const drinks: Drink[] = orderedDrinks.map((d: any) => mapPublicDrinkRow(d));
+  const drinks: Drink[] = orderedDrinks.map((d) => mapPublicDrinkRow(d as PublicDrinkRow));
 
   return { collection, drinks };
 }

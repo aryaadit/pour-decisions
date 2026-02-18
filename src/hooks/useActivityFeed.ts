@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { ActivityFeedItem } from '@/types/social';
 import { queryKeys } from '@/lib/queryKeys';
 import { mapActivityFeedItem } from '@/lib/mappers';
 import * as feedService from '@/services/feedService';
+import type { FeedPage } from '@/services/feedService';
 
 export function useActivityFeed(limit = 20) {
   const { user } = useAuth();
@@ -47,7 +48,7 @@ export function useActivityFeed(limit = 20) {
       const mappedActivity = mapActivityFeedItem(newActivity, userProfile);
 
       // Prepend to first page
-      queryClient.setQueryData(queryKeys.feed.list(), (old: any) => {
+      queryClient.setQueryData(queryKeys.feed.list(), (old: InfiniteData<FeedPage> | undefined) => {
         if (!old?.pages?.length) return old;
         const newPages = [...old.pages];
         newPages[0] = {

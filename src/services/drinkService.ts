@@ -95,10 +95,11 @@ export async function deleteDrink(id: string, userId: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function migrateDrinksToType(typeName: string): Promise<void> {
+export async function migrateDrinksToType(userId: string, typeName: string): Promise<void> {
   const { error } = await supabase
     .from('drinks')
     .update({ type: 'other' })
+    .eq('user_id', userId)
     .eq('type', typeName);
 
   if (error) throw error;

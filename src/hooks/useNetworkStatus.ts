@@ -1,21 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function useNetworkStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [wasOffline, setWasOffline] = useState(false);
+  const wasOfflineRef = useRef(false);
 
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      if (wasOffline) {
-        // We just came back online after being offline
+      if (wasOfflineRef.current) {
         setWasOffline(false);
+        wasOfflineRef.current = false;
       }
     };
 
     const handleOffline = () => {
       setIsOnline(false);
       setWasOffline(true);
+      wasOfflineRef.current = true;
     };
 
     window.addEventListener('online', handleOnline);
@@ -25,7 +27,7 @@ export function useNetworkStatus() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [wasOffline]);
+  }, []);
 
   return { isOnline, wasOffline };
 }

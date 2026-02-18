@@ -67,8 +67,8 @@ export function useSocialProfile() {
       try {
         await profileService.updateSocialProfile(user.id, updates);
         return { error: null };
-      } catch (error) {
-        return { error: error as Error };
+      } catch (error: unknown) {
+        return { error: error instanceof Error ? error : new Error('Unknown error') };
       }
     },
     [user]

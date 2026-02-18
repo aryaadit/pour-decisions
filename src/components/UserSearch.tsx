@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { PublicProfile } from '@/types/social';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/useDebounce';
-import { cn } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 
 interface UserSearchProps {
   onSelect?: (profile: PublicProfile) => void;
@@ -53,11 +53,6 @@ export function UserSearch({
     }
     setQuery('');
     setIsOpen(false);
-  };
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   return (

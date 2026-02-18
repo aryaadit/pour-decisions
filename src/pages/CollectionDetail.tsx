@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCollections } from '@/hooks/useCollections';
 import { useDrinks } from '@/hooks/useDrinks';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { DrinkListItem } from '@/components/MemoizedDrinkListItem';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { StorageImage } from '@/components/StorageImage';

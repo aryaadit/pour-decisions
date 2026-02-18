@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Drink, DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons, isBuiltInDrinkType } from '@/types/drink';
+import { Drink, DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons } from '@/types/drink';
 import { StarRating } from '@/components/StarRating';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +15,11 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useDrinks } from '@/hooks/useDrinks';
-import * as drinkService from '@/services/drinkService';
+import { useAddDrinkForm } from '@/hooks/useAddDrinkForm';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
-import { Loader2, Search, Sparkles, ChevronDown, ArrowLeft } from 'lucide-react';
+import { Loader2, Sparkles, ChevronDown, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhotoCaptureArea } from '@/components/drink-form/PhotoCaptureArea';
-import { detectDrinkType } from '@/lib/drinkTypeKeywords';
 
 export default function AddDrink() {
   const navigate = useNavigate();
@@ -42,19 +41,29 @@ export default function AddDrink() {
   const [price, setPrice] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [isUploading, setIsUploading] = useState(false);
-  const [isLookingUp, setIsLookingUp] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [lookupInfo, setLookupInfo] = useState<{
-    tastingNotes?: string | null;
-    brandInfo?: string | null;
-    priceRange?: string | null;
-    suggestions?: string | null;
-    drinkName?: string;
-    drinkBrand?: string;
-    drinkType?: string;
-  } | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const userSetTypeRef = useRef(false);
+
+  // Shared lookup logic (also used by AddDrinkDialog)
+  const {
+    isLookingUp,
+    lookupInfo,
+    handleImageChange: hookImageChange,
+    handleLookup,
+    applyLookupInfo,
+    handleNameBlur,
+    handleTypeChange,
+  } = useAddDrinkForm({
+    name, type, brand, notes, price, imageUrl,
+    setName, setType, setBrand, setNotes, setPrice, setDetailsOpen,
+    userSetTypeRef,
+  });
+
+  // Wrap hook's handleImageChange to also set local imageUrl state
+  const handleImageChange = useCallback((url: string | undefined) => {
+    hookImageChange(url, setImageUrl);
+  }, [hookImageChange]);
 
   // Load edit drink data
   useEffect(() => {
@@ -74,162 +83,6 @@ export default function AddDrink() {
       }
     }
   }, [editId, drinks]);
-
-  const autoLookupFromImage = async (imgUrl: string) => {
-    impact(ImpactStyle.Light);
-    setIsLookingUp(true);
-    setLookupInfo(null);
-
-    try {
-      const data = await drinkService.lookupDrink({
-        drinkName: name.trim() || undefined,
-        drinkType: type,
-        brand: brand.trim() || undefined,
-        imageUrl: imgUrl,
-      });
-
-      if (data?.success && data?.data) {
-        notification(NotificationType.Success);
-        const info = data.data;
-
-        // Auto-fill empty fields
-        if (info.drinkName && !name.trim()) {
-          setName(info.drinkName);
-        }
-        if (info.drinkBrand && !brand.trim()) {
-          setBrand(info.drinkBrand);
-        }
-        if (info.drinkType && !userSetTypeRef.current) {
-          setType(info.drinkType);
-        }
-
-        // Auto-fill notes and price from lookup
-        const combinedNotes = [
-          info.tastingNotes,
-          info.brandInfo,
-          info.suggestions,
-        ].filter(Boolean).join('\n\n');
-        if (combinedNotes && !notes.trim()) {
-          setNotes(combinedNotes);
-        }
-        if (info.priceRange && !price.trim()) {
-          setPrice(info.priceRange);
-        }
-
-        // Auto-expand details if AI populated them
-        if ((info.drinkBrand && !brand.trim()) || combinedNotes || info.priceRange) {
-          setDetailsOpen(true);
-        }
-
-        setLookupInfo(info);
-        toast.success(`Identified: ${info.drinkName || 'drink'}!`);
-      }
-    } catch (err) {
-      console.error('Lookup error:', err);
-      toast.error('Failed to identify drink');
-    } finally {
-      setIsLookingUp(false);
-    }
-  };
-
-  // Keep a ref to the latest autoLookup so the stable callback always calls it
-  const autoLookupRef = useRef(autoLookupFromImage);
-  autoLookupRef.current = autoLookupFromImage;
-
-  // Auto-trigger AI lookup when image is uploaded
-  const handleImageChange = useCallback((url: string | undefined) => {
-    setImageUrl(url);
-    if (url) {
-      setTimeout(() => {
-        autoLookupRef.current(url);
-      }, 100);
-    }
-  }, []);
-
-  const handleLookup = async (useImage = false) => {
-    const hasName = name.trim();
-    const hasImage = useImage && imageUrl;
-
-    if (!hasName && !hasImage) {
-      toast.error('Enter a drink name or add a photo first');
-      return;
-    }
-
-    impact(ImpactStyle.Light);
-    setIsLookingUp(true);
-    setLookupInfo(null);
-
-    try {
-      const data = await drinkService.lookupDrink({
-        drinkName: hasName ? name.trim() : undefined,
-        drinkType: type,
-        brand: brand.trim() || undefined,
-        imageUrl: hasImage ? imageUrl : undefined,
-      });
-
-      if (data?.success && data?.data) {
-        notification(NotificationType.Success);
-        const info = data.data;
-        setLookupInfo(info);
-
-        if (useImage) {
-          if (info.drinkName && !name.trim()) {
-            setName(info.drinkName);
-          }
-          if (info.drinkBrand && !brand.trim()) {
-            setBrand(info.drinkBrand);
-          }
-          if (info.drinkType && !userSetTypeRef.current) {
-            setType(info.drinkType);
-          }
-        }
-
-        toast.success(useImage ? 'Identified drink from photo!' : 'Found drink information!');
-      }
-    } catch (err) {
-      console.error('Lookup error:', err);
-      toast.error('Failed to look up drink info');
-    } finally {
-      setIsLookingUp(false);
-    }
-  };
-
-  const applyLookupInfo = (field: 'notes' | 'price' | 'all') => {
-    impact(ImpactStyle.Light);
-    if (!lookupInfo) return;
-
-    if (field === 'notes' || field === 'all') {
-      const combinedNotes = [
-        lookupInfo.tastingNotes,
-        lookupInfo.brandInfo,
-        lookupInfo.suggestions
-      ].filter(Boolean).join('\n\n');
-      if (combinedNotes) setNotes(combinedNotes);
-    }
-
-    if (field === 'price' || field === 'all') {
-      if (lookupInfo.priceRange) setPrice(lookupInfo.priceRange);
-    }
-
-    if (field === 'all') {
-      setDetailsOpen(true);
-      setLookupInfo(null);
-      toast.success('Applied drink info');
-    }
-  };
-
-  const handleNameBlur = () => {
-    if (!name.trim() || userSetTypeRef.current) return;
-    const detected = detectDrinkType(name);
-    if (detected) {
-      setType(detected);
-    }
-  };
-
-  const handleTypeChange = (v: string) => {
-    userSetTypeRef.current = true;
-    setType(v as DrinkType);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -269,7 +122,7 @@ export default function AddDrink() {
         toast.success('Drink added');
         navigate(-1);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving drink:', error);
       toast.error('Failed to save drink');
     } finally {

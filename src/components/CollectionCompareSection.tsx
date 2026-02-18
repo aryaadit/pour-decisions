@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Drink } from '@/types/drink';
 import { PublicProfile } from '@/types/social';
 import { NetworkComparisonSection } from './NetworkComparisonSection';
-import { cn } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 
 interface CollectionCompareSectionProps {
   profileUserId: string;
@@ -118,7 +118,7 @@ export function CollectionCompareSection({
           myDrinksCount: myDrinksData.length,
           theirDrinksCount: theirDrinksData.length,
         });
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error fetching comparison:', error);
       }
 
@@ -142,10 +142,6 @@ export function CollectionCompareSection({
       dateAdded: new Date(),
     };
     onDrinkClick(fullDrink);
-  };
-
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   // Not logged in - prompt to sign in

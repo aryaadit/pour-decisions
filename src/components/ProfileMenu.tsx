@@ -2,8 +2,9 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StorageAvatar } from '@/components/StorageAvatar';
 import { Button } from '@/components/ui/button';
+import { getInitials } from '@/lib/utils';
 import { LogOut, Settings, MessageSquare, Shield, User } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { BugReportDialog } from '@/components/BugReportDialog';
@@ -47,13 +48,6 @@ export function ProfileMenu({ avatarUrl, displayName, email, username, onSignOut
     }, 150);
   }, [impact, ImpactStyle]);
 
-  const getInitials = () => {
-    if (displayName) {
-      return displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return email?.charAt(0).toUpperCase() || 'U';
-  };
-
   const handleSettings = () => {
     impact(ImpactStyle.Light);
     setDrawerOpen(false);
@@ -79,7 +73,7 @@ export function ProfileMenu({ avatarUrl, displayName, email, username, onSignOut
     <Button variant="ghost" size="icon" className="text-muted-foreground min-w-[44px] min-h-[44px]">
       <StorageAvatar
         storagePath={avatarUrl}
-        fallback={getInitials()}
+        fallback={getInitials(displayName)}
         className="w-9 h-9"
       />
     </Button>
@@ -90,7 +84,7 @@ export function ProfileMenu({ avatarUrl, displayName, email, username, onSignOut
       <div className="flex items-center gap-3 px-2 py-3">
         <StorageAvatar
           storagePath={avatarUrl}
-          fallback={getInitials()}
+          fallback={getInitials(displayName)}
           className="w-12 h-12"
         />
         <div className="flex-1 min-w-0">

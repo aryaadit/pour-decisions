@@ -19,7 +19,7 @@ export const useAppInfo = () => {
             version: info.version,
             build: info.build,
           });
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Failed to get app info:', error);
           setAppInfo({ version: 'dev', build: '0' });
         }

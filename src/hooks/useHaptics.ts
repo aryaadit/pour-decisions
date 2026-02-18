@@ -8,7 +8,7 @@ export const useHaptics = () => {
     if (!isNative) return;
     try {
       await Haptics.impact({ style });
-    } catch (e) {
+    } catch (error: unknown) {
       // Silently fail on unsupported platforms
     }
   };
@@ -17,7 +17,7 @@ export const useHaptics = () => {
     if (!isNative) return;
     try {
       await Haptics.notification({ type });
-    } catch (e) {
+    } catch (error: unknown) {
       // Silently fail on unsupported platforms
     }
   };
@@ -26,7 +26,7 @@ export const useHaptics = () => {
     if (!isNative) return;
     try {
       await Haptics.selectionChanged();
-    } catch (e) {
+    } catch (error: unknown) {
       // Silently fail on unsupported platforms
     }
   };

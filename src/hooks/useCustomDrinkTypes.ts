@@ -90,8 +90,9 @@ export function useCustomDrinkTypes() {
     try {
       const data = await addMutation.mutateAsync({ name, icon, color });
       return { data };
-    } catch (error: any) {
-      return { error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return { error: message };
     }
   };
 
@@ -113,8 +114,9 @@ export function useCustomDrinkTypes() {
     try {
       const data = await updateMutation.mutateAsync({ id, updates });
       return { data };
-    } catch (error: any) {
-      return { error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return { error: message };
     }
   };
 
@@ -122,8 +124,9 @@ export function useCustomDrinkTypes() {
     try {
       await deleteMutation.mutateAsync(id);
       return { data: true };
-    } catch (error: any) {
-      return { error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return { error: message };
     }
   };
 

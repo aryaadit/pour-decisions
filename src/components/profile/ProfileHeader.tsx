@@ -5,6 +5,7 @@ import { StorageAvatar } from '@/components/StorageAvatar';
 import { FollowButton } from '@/components/FollowButton';
 import { PublicProfile, FollowCounts } from '@/types/social';
 import { ProfileStats } from '@/hooks/useProfileStats';
+import { getInitials } from '@/lib/utils';
 
 interface ProfileHeaderProps {
   profile: PublicProfile;
@@ -26,11 +27,6 @@ export function ProfileHeader({
   onFollowingClick,
 }: ProfileHeaderProps) {
   const navigate = useNavigate();
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
 
   const getVisibilityIcon = () => {
     switch (profile.activityVisibility) {

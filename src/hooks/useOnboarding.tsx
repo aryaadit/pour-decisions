@@ -62,8 +62,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       if (stored) {
         return JSON.parse(stored);
       }
-    } catch (e) {
-      console.warn('Failed to load onboarding state from localStorage:', e);
+    } catch (error: unknown) {
+      console.warn('Failed to load onboarding state from localStorage:', error);
     }
     
     return defaultState;
@@ -85,14 +85,14 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
             onboardingStep: localData.currentStep,
             dismissedOnboardingSteps: localData.dismissedSteps,
           });
-          console.log('Migrated onboarding state from localStorage to database');
+          // Successfully migrated onboarding state from localStorage to database
         }
         
         // Clear localStorage after migration attempt
         localStorage.removeItem(STORAGE_KEY);
       }
-    } catch (e) {
-      console.warn('Failed to migrate localStorage onboarding state:', e);
+    } catch (error: unknown) {
+      console.warn('Failed to migrate localStorage onboarding state:', error);
     }
     
     setHasMigratedLocalStorage(true);
@@ -126,8 +126,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       // Persist to localStorage for guests
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
-      } catch (e) {
-        console.warn('Failed to save onboarding state to localStorage:', e);
+      } catch (error: unknown) {
+        console.warn('Failed to save onboarding state to localStorage:', error);
       }
     }
   }, [user, updateProfile]);

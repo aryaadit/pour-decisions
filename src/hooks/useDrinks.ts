@@ -99,7 +99,7 @@ export function useDrinks() {
   });
 
   const migrateMutation = useMutation({
-    mutationFn: (typeName: string) => drinkService.migrateDrinksToType(typeName),
+    mutationFn: (typeName: string) => drinkService.migrateDrinksToType(user!.id, typeName),
     onMutate: async (typeName) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.drinks.list(user!.id) });
       const previous = queryClient.getQueryData<Drink[]>(queryKeys.drinks.list(user!.id));

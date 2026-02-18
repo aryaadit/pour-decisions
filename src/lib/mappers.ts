@@ -1,8 +1,39 @@
 import { Drink, DrinkType, Collection } from '@/types/drink';
 import { PublicProfile, ActivityFeedItem, ActivityVisibility } from '@/types/social';
 import { Profile, SortOrder, ThemePreference, OnboardingStep } from '@/types/profile';
+import type { Database } from '@/integrations/supabase/types';
 
-export function mapDrinkRow(d: any): Drink {
+type DrinkRow = Database['public']['Tables']['drinks']['Row'];
+type CollectionRow = Database['public']['Tables']['collections']['Row'];
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+type ActivityFeedRow = Database['public']['Tables']['activity_feed']['Row'];
+
+interface CollectionRowWithCount extends CollectionRow {
+  collection_drinks?: { count: number }[];
+}
+
+interface PublicProfileRow {
+  user_id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  is_public: boolean | null;
+  activity_visibility: string | null;
+  created_at: string | null;
+}
+
+interface PublicDrinkRow {
+  id: string;
+  name: string;
+  type: string;
+  brand: string | null;
+  rating: number | null;
+  date_added: string;
+  image_url: string | null;
+}
+
+export function mapDrinkRow(d: DrinkRow): Drink {
   return {
     id: d.id,
     name: d.name,
@@ -17,7 +48,7 @@ export function mapDrinkRow(d: any): Drink {
   };
 }
 
-export function mapPublicDrinkRow(d: any): Drink {
+export function mapPublicDrinkRow(d: PublicDrinkRow): Drink {
   return {
     id: d.id,
     name: d.name,
@@ -32,7 +63,7 @@ export function mapPublicDrinkRow(d: any): Drink {
   };
 }
 
-export function mapCollectionRow(c: any): Collection {
+export function mapCollectionRow(c: CollectionRowWithCount): Collection {
   return {
     id: c.id,
     name: c.name,
@@ -47,7 +78,7 @@ export function mapCollectionRow(c: any): Collection {
   };
 }
 
-export function mapPublicProfileRow(p: any): PublicProfile {
+export function mapPublicProfileRow(p: PublicProfileRow): PublicProfile {
   return {
     userId: p.user_id,
     username: p.username,
@@ -60,7 +91,7 @@ export function mapPublicProfileRow(p: any): PublicProfile {
   };
 }
 
-export function mapProfileRow(data: any): Profile {
+export function mapProfileRow(data: ProfileRow): Profile {
   return {
     id: data.id,
     userId: data.user_id,
@@ -81,7 +112,7 @@ export function mapProfileRow(data: any): Profile {
   };
 }
 
-export function mapActivityFeedItem(item: any, user?: PublicProfile): ActivityFeedItem {
+export function mapActivityFeedItem(item: ActivityFeedRow, user?: PublicProfile): ActivityFeedItem {
   return {
     id: item.id,
     userId: item.user_id,

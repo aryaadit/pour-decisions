@@ -22,9 +22,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { FollowButton } from '@/components/FollowButton';
 import { PublicProfile } from '@/types/social';
 import { useAuth } from '@/hooks/useAuth';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { useDebounce } from '@/hooks/useDebounce';
 import { supabase } from '@/integrations/supabase/client';
+import { getInitials } from '@/lib/utils';
 
 interface FollowListModalProps {
   open: boolean;
@@ -120,11 +121,6 @@ export function FollowListModal({
       setDrinkSearchResults(new Map());
     }
   }, [open]);
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
 
   const handleUserClick = (username: string | null) => {
     if (username) {

@@ -29,7 +29,7 @@ async function checkAndRequestPermissions(): Promise<boolean> {
     }
     
     return true;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error checking camera permissions:', error);
     return false;
   }
@@ -51,7 +51,7 @@ async function checkAndRequestPhotosPermission(): Promise<boolean> {
     }
     
     return true;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error checking photos permissions:', error);
     return false;
   }
@@ -83,10 +83,11 @@ export async function takePhoto(): Promise<CameraPhoto | null> {
       };
     }
     return null;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // User cancelled - this is not an error
-    if (error?.message?.includes('cancelled') || error?.message?.includes('User cancelled')) {
-      console.log('Photo capture cancelled by user');
+    const message = error instanceof Error ? error.message : '';
+    if (message.includes('cancelled') || message.includes('User cancelled')) {
+      // User cancelled — not an error
       return null;
     }
     console.error('Error taking photo:', error);
@@ -116,10 +117,11 @@ export async function pickFromGallery(): Promise<CameraPhoto | null> {
       };
     }
     return null;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // User cancelled - not an error
-    if (error?.message?.includes('cancelled') || error?.message?.includes('User cancelled')) {
-      console.log('Gallery selection cancelled by user');
+    const message = error instanceof Error ? error.message : '';
+    if (message.includes('cancelled') || message.includes('User cancelled')) {
+      // User cancelled — not an error
       return null;
     }
     console.error('Error picking from gallery:', error);

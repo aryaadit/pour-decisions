@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BottomSheetSelect } from '@/components/ui/BottomSheetSelect';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { Loader2, Sparkles } from 'lucide-react';
@@ -153,8 +153,8 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         setLookupInfo(info);
         toast.success(`Identified: ${info.drinkName || 'drink'}!`);
       }
-    } catch (err) {
-      console.error('Lookup error:', err);
+    } catch (error: unknown) {
+      console.error('Lookup error:', error);
       toast.error('Failed to identify drink');
     } finally {
       setIsLookingUp(false);
@@ -209,8 +209,8 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
 
         toast.success(useImage ? 'Identified drink from photo!' : 'Found drink information!');
       }
-    } catch (err) {
-      console.error('Lookup error:', err);
+    } catch (error: unknown) {
+      console.error('Lookup error:', error);
       toast.error('Failed to look up drink info');
     } finally {
       setIsLookingUp(false);

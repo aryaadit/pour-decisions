@@ -29,7 +29,7 @@ export function useIsAdmin() {
         } else {
           setIsAdmin(!!data);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);
       } finally {

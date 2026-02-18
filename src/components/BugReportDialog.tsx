@@ -3,7 +3,7 @@ import { MessageSquare, Loader2, ImagePlus, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import * as storageService from '@/services/storageService';
 import * as adminService from '@/services/adminService';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -114,7 +114,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
 
     try {
       return await storageService.uploadImage('bug-attachments', user.id, file);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error uploading image:', error);
       return null;
     }
@@ -160,7 +160,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
       });
       
       handleOpenChange(false);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error submitting bug report:', error);
       toast.error('Failed to submit feedback', {
         description: 'Please try again later.',

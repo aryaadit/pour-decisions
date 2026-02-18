@@ -87,8 +87,8 @@ export function useAnalytics() {
         queueRef.current = [...eventsToSend, ...queueRef.current];
         saveQueuedEvents(queueRef.current);
       }
-    } catch (err) {
-      console.error('Analytics error:', err);
+    } catch (error: unknown) {
+      console.error('Analytics error:', error);
       // Re-queue on network failure
       queueRef.current = [...eventsToSend, ...queueRef.current];
       saveQueuedEvents(queueRef.current);

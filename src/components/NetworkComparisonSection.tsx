@@ -163,7 +163,7 @@ export function NetworkComparisonSection({ onDrinkClick }: NetworkComparisonSect
           totalNetworkDrinks: uniqueNetworkDrinks,
           overlapPercent,
         });
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error fetching network comparison:', error);
       }
 

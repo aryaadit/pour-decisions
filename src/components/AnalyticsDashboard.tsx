@@ -354,8 +354,8 @@ export function AnalyticsDashboard() {
         actions: data.filter(e => e.event_category === 'action').length,
         errors: data.filter(e => e.event_category === 'error').length,
       });
-    } catch (err) {
-      console.error('Failed to fetch analytics:', err);
+    } catch (error: unknown) {
+      console.error('Failed to fetch analytics:', error);
     } finally {
       setIsLoading(false);
     }

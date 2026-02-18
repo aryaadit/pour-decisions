@@ -77,8 +77,8 @@ export function saveQueryCache() {
         queries: serializable,
       })
     );
-  } catch (e) {
-    console.warn("Failed to save query cache:", e);
+  } catch (error: unknown) {
+    console.warn("Failed to save query cache:", error);
   }
 }
 
@@ -122,9 +122,8 @@ export function restoreQueryCache(userId: string) {
       }
     );
 
-    console.log(`Restored ${queries.length} cached queries`);
-  } catch (e) {
-    console.warn("Failed to restore query cache:", e);
+  } catch (error: unknown) {
+    console.warn("Failed to restore query cache:", error);
   }
 }
 

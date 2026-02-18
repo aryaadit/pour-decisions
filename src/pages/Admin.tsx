@@ -49,7 +49,7 @@ export default function Admin() {
     try {
       const data = await adminService.fetchBugReports();
       setBugReports(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching bug reports:', error);
       toast.error('Failed to load bug reports');
     } finally {
@@ -67,7 +67,7 @@ export default function Admin() {
     try {
       const data = await adminService.searchProfiles(query);
       setSearchResults(data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error searching users:', error);
       toast.error('Failed to search users');
     } finally {
@@ -85,7 +85,7 @@ export default function Admin() {
         setSelectedUser({ ...selectedUser, ...updates });
       }
       toast.success('User onboarding updated');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error updating user onboarding:', error);
       toast.error('Failed to update user onboarding');
     } finally {
@@ -144,7 +144,7 @@ export default function Admin() {
         )
       );
       toast.success('Status updated');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error updating status:', error);
       toast.error('Failed to update status');
     }
@@ -158,7 +158,7 @@ export default function Admin() {
 
       setBugReports(prev => prev.filter(report => report.id !== reportId));
       toast.success('Bug report deleted');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error deleting bug report:', error);
       toast.error('Failed to delete bug report');
     }

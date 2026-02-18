@@ -6,7 +6,7 @@ import { useSocialProfile } from '@/hooks/useSocialProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
 import { DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons } from '@/types/drink';
@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useDrinks } from '@/hooks/useDrinks';
+import { getInitials } from '@/lib/utils';
 
 const Settings = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -246,13 +247,6 @@ const Settings = () => {
 
   if (!user) return null;
 
-  const getInitials = () => {
-    if (displayName) {
-      return displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    return user.email?.charAt(0).toUpperCase() || 'U';
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
@@ -277,7 +271,7 @@ const Settings = () => {
                 <div className="relative group">
                   <StorageAvatar
                     storagePath={profile?.avatarUrl}
-                    fallback={isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : getInitials()}
+                    fallback={isUploading ? <Loader2 className="w-6 h-6 animate-spin" /> : getInitials(displayName)}
                     className="w-20 h-20 cursor-pointer"
                     onClick={handleAvatarClick}
                   />

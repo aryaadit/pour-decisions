@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Wine, Star, MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,13 +10,14 @@ import { useNavigate } from 'react-router-dom';
 import { Drink, DrinkType, isBuiltInDrinkType, drinkTypeIcons } from '@/types/drink';
 import { DrinkOwner } from './DrinkDetailModal';
 import { useSignedUrl } from '@/hooks/useSignedUrl';
+import { getInitials } from '@/lib/utils';
 
 interface ActivityCardProps {
   activity: ActivityFeedItem;
   onDrinkClick?: (drink: Drink, owner: DrinkOwner) => void;
 }
 
-export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
+export const ActivityCard = memo(function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
   const navigate = useNavigate();
 
   const { user, metadata, activityType, createdAt, drinkId } = activity;
@@ -40,11 +42,6 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
       default:
         return 'interacted with';
     }
-  };
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   const getDrinkTypeIcon = (type: string) => {
@@ -182,4 +179,4 @@ export function ActivityCard({ activity, onDrinkClick }: ActivityCardProps) {
       </CardContent>
     </Card>
   );
-}
+});

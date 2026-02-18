@@ -63,8 +63,8 @@ export function useProfile() {
     try {
       await updateMutation.mutateAsync(updates);
       return { error: null };
-    } catch (error) {
-      return { error: error as Error };
+    } catch (error: unknown) {
+      return { error: error instanceof Error ? error : new Error('Unknown error') };
     }
   };
 
@@ -75,8 +75,8 @@ export function useProfile() {
       const storagePath = await profileService.uploadAvatar(user.id, file);
       await updateProfile({ avatarUrl: storagePath });
       return { error: null, url: storagePath };
-    } catch (error) {
-      return { error: error as Error, url: null };
+    } catch (error: unknown) {
+      return { error: error instanceof Error ? error : new Error('Unknown error'), url: null };
     }
   };
 
