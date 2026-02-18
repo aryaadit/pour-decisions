@@ -292,7 +292,7 @@ export default function AddDrink() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between px-4 h-14">
@@ -312,7 +312,7 @@ export default function AddDrink() {
       </header>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="flex-1 overflow-auto">
+      <form onSubmit={handleSubmit}>
         <div className="p-4 space-y-5">
           {/* Photo Capture Area */}
           <PhotoCaptureArea
@@ -501,8 +501,8 @@ export default function AddDrink() {
           </Collapsible>
         </div>
 
-        {/* Sticky Footer */}
-        <div className="sticky bottom-0 bg-background border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {/* Footer */}
+        <div className="border-t border-border p-4 pb-28">
           <div className="flex gap-3">
             <Button
               type="button"
