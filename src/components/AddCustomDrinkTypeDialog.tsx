@@ -14,13 +14,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { EmojiInput } from '@/components/ui/EmojiInput';
 import { Loader2 } from 'lucide-react';
 import { CustomDrinkType } from '@/hooks/useCustomDrinkTypes';
-
-const EMOJI_OPTIONS = [
-  '🥃', '🍺', '🍷', '🍸', '🍹', '🍾', '🥂', '🍶', '🫗', '🧉',
-  '🍻', '🥤', '🧊', '🍵', '🫖', '🍯', '🧃', '🌵', '🍋', '🫧',
-];
 
 const COLOR_OPTIONS = [
   { name: 'Amber', value: '#D97706' },
@@ -123,32 +119,12 @@ export function CustomDrinkTypeDialog({
           <div className="flex gap-4">
             <div className="space-y-2 flex-1">
               <Label>Icon</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-12 text-2xl"
-                  >
-                    {icon}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-2" align="start">
-                  <div className="grid grid-cols-5 gap-1">
-                    {EMOJI_OPTIONS.map((emoji) => (
-                      <Button
-                        key={emoji}
-                        type="button"
-                        variant={icon === emoji ? 'default' : 'ghost'}
-                        className="w-10 h-10 text-xl p-0"
-                        onClick={() => setIcon(emoji)}
-                      >
-                        {emoji}
-                      </Button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <EmojiInput
+                value={icon}
+                onChange={setIcon}
+                defaultEmoji="🍹"
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-2 flex-1">
@@ -158,10 +134,10 @@ export function CustomDrinkTypeDialog({
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full h-12 p-2"
+                    className="w-full h-14 p-2"
                   >
-                    <div 
-                      className="w-full h-full rounded" 
+                    <div
+                      className="w-full h-full rounded"
                       style={{ backgroundColor: color }}
                     />
                   </Button>
@@ -177,9 +153,9 @@ export function CustomDrinkTypeDialog({
                         onClick={() => setColor(c.value)}
                         title={c.name}
                       >
-                        <div 
+                        <div
                           className="w-full h-full rounded-md border-2"
-                          style={{ 
+                          style={{
                             backgroundColor: c.value,
                             borderColor: color === c.value ? 'white' : 'transparent',
                             boxShadow: color === c.value ? '0 0 0 2px hsl(var(--primary))' : 'none'
@@ -197,7 +173,7 @@ export function CustomDrinkTypeDialog({
           <div className="flex items-center justify-center gap-2 py-3">
             <span
               className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border"
-              style={{ 
+              style={{
                 backgroundColor: `${color}20`,
                 color: color,
                 borderColor: `${color}40`
@@ -211,7 +187,7 @@ export function CustomDrinkTypeDialog({
           {error && (
             <p className="text-sm text-destructive">{error}</p>
           )}
-          
+
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"

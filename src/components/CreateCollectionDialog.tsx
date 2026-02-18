@@ -8,6 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { EmojiInput } from '@/components/ui/EmojiInput';
 import { Loader2 } from 'lucide-react';
 import { useHaptics } from '@/hooks/useHaptics';
 import { Collection } from '@/types/drink';
@@ -20,7 +21,6 @@ interface CreateCollectionDialogProps {
   editCollection?: Collection | null;
 }
 
-const ICONS = ['📚', '🍸', '🍷', '🍺', '🥃', '🍹', '🥤', '☕', '🎉', '⭐', '❤️', '🔥', '🌟', '🏆', '🎯', '💎'];
 const COLORS = [
   '#8B5CF6', '#EC4899', '#EF4444', '#F97316', '#EAB308',
   '#22C55E', '#14B8A6', '#06B6D4', '#3B82F6', '#6366F1',
@@ -35,7 +35,7 @@ export function CreateCollectionDialog({
   const { notification, NotificationType } = useHaptics();
   const [name, setName] = useState(editCollection?.name || '');
   const [description, setDescription] = useState(editCollection?.description || '');
-  const [icon, setIcon] = useState(editCollection?.icon || '📚');
+  const [icon, setIcon] = useState(editCollection?.icon || '🍸');
   const [coverColor, setCoverColor] = useState(editCollection?.coverColor || '#8B5CF6');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -56,7 +56,7 @@ export function CreateCollectionDialog({
   const resetForm = () => {
     setName('');
     setDescription('');
-    setIcon('📚');
+    setIcon('🍸');
     setCoverColor('#8B5CF6');
   };
 
@@ -64,31 +64,12 @@ export function CreateCollectionDialog({
     <div className="space-y-4">
       {/* Icon and Color pickers */}
       <div className="flex items-center gap-3">
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl border border-border hover:border-primary/50 transition-colors"
-              style={{ backgroundColor: `${coverColor}20` }}
-            >
-              {icon}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-3" align="start">
-            <div className="grid grid-cols-8 gap-1">
-              {ICONS.map((i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setIcon(i)}
-                  className={`w-8 h-8 rounded-md flex items-center justify-center text-xl hover:bg-muted transition-colors ${icon === i ? 'bg-primary/20' : ''}`}
-                >
-                  {i}
-                </button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+        <EmojiInput
+          value={icon}
+          onChange={setIcon}
+          defaultEmoji="🍸"
+          backgroundColor={coverColor}
+        />
 
         <Popover>
           <PopoverTrigger asChild>
