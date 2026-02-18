@@ -19,7 +19,7 @@ export function OnboardingSection({
   const navigate = useNavigate();
 
   const hasVisibleSteps =
-    isStepVisible('welcome') ||
+    (isStepVisible('welcome') && drinkCount === 0) ||
     (isStepVisible('add_drink') && drinkCount > 0) ||
     (isStepVisible('collections') && drinkCount >= 2) ||
     (isStepVisible('social') && drinkCount >= 3);
@@ -28,7 +28,7 @@ export function OnboardingSection({
 
   return (
     <div className="max-w-2xl mx-auto space-y-3 mb-4">
-      {isStepVisible('welcome') && (
+      {isStepVisible('welcome') && drinkCount === 0 && (
         <OnboardingTipCard
           title="Welcome to Pour Decisions!"
           description="Your personal drink journal. Start by adding your first drink to build your library."
