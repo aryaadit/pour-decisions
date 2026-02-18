@@ -40,7 +40,7 @@ export function useActivityFeed(limit = 20) {
   useEffect(() => {
     if (!user) return;
 
-    const subscription = feedService.subscribeToFeed(async (newActivity) => {
+    const subscription = feedService.subscribeToFeed(user.id, async (newActivity) => {
       // Batch-fetch profile (reuses existing helper)
       const profileMap = await feedService.fetchProfilesForActivities([newActivity.user_id]);
       const userProfile = profileMap.get(newActivity.user_id);

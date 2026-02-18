@@ -13,11 +13,20 @@ export async function fetchFeedPage(
   limit: number,
   cursor?: string
 ): Promise<FeedPage> {
+  // Get current user to exclude own activity from the feed
+  const { data: { user } } = await supabase.auth.getUser();
+  const currentUserId = user?.id;
+
   let query = supabase
     .from('activity_feed')
     .select('id, user_id, activity_type, drink_id, metadata, created_at')
     .order('created_at', { ascending: false })
     .limit(limit + 1);
+
+  // Exclude own activity — feed shows other people's activity
+  if (currentUserId) {
+    query = query.neq('user_id', currentUserId);
+  }
 
   if (cursor) {
     query = query.lt('created_at', cursor);
@@ -87,6 +96,7 @@ export async function fetchUserActivities(
 }
 
 export function subscribeToFeed(
+  currentUserId: string,
   onInsert: (item: any) => void
 ): { unsubscribe: () => void } {
   const channel: RealtimeChannel = supabase
@@ -99,6 +109,8 @@ export function subscribeToFeed(
         table: 'activity_feed',
       },
       (payload) => {
+        // Skip own activity in the feed
+        if (payload.new.user_id === currentUserId) return;
         onInsert(payload.new);
       }
     )

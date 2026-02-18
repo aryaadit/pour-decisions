@@ -446,11 +446,17 @@ CREATE POLICY "Users can view drinks based on activity visibility"
   );
 
 -- Activity feed visibility (depends on is_following, get_activity_visibility)
-CREATE POLICY "Users can see followed users activity"
+--   public    → visible to everyone
+--   followers → visible only to accepted followers
+--   private   → never visible (excluded implicitly)
+CREATE POLICY "Users can see activity based on visibility"
   ON public.activity_feed FOR SELECT
   USING (
-    public.is_following(auth.uid(), user_id)
-    AND public.get_activity_visibility(user_id) IN ('public', 'followers')
+    public.get_activity_visibility(user_id) = 'public'
+    OR (
+      public.get_activity_visibility(user_id) = 'followers'
+      AND public.is_following(auth.uid(), user_id)
+    )
   );
 
 -- ─── ACTIVITY TRIGGER ───────────────────────────────────────────────────────────
