@@ -1,10 +1,13 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Collection, Drink, DrinkType } from '@/types/drink';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { queryKeys } from '@/lib/queryKeys';
 import * as collectionService from '@/services/collectionService';
+
+// Track seeded users across hook instances to avoid duplicate calls
+const seededUsers = new Set<string>();
 
 export function useCollections() {
   const { user } = useAuth();
@@ -16,6 +19,26 @@ export function useCollections() {
     queryFn: () => collectionService.fetchCollections(user!.id),
     enabled: !!user,
   });
+
+  // Seed a default "My Wishlist" collection for new users
+  useEffect(() => {
+    if (!user || isLoading || collections.length > 0) return;
+    if (seededUsers.has(user.id)) return;
+    seededUsers.add(user.id);
+
+    collectionService
+      .createCollection(user.id, 'My Wishlist', 'Drinks I want to try', '⭐', '#8B5CF6')
+      .then((newCollection) => {
+        queryClient.setQueryData<Collection[]>(
+          queryKeys.collections.list(user.id),
+          (old = []) => [newCollection, ...old]
+        );
+      })
+      .catch(() => {
+        // Non-critical — user can create collections manually
+        seededUsers.delete(user.id);
+      });
+  }, [user, isLoading, collections.length, queryClient]);
 
   const createMutation = useMutation({
     mutationFn: ({
