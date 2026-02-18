@@ -6,37 +6,19 @@ import { useDrinks } from '@/hooks/useDrinks';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DrinkListItem } from '@/components/MemoizedDrinkListItem';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
-import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
 import { StorageImage } from '@/components/StorageImage';
 import { PullToRefresh } from '@/components/PullToRefresh';
 
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, MoreVertical, Pencil, Trash2, Globe, Lock, Share2, Plus, Loader2, Wine } from 'lucide-react';
+import { ArrowLeft, Settings, Globe, Lock, Plus, Loader2, Wine } from 'lucide-react';
 import { Drink, Collection } from '@/types/drink';
 import { toast } from 'sonner';
 
@@ -44,7 +26,7 @@ const CollectionDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { user, isLoading: authLoading } = useAuth();
-  const { collections, updateCollection, deleteCollection, togglePublic, getCollectionDrinks, addDrinkToCollection, removeDrinkFromCollection, refetch } = useCollections();
+  const { collections, getCollectionDrinks, addDrinkToCollection, removeDrinkFromCollection, refetch } = useCollections();
   const { drinks: allDrinks } = useDrinks();
   const isMobile = useIsMobile();
 
@@ -52,8 +34,6 @@ const CollectionDetail = () => {
   const [collectionDrinks, setCollectionDrinks] = useState<Drink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewingDrink, setViewingDrink] = useState<Drink | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAddDrinksDialog, setShowAddDrinksDialog] = useState(false);
   const [selectedDrinkIds, setSelectedDrinkIds] = useState<Set<string>>(new Set());
 
@@ -82,57 +62,6 @@ const CollectionDetail = () => {
     setCollectionDrinks(drinks);
     setSelectedDrinkIds(new Set(drinks.map((d) => d.id)));
     setIsLoading(false);
-  };
-
-  const handleEditSave = async (name: string, description?: string, icon?: string, coverColor?: string) => {
-    if (!collection) return null;
-
-    const success = await updateCollection(collection.id, {
-      name,
-      description,
-      icon,
-      coverColor,
-    });
-
-    if (success) {
-      toast.success('Collection updated');
-      refetch();
-      return collection;
-    } else {
-      toast.error('Failed to update collection');
-      return null;
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!collection) return;
-
-    const success = await deleteCollection(collection.id);
-    if (success) {
-      toast.success('Collection deleted');
-      navigate('/collections');
-    } else {
-      toast.error('Failed to delete collection');
-    }
-  };
-
-  const handleTogglePublic = async () => {
-    if (!collection) return;
-
-    const success = await togglePublic(collection.id);
-    if (success) {
-      toast.success(collection.isPublic ? 'Collection is now private' : 'Collection is now public');
-      refetch();
-    } else {
-      toast.error('Failed to update sharing');
-    }
-  };
-
-  const handleCopyShareLink = () => {
-    if (!collection) return;
-    const shareUrl = `${window.location.origin}/share/${collection.shareId}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast.success('Share link copied!');
   };
 
   const handleEditDrink = (drink: Drink) => {
@@ -252,46 +181,9 @@ const CollectionDetail = () => {
               </p>
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleTogglePublic}>
-                  {collection.isPublic ? (
-                    <>
-                      <Lock className="w-4 h-4 mr-2" />
-                      Make Private
-                    </>
-                  ) : (
-                    <>
-                      <Globe className="w-4 h-4 mr-2" />
-                      Make Public
-                    </>
-                  )}
-                </DropdownMenuItem>
-                {collection.isPublic && (
-                  <DropdownMenuItem onClick={handleCopyShareLink}>
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Copy Share Link
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Collection
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/collections/${collection.id}/settings`)}>
+              <Settings className="w-5 h-5" />
+            </Button>
           </div>
 
           {collection.description && (
@@ -365,42 +257,13 @@ const CollectionDetail = () => {
         onDelete={handleDeleteDrink}
       />
 
-      {/* Edit Collection Dialog */}
-      <CreateCollectionDialog
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        onSave={handleEditSave}
-        editCollection={collection}
-      />
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete "{collection.name}"?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will delete the collection. The drinks in this collection will not be deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Add Drinks Dialog */}
-      <Dialog open={showAddDrinksDialog} onOpenChange={setShowAddDrinksDialog}>
-        <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Add Drinks to Collection</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="flex-1 -mx-6 px-6">
+      {/* Add Drinks Bottom Sheet */}
+      <Drawer open={showAddDrinksDialog} onOpenChange={setShowAddDrinksDialog}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader className="pb-2">
+            <DrawerTitle>Add Drinks to Collection</DrawerTitle>
+          </DrawerHeader>
+          <div className="overflow-y-auto flex-1 px-4">
             {allDrinks.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">
                 No drinks in your library yet
@@ -437,8 +300,8 @@ const CollectionDetail = () => {
                 ))}
               </div>
             )}
-          </ScrollArea>
-          <div className="flex gap-2 pt-4 border-t">
+          </div>
+          <div className="flex gap-2 p-4 border-t">
             <Button variant="outline" onClick={() => setShowAddDrinksDialog(false)} className="flex-1">
               Cancel
             </Button>
@@ -446,8 +309,8 @@ const CollectionDetail = () => {
               Save
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
       {/* Spacer for bottom nav */}
       {isMobile && <div className="h-20" />}

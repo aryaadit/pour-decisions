@@ -6,13 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { BottomSheetSelect } from '@/components/ui/BottomSheetSelect';
 import {
   Collapsible,
   CollapsibleContent,
@@ -362,34 +356,24 @@ export default function AddDrink() {
           {/* Type */}
           <div className="space-y-2">
             <Label htmlFor="type">Type</Label>
-            <Select value={type} onValueChange={handleTypeChange}>
-              <SelectTrigger className="bg-secondary/50 h-12">
-                <SelectValue>
-                  <span className="flex items-center gap-2">
-                    <span>{isBuiltInDrinkType(type) ? drinkTypeIcons[type] : (customTypes.find(c => c.name === type)?.icon || '🍹')}</span>
-                    <span>{isBuiltInDrinkType(type) ? drinkTypeLabels[type] : type}</span>
-                  </span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-popover">
-                {builtInDrinkTypes.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    <span className="flex items-center gap-2">
-                      <span>{drinkTypeIcons[t]}</span>
-                      <span>{drinkTypeLabels[t]}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-                {customTypes.map((ct) => (
-                  <SelectItem key={ct.id} value={ct.name}>
-                    <span className="flex items-center gap-2">
-                      <span>{ct.icon}</span>
-                      <span>{ct.name}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <BottomSheetSelect
+              value={type}
+              onValueChange={handleTypeChange}
+              placeholder="Drink Type"
+              triggerClassName="bg-secondary/50 h-12"
+              options={[
+                ...builtInDrinkTypes.map((t) => ({
+                  value: t,
+                  label: drinkTypeLabels[t],
+                  icon: drinkTypeIcons[t],
+                })),
+                ...customTypes.map((ct) => ({
+                  value: ct.name,
+                  label: ct.name,
+                  icon: ct.icon,
+                })),
+              ]}
+            />
           </div>
 
           {/* Rating */}

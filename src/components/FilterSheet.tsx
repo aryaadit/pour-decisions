@@ -232,7 +232,6 @@ export function FilterSheet({
                     )}
                     style={selectedType !== customType.name ? {
                       borderColor: `${customType.color}40`,
-                      color: customType.color,
                     } : {
                       backgroundColor: customType.color,
                       borderColor: customType.color,

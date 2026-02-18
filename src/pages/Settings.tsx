@@ -9,33 +9,41 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
-import { DrinkType, builtInDrinkTypes, drinkTypeLabels } from '@/types/drink';
+import { DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons } from '@/types/drink';
 import { SortOrder, sortOrderLabels, ThemePreference } from '@/types/profile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { BottomSheetSelect } from '@/components/ui/BottomSheetSelect';
 import { PageHeader } from '@/components/PageHeader';
 import { StorageAvatar } from '@/components/StorageAvatar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X, Settings as SettingsIcon, HelpCircle, MessageSquare } from 'lucide-react';
+import { Camera, Loader2, Sun, Moon, Monitor, Globe, Users, Lock, Check, X, Settings as SettingsIcon, HelpCircle, MessageSquare, Pencil, Trash2, Plus, AlertTriangle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { ActivityVisibility } from '@/types/social';
 import { BugReportDialog } from '@/components/BugReportDialog';
+import { CustomDrinkTypeDialog } from '@/components/AddCustomDrinkTypeDialog';
+import { CustomDrinkType } from '@/hooks/useCustomDrinkTypes';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useDrinks } from '@/hooks/useDrinks';
 
 const Settings = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { profile, isLoading: profileLoading, updateProfile, uploadAvatar, refetch } = useProfile();
   const { checkUsernameAvailable } = useSocialProfile();
   const { theme, setTheme } = useThemeContext();
-  const { customTypes } = useCustomDrinkTypes();
+  const { customTypes, addCustomType, updateCustomType, deleteCustomType } = useCustomDrinkTypes();
+  const { drinks } = useDrinks();
   const { trackEvent } = useAnalytics();
   const { showTour, state: onboardingState } = useOnboarding();
   const isMobile = useIsMobile();
@@ -53,6 +61,14 @@ const Settings = () => {
   const [activityVisibility, setActivityVisibility] = useState<ActivityVisibility>('private');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [drinkTypeDialogOpen, setDrinkTypeDialogOpen] = useState(false);
+  const [editingDrinkType, setEditingDrinkType] = useState<CustomDrinkType | null>(null);
+  const [deleteWarningType, setDeleteWarningType] = useState<CustomDrinkType | null>(null);
+
+  const drinkCountByType = drinks.reduce<Record<string, number>>((acc, d) => {
+    acc[d.type] = (acc[d.type] || 0) + 1;
+    return acc;
+  }, {});
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -120,6 +136,46 @@ const Settings = () => {
       document.documentElement.removeAttribute('data-drink-theme');
     };
   }, [defaultDrinkType]);
+
+  const handleSaveDrinkType = async (name: string, icon: string, color: string) => {
+    if (editingDrinkType) {
+      const result = await updateCustomType(editingDrinkType.id, { name, icon, color });
+      if (result?.error) return { error: result.error };
+      toast.success('Drink type updated');
+    } else {
+      const result = await addCustomType(name, icon, color);
+      if (result?.error) return { error: result.error };
+      toast.success('Drink type added');
+    }
+    return null;
+  };
+
+  const handleDeleteDrinkType = async (ct: CustomDrinkType) => {
+    const count = drinkCountByType[ct.name] || 0;
+    if (count > 0) {
+      setDeleteWarningType(ct);
+    } else {
+      const result = await deleteCustomType(ct.id);
+      if (result?.error) {
+        toast.error('Failed to delete', { description: result.error });
+      } else {
+        toast.success('Drink type removed');
+      }
+    }
+  };
+
+  const confirmDeleteDrinkType = async () => {
+    if (!deleteWarningType) return;
+    const result = await deleteCustomType(deleteWarningType.id);
+    if (result?.error) {
+      toast.error('Failed to delete', { description: result.error });
+    } else {
+      toast.success('Drink type removed', {
+        description: `Drinks will keep their type but won't have a filter chip.`,
+      });
+    }
+    setDeleteWarningType(null);
+  };
 
   const handleSave = async () => {
     // Validate username before saving
@@ -379,45 +435,136 @@ const Settings = () => {
 
             <div>
               <Label htmlFor="defaultDrinkType">Default Drink Filter</Label>
-              <Select
+              <BottomSheetSelect
                 value={defaultDrinkType}
                 onValueChange={(v) => setDefaultDrinkType(v as DrinkType | 'all')}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All drinks</SelectItem>
-                  {builtInDrinkTypes.map((type) => (
-                    <SelectItem key={type} value={type}>{drinkTypeLabels[type]}</SelectItem>
-                  ))}
-                  {customTypes.map((ct) => (
-                    <SelectItem key={ct.id} value={ct.name}>
-                      {ct.icon} {ct.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Default Drink Filter"
+                triggerClassName="mt-1"
+                options={[
+                  { value: 'all', label: 'All drinks', icon: '🍹' },
+                  ...builtInDrinkTypes.map((type) => ({
+                    value: type,
+                    label: drinkTypeLabels[type],
+                    icon: drinkTypeIcons[type],
+                  })),
+                  ...customTypes.map((ct) => ({
+                    value: ct.name,
+                    label: ct.name,
+                    icon: ct.icon,
+                  })),
+                ]}
+              />
             </div>
 
             <div>
               <Label htmlFor="defaultSortOrder">Default Sort Order</Label>
-              <Select
+              <BottomSheetSelect
                 value={defaultSortOrder}
                 onValueChange={(v) => setDefaultSortOrder(v as SortOrder)}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(sortOrderLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Default Sort Order"
+                triggerClassName="mt-1"
+                options={Object.entries(sortOrderLabels).map(([value, label]) => ({
+                  value,
+                  label,
+                }))}
+              />
             </div>
           </CardContent>
         </Card>
+
+        {/* Drink Types Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Drink Types</CardTitle>
+            <CardDescription>Manage built-in and custom drink types</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {/* Built-in types */}
+            {builtInDrinkTypes.map((type) => (
+              <div key={type} className="flex items-center gap-3 px-2 py-2.5 rounded-lg">
+                <span className="text-lg">{drinkTypeIcons[type]}</span>
+                <span className="flex-1 text-sm font-medium">{drinkTypeLabels[type]}</span>
+                <span className="text-xs text-muted-foreground">Built-in</span>
+              </div>
+            ))}
+
+            {/* Custom types */}
+            {customTypes.map((ct) => (
+              <div key={ct.id} className="flex items-center gap-3 px-2 py-2.5 rounded-lg group">
+                <span className="text-lg">{ct.icon}</span>
+                <span className="flex-1 text-sm font-medium">{ct.name}</span>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      setEditingDrinkType(ct);
+                      setDrinkTypeDialogOpen(true);
+                    }}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => handleDeleteDrinkType(ct)}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-3 border-dashed"
+              onClick={() => {
+                setEditingDrinkType(null);
+                setDrinkTypeDialogOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Custom Type
+            </Button>
+          </CardContent>
+        </Card>
+
+        <CustomDrinkTypeDialog
+          open={drinkTypeDialogOpen}
+          onOpenChange={(open) => {
+            setDrinkTypeDialogOpen(open);
+            if (!open) setEditingDrinkType(null);
+          }}
+          onSave={handleSaveDrinkType}
+          editingType={editingDrinkType}
+        />
+
+        <AlertDialog open={!!deleteWarningType} onOpenChange={(open) => !open && setDeleteWarningType(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                Delete "{deleteWarningType?.name}"?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                This drink type has <strong>{drinkCountByType[deleteWarningType?.name || ''] || 0} drink{(drinkCountByType[deleteWarningType?.name || ''] || 0) !== 1 ? 's' : ''}</strong> assigned to it.
+                Those drinks will keep their type but won't have a filter chip.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDeleteDrinkType}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Help Section */}
         <Card>

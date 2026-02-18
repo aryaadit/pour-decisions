@@ -1,12 +1,5 @@
 import { SortOrder, sortOrderLabels } from '@/types/profile';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ArrowUpDown } from 'lucide-react';
+import { BottomSheetSelect } from '@/components/ui/BottomSheetSelect';
 
 interface SortSelectorProps {
   value: SortOrder;
@@ -17,18 +10,15 @@ const sortOptions: SortOrder[] = ['date_desc', 'date_asc', 'rating_desc', 'ratin
 
 export function SortSelector({ value, onChange }: SortSelectorProps) {
   return (
-    <Select value={value} onValueChange={(v) => onChange(v as SortOrder)}>
-      <SelectTrigger className="w-[160px] bg-background">
-        <ArrowUpDown className="w-4 h-4 mr-2 text-muted-foreground" />
-        <SelectValue placeholder="Sort by" />
-      </SelectTrigger>
-      <SelectContent className="bg-background border-border">
-        {sortOptions.map((option) => (
-          <SelectItem key={option} value={option}>
-            {sortOrderLabels[option]}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <BottomSheetSelect
+      value={value}
+      onValueChange={(v) => onChange(v as SortOrder)}
+      placeholder="Sort by"
+      triggerClassName="w-[160px] bg-background"
+      options={sortOptions.map((option) => ({
+        value: option,
+        label: sortOrderLabels[option],
+      }))}
+    />
   );
 }

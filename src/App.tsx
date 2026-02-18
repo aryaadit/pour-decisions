@@ -26,6 +26,7 @@ const UserProfile = lazy(() => import("./pages/UserProfile"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Admin = lazy(() => import("./pages/Admin"));
 const CollectionDetail = lazy(() => import("./pages/CollectionDetail"));
+const CollectionSettings = lazy(() => import("./pages/CollectionSettings"));
 const SharedCollection = lazy(() => import("./pages/SharedCollection"));
 const StoreListing = lazy(() => import("./pages/StoreListing"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -67,6 +68,7 @@ function AppRoutes() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/collections/:id" element={<CollectionDetail />} />
+          <Route path="/collections/:id/settings" element={<CollectionSettings />} />
           <Route path="/share/:shareId" element={<SharedCollection />} />
           <Route path="/c/:shareId" element={<SharedCollection />} />
           <Route path="/store-listing" element={<StoreListing />} />
