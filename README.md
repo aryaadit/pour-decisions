@@ -1,76 +1,120 @@
-# Welcome to your Lovable project
+# Pour Decisions
 
-## Project info
+A mobile-first drink logging and social discovery app. Log drinks you try, rate them, build your taste profile, and see what your friends are drinking.
 
-**URL**: https://lovable.dev/projects/83dab526-5dce-4cd6-b467-9c007e9792e6
+## What It Does
 
-## How can I edit this code?
+- **Log drinks** — Snap a photo and AI identifies the drink, auto-filling name, type, brand, tasting notes, and price. Or enter manually.
+- **Build your taste profile** — Your profile shows your taste signature, top drinks by category, and drinking stats.
+- **Follow friends** — See what others are drinking in your feed. Discover new drinks through your network.
+- **Create collections** — Organize drinks by trip, occasion, or theme. Make collections public to share on your profile.
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui
+- **Backend**: Supabase (Postgres, Auth, Storage, Edge Functions, Row Level Security)
+- **Mobile**: Capacitor (iOS + Android)
+- **AI**: Google Gemini for drink photo recognition
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/83dab526-5dce-4cd6-b467-9c007e9792e6) and start prompting.
+## Project Structure
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+├── components/       # UI components
+│   ├── ui/           # shadcn/ui base components
+│   └── ...           # Feature components
+├── hooks/            # React Query hooks and custom hooks
+├── pages/            # Route-level pages
+├── services/         # Supabase data access layer
+├── lib/              # Utilities, constants, query keys
+├── types/            # TypeScript type definitions
+└── contexts/         # React context providers
+supabase/
+├── migrations/       # Database schema (single clean migration)
+├── functions/        # Edge functions (drink lookup)
+└── config.toml       # Supabase project config
+ios/                  # Capacitor iOS project
+android/              # Capacitor Android project
 ```
 
-**Edit a file directly in GitHub**
+## Getting Started
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Prerequisites
 
-**Use GitHub Codespaces**
+- Node.js 18+
+- [Bun](https://bun.sh/) (package manager)
+- A Supabase project with the schema applied
+- A Google Gemini API key (for drink recognition)
+- Xcode (for iOS builds)
+- Android Studio (for Android builds)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Setup
 
-## What technologies are used for this project?
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/aryaadit/barkeeply.git
+   cd barkeeply
+   ```
 
-This project is built with:
+2. Install dependencies:
+   ```bash
+   bun install
+   ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+3. Set up environment variables — create a `.env` file:
+   ```
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-## How can I deploy this project?
+4. Apply the database schema:
+   ```bash
+   supabase link --project-ref your_project_ref
+   supabase db push
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/83dab526-5dce-4cd6-b467-9c007e9792e6) and click on Share -> Publish.
+5. Deploy the edge function:
+   ```bash
+   supabase functions deploy lookup-drink
+   ```
 
-## Can I connect a custom domain to my Lovable project?
+6. Set the Gemini API key as a Supabase secret:
+   ```bash
+   supabase secrets set GEMINI_API_KEY=your_gemini_key
+   ```
 
-Yes, you can!
+7. Run the dev server:
+   ```bash
+   bun run dev
+   ```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Mobile Builds
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+**iOS:**
+```bash
+bun run build
+npx cap sync ios
+npx cap open ios
+```
+Then archive and upload to TestFlight from Xcode.
 
-## Supabase
-Password: fo3uJ9ybXF7zG0Nf
+**Android:**
+```bash
+bun run build
+npx cap sync android
+npx cap open android
+```
+Then generate a signed AAB from Android Studio.
+
+## Architecture
+
+- **Service layer**: All Supabase calls go through dedicated service modules. Components never call Supabase directly.
+- **React Query**: All server state managed through TanStack Query with centralized query keys and configured stale times.
+- **Row Level Security**: Enabled on all tables. Service layer also includes user_id filtering as defense-in-depth.
+- **Log-first data model**: Each drink entry is a standalone log, not linked to a canonical drink database. Cross-user matching uses fuzzy matching on name, type, and brand.
+
+## License
+
+Private — all rights reserved.
+
+fo3uJ9ybXF7zG0Nf
