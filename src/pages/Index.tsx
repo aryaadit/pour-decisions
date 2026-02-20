@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useThemeContext } from '@/hooks/ThemeProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useAppInfo } from '@/hooks/useAppInfo';
+
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { DrinkType, Drink, isBuiltInDrinkType } from '@/types/drink';
@@ -30,7 +30,7 @@ const Index = () => {
   const { setTheme } = useThemeContext();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const appInfo = useAppInfo();
+
   const { isStepVisible, dismissStep } = useOnboarding();
   const { drinks, isLoading, addDrink, updateDrink, deleteDrink, filterDrinks, getDrinkCountByType, migrateDrinksToOther, refetch } = useDrinks();
   const { customTypes } = useCustomDrinkTypes();
@@ -242,7 +242,6 @@ const Index = () => {
       <TestFlightBanner />
 
       <HomeHeader
-        appVersion={appInfo?.version}
         avatarUrl={profile?.avatarUrl}
         displayName={profile?.displayName}
         email={user.email}
