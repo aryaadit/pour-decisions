@@ -117,4 +117,5 @@ Then generate a signed AAB from Android Studio.
 
 Private — all rights reserved.
 
-fo3uJ9ybXF7zG0Nf
+SDB:fo3uJ9ybXF7zG0Nf
+GPS: ExcitedSpider731@
