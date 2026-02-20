@@ -6,32 +6,32 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
-const SHORT_DESCRIPTION = "Your personal drink journal. Track, rate & discover your favorite drinks.";
+const SHORT_DESCRIPTION = "Your personal drink journal. Snap, identify, rate & discover favorite drinks.";
 
 const FULL_DESCRIPTION = `Pour Decisions is the ultimate companion for drink enthusiasts. Whether you're a whiskey connoisseur, wine lover, or craft beer explorer, build a curated library of every pour.
+
+📸 SNAP & IDENTIFY
+Take a photo of any drink and AI instantly identifies it — auto-filling the name, brand, type, tasting notes, and price range. Just review, rate, and save.
 
 🥃 LOG WITH DETAIL
 Save ratings (1-5 stars), tasting notes, prices, and locations for every drink you try. Never forget that amazing whiskey you had on vacation.
 
 📚 STAY ORGANIZED
-Create custom collections to group your drinks for any occasion—"Summer Favorites," "Gift Ideas," "Date Night Picks," or "Bucket List Bottles."
+Create custom collections to group your drinks for any occasion — "Summer Favorites," "Gift Ideas," "Date Night Picks," or "Bucket List Bottles."
 
 👥 SOCIAL DISCOVERY
 Follow friends to see their latest ratings and discoveries. Your feed shows what people in your circle are drinking.
-
-🔗 COMPARE & DISCOVER
-See how your palate overlaps with friends. Find trending drinks in your network and get personalized recommendations based on what similar tastes have loved.
 
 🎨 PERSONALIZED EXPERIENCE
 Custom drink types with your own colors and icons. Light and dark themes. Make it yours.
 
 DRINK TYPES SUPPORTED:
-• Whiskey & Bourbon
-• Wine (Red, White, Rosé, Sparkling)
-• Beer & Craft Brews
-• Cocktails & Mixed Drinks
-• Spirits (Vodka, Gin, Rum, Tequila)
-• And any custom type you create!
+- Whiskey & Bourbon
+- Wine (Red, White, Rosé, Sparkling)
+- Beer & Craft Brews
+- Cocktails & Mixed Drinks
+- Spirits (Vodka, Gin, Rum, Tequila)
+- And any custom type you create!
 
 Download Pour Decisions today and never lose track of a great drink again.`;
 
@@ -53,8 +53,8 @@ const FEATURES = [
   },
   {
     icon: Sparkles,
-    title: "Smart Recommendations",
-    description: "Compare tastes with friends and get personalized suggestions based on your network."
+    title: "AI Drink Recognition",
+    description: "Snap a photo and AI identifies the drink, auto-filling name, brand, tasting notes, and price."
   }
 ];
 
@@ -356,7 +356,7 @@ export default function StoreListing() {
                     Required for apps with user accounts. Create a privacy policy and host it at:
                   </p>
                   <code className="text-sm bg-muted px-2 py-1 rounded">
-                    https://barkeeply.lovable.app/privacy
+                    https://barkeeply.com/privacy
                   </code>
                 </CardContent>
               </Card>

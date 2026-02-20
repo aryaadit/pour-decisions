@@ -117,4 +117,4 @@ Then generate a signed AAB from Android Studio.
 
 Private — all rights reserved.
 
-fo3uJ9ybXF7zG0Nf
+See CREDENTIALS.md (local only, not tracked by git) for passwords and review account info.
