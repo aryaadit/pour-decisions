@@ -136,6 +136,16 @@ export async function checkUsernameAvailable(
   return true;
 }
 
+export async function deleteAccount(): Promise<{ error: string | null }> {
+  try {
+    const { error } = await supabase.rpc('delete_user_account');
+    if (error) return { error: error.message };
+    return { error: null };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to delete account' };
+  }
+}
+
 export async function updateSocialProfile(
   userId: string,
   updates: {

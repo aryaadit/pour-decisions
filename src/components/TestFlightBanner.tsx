@@ -32,12 +32,9 @@ export function TestFlightBanner() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-foreground truncate">
                 Get the iOS app
-                <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-semibold">
-                  BETA
-                </span>
               </p>
               <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                Join our TestFlight beta for the best mobile experience
+                Join our TestFlight for the best mobile experience
               </p>
             </div>
           </div>

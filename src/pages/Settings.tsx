@@ -36,9 +36,11 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useDrinks } from '@/hooks/useDrinks';
+import { deleteAccount } from '@/services/profileService';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Settings = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, signOut } = useAuth();
   const { profile, isLoading: profileLoading, updateProfile, uploadAvatar, refetch } = useProfile();
   const { checkUsernameAvailable } = useSocialProfile();
   const { theme, setTheme } = useThemeContext();
@@ -48,6 +50,7 @@ const Settings = () => {
   const { showTour, state: onboardingState } = useOnboarding();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState('');
@@ -64,6 +67,9 @@ const Settings = () => {
   const [drinkTypeDialogOpen, setDrinkTypeDialogOpen] = useState(false);
   const [editingDrinkType, setEditingDrinkType] = useState<CustomDrinkType | null>(null);
   const [deleteWarningType, setDeleteWarningType] = useState<CustomDrinkType | null>(null);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const drinkCountByType = drinks.reduce<Record<string, number>>((acc, d) => {
     acc[d.type] = (acc[d.type] || 0) + 1;
@@ -595,6 +601,78 @@ const Settings = () => {
             />
           </CardContent>
         </Card>
+
+        {/* Danger Zone */}
+        <Card className="border-destructive/30">
+          <CardHeader>
+            <CardTitle className="text-destructive">Danger Zone</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              className="w-full border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              onClick={() => setShowDeleteAccount(true)}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Account
+            </Button>
+          </CardContent>
+        </Card>
+
+        <AlertDialog open={showDeleteAccount} onOpenChange={(open) => {
+          setShowDeleteAccount(open);
+          if (!open) setDeleteConfirmText('');
+        }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                Delete your account?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete your account and all your data including drinks, collections, and followers. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="px-1">
+              <Label htmlFor="deleteConfirm" className="text-sm text-muted-foreground">
+                Type <span className="font-mono font-bold text-foreground">DELETE</span> to confirm
+              </Label>
+              <Input
+                id="deleteConfirm"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="DELETE"
+                className="mt-1"
+                autoCapitalize="off"
+                autoCorrect="off"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  setIsDeleting(true);
+                  const { error } = await deleteAccount();
+                  if (error) {
+                    setIsDeleting(false);
+                    toast.error('Failed to delete account', { description: 'Please try again or contact support.' });
+                    return;
+                  }
+                  queryClient.clear();
+                  await signOut();
+                  navigate('/auth');
+                  toast.success('Account deleted', { description: 'Your account and all data have been removed.' });
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Delete Account
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <Button onClick={handleSave} disabled={isSaving} className="w-full">
           {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}

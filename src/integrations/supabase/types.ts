@@ -525,6 +525,7 @@ export type Database = {
       }
     }
     Functions: {
+      delete_user_account: { Args: Record<string, never>; Returns: undefined }
       get_activity_visibility: { Args: { _user_id: string }; Returns: string }
       get_trending_drinks: {
         Args: { days?: number; lim?: number }

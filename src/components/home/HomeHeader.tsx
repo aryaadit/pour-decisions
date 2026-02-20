@@ -36,7 +36,7 @@ export function HomeHeader({
               <h1 className="font-display text-xl font-bold text-foreground">
                 Pour Decisions
                 {appVersion && (
-                  <span className="ml-2 font-display text-[0.625rem] font-bold text-muted-foreground/70">Beta v{appVersion}</span>
+                  <span className="ml-2 font-display text-[0.625rem] font-bold text-muted-foreground/70">v{appVersion}</span>
                 )}
               </h1>
               <p className="text-xs text-muted-foreground hidden sm:block">
