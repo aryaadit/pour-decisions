@@ -3,12 +3,12 @@ import { Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function PrivacyPolicy() {
-  const lastUpdated = 'January 29, 2025';
+  const lastUpdated = 'February 19, 2026';
 
   return (
     <div className="min-h-screen bg-background pb-8">
-      <PageHeader 
-        title="Privacy Policy" 
+      <PageHeader
+        title="Privacy Policy"
         icon={<Shield className="h-5 w-5 text-primary" />}
       />
 
@@ -23,12 +23,12 @@ export default function PrivacyPolicy() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-3">
             <p>
-              Barkeeply ("we," "our," or "us") is committed to protecting your privacy. 
-              This Privacy Policy explains how we collect, use, disclose, and safeguard 
+              Pour Decisions ("we," "our," or "us") is committed to protecting your privacy.
+              This Privacy Policy explains how we collect, use, disclose, and safeguard
               your information when you use our mobile application.
             </p>
             <p>
-              Please read this privacy policy carefully. If you do not agree with the 
+              Please read this privacy policy carefully. If you do not agree with the
               terms of this privacy policy, please do not access the application.
             </p>
           </CardContent>
@@ -42,18 +42,26 @@ export default function PrivacyPolicy() {
             <div>
               <h4 className="font-medium text-foreground mb-2">Account Information</h4>
               <p>
-                When you create an account, we collect your email address and password 
-                (stored securely using industry-standard encryption). You may optionally 
+                When you create an account, we collect your email address and password
+                (stored securely using industry-standard encryption). You may optionally
                 provide a display name, username, bio, and profile photo.
               </p>
             </div>
             <div>
               <h4 className="font-medium text-foreground mb-2">Drink Logging Data</h4>
               <p>
-                We collect information about the drinks you log, including: drink name, 
-                type/category, brand, rating, tasting notes, location, price, and photos 
-                you choose to upload. This data is stored to provide you with your 
+                We collect information about the drinks you log, including: drink name,
+                type/category, brand, rating, tasting notes, location, price, and photos
+                you choose to upload. This data is stored to provide you with your
                 personal drink journal.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium text-foreground mb-2">Camera & Photo Library</h4>
+              <p>
+                With your permission, we access your device's camera or photo library to
+                let you photograph and attach images of drinks. Photos are uploaded to our
+                secure storage and may be sent to Google's AI services for drink identification.
               </p>
             </div>
             <div>
@@ -66,15 +74,15 @@ export default function PrivacyPolicy() {
             <div>
               <h4 className="font-medium text-foreground mb-2">Usage Analytics</h4>
               <p>
-                If you opt-in, we collect anonymous usage data including page views, 
-                feature usage, and error reports to improve the app experience. This 
+                If you opt-in, we collect anonymous usage data including page views,
+                feature usage, and error reports to improve the app experience. This
                 can be disabled in Settings.
               </p>
             </div>
             <div>
               <h4 className="font-medium text-foreground mb-2">Device Information</h4>
               <p>
-                We may collect device type, operating system, screen size, and timezone 
+                We may collect device type, operating system, screen size, and timezone
                 to optimize your experience and troubleshoot issues.
               </p>
             </div>
@@ -100,16 +108,29 @@ export default function PrivacyPolicy() {
 
         <Card>
           <CardHeader>
+            <CardTitle className="text-lg">Third-Party Services</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground space-y-3">
+            <p>
+              Drink photos may be sent to Google's AI services (Gemini) for automatic
+              drink identification. These images are processed in real-time and are not
+              permanently stored by the third-party provider.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle className="text-lg">Data Storage & Security</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-3">
             <p>
-              Your data is stored securely using industry-standard encryption and 
-              hosted on secure cloud infrastructure. We implement appropriate technical 
+              Your data is stored securely using industry-standard encryption and
+              hosted on secure cloud infrastructure. We implement appropriate technical
               and organizational measures to protect your personal information.
             </p>
             <p>
-              Your password is hashed and never stored in plain text. All data 
+              Your password is hashed and never stored in plain text. All data
               transmission uses HTTPS encryption.
             </p>
           </CardContent>
@@ -124,12 +145,12 @@ export default function PrivacyPolicy() {
               We do not sell, trade, or rent your personal information to third parties.
             </p>
             <p>
-              Your drink data and profile are private by default. If you choose to 
-              make your profile public or share collections, that information becomes 
+              Your drink data and profile are private by default. If you choose to
+              make your profile public or share collections, that information becomes
               visible to other users as configured in your privacy settings.
             </p>
             <p>
-              We may share anonymized, aggregated data for analytics purposes that 
+              We may share anonymized, aggregated data for analytics purposes that
               cannot be used to identify you.
             </p>
           </CardContent>
@@ -145,7 +166,6 @@ export default function PrivacyPolicy() {
               <li>Control activity feed visibility (public/followers/private)</li>
               <li>Opt-out of analytics collection in Settings</li>
               <li>Delete individual drinks or your entire account</li>
-              <li>Export your data upon request</li>
             </ul>
           </CardContent>
         </Card>
@@ -156,8 +176,8 @@ export default function PrivacyPolicy() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <p>
-              We retain your data for as long as your account is active. If you delete 
-              your account, your personal data will be permanently deleted within 30 days, 
+              We retain your data for as long as your account is active. If you delete
+              your account, your personal data will be permanently deleted within 30 days,
               except where we are required to retain it for legal purposes.
             </p>
           </CardContent>
@@ -169,9 +189,9 @@ export default function PrivacyPolicy() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <p>
-              Barkeeply is intended for users who are of legal drinking age in their 
-              jurisdiction. We do not knowingly collect personal information from 
-              anyone under the legal drinking age. If we learn we have collected such 
+              Pour Decisions is intended for users who are of legal drinking age in their
+              jurisdiction. We do not knowingly collect personal information from
+              anyone under the legal drinking age. If we learn we have collected such
               information, we will delete it immediately.
             </p>
           </CardContent>
@@ -183,8 +203,8 @@ export default function PrivacyPolicy() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <p>
-              We may update this privacy policy from time to time. We will notify you 
-              of any changes by posting the new policy on this page and updating the 
+              We may update this privacy policy from time to time. We will notify you
+              of any changes by posting the new policy on this page and updating the
               "Last updated" date.
             </p>
           </CardContent>
@@ -196,9 +216,8 @@ export default function PrivacyPolicy() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <p>
-              If you have questions about this Privacy Policy or our data practices, 
-              please contact us through the bug report feature in the app or email us 
-              at privacy@barkeeply.app.
+              If you have questions about this Privacy Policy or our data practices,
+              please use the bug report / feedback feature within the app to contact us.
             </p>
           </CardContent>
         </Card>
