@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -186,6 +186,7 @@ export type Database = {
           icon: string | null
           id: string
           is_public: boolean | null
+          is_system: boolean | null
           name: string
           share_id: string | null
           updated_at: string
@@ -198,6 +199,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_public?: boolean | null
+          is_system?: boolean | null
           name: string
           share_id?: string | null
           updated_at?: string
@@ -210,6 +212,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_public?: boolean | null
+          is_system?: boolean | null
           name?: string
           share_id?: string | null
           updated_at?: string
@@ -251,8 +254,6 @@ export type Database = {
           date_added: string
           id: string
           image_url: string | null
-          is_favorite: boolean | null
-          is_wishlist: boolean | null
           location: string | null
           name: string
           notes: string | null
@@ -268,8 +269,6 @@ export type Database = {
           date_added?: string
           id?: string
           image_url?: string | null
-          is_favorite?: boolean | null
-          is_wishlist?: boolean | null
           location?: string | null
           name: string
           notes?: string | null
@@ -285,8 +284,6 @@ export type Database = {
           date_added?: string
           id?: string
           image_url?: string | null
-          is_favorite?: boolean | null
-          is_wishlist?: boolean | null
           location?: string | null
           name?: string
           notes?: string | null
@@ -486,35 +483,10 @@ export type Database = {
           date_added: string | null
           id: string | null
           image_url: string | null
-          is_wishlist: boolean | null
           name: string | null
           rating: number | null
           type: string | null
           user_id: string | null
-        }
-        Insert: {
-          brand?: string | null
-          created_at?: string | null
-          date_added?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_wishlist?: boolean | null
-          name?: string | null
-          rating?: number | null
-          type?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          brand?: string | null
-          created_at?: string | null
-          date_added?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_wishlist?: boolean | null
-          name?: string | null
-          rating?: number | null
-          type?: string | null
-          user_id?: string | null
         }
         Relationships: []
       }
@@ -554,9 +526,15 @@ export type Database = {
     }
     Functions: {
       get_activity_visibility: { Args: { _user_id: string }; Returns: string }
-      get_or_create_wishlist_collection: {
-        Args: { _user_id: string }
-        Returns: string
+      get_trending_drinks: {
+        Args: { days?: number; lim?: number }
+        Returns: {
+          avg_rating: number
+          drink_name: string
+          drink_type: string
+          log_count: number
+          sample_image: string
+        }[]
       }
       has_role: {
         Args: {

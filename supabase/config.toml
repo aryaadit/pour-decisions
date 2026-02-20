@@ -1,4 +1,1 @@
 project_id = "vfveigsnfatlmiiunprc"
-
-[functions.lookup-drink]
-verify_jwt = false
