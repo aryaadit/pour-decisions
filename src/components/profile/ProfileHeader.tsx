@@ -1,17 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import { Lock, Globe, Users, Wine } from 'lucide-react';
+import { Lock, Globe, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StorageAvatar } from '@/components/StorageAvatar';
 import { FollowButton } from '@/components/FollowButton';
 import { PublicProfile, FollowCounts } from '@/types/social';
-import { ProfileStats } from '@/hooks/useProfileStats';
 
 interface ProfileHeaderProps {
   profile: PublicProfile;
   isOwnProfile: boolean;
   followCounts: FollowCounts;
-  canViewStats: boolean;
-  stats: ProfileStats | null;
   onFollowersClick: () => void;
   onFollowingClick: () => void;
 }
@@ -20,8 +17,6 @@ export function ProfileHeader({
   profile,
   isOwnProfile,
   followCounts,
-  canViewStats,
-  stats,
   onFollowersClick,
   onFollowingClick,
 }: ProfileHeaderProps) {
@@ -70,15 +65,7 @@ export function ProfileHeader({
             <p className="mt-2 text-foreground">{profile.bio}</p>
           )}
 
-          <div className="flex gap-4 mt-3 flex-wrap">
-            {canViewStats && stats && (
-              <div className="text-sm flex items-center gap-1">
-                <Wine className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="font-semibold">{stats.totalDrinks}</span>{' '}
-                <span className="text-muted-foreground">drinks</span>
-              </div>
-            )}
-
+          <div className="flex gap-4 mt-3">
             <button className="text-sm hover:underline min-h-[44px] px-1 inline-flex items-center gap-1 active:opacity-70" onClick={onFollowersClick}>
               <span className="font-semibold">{followCounts.followers}</span>
               <span className="text-muted-foreground">followers</span>

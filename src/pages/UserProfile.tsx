@@ -153,8 +153,6 @@ export default function UserProfile() {
         profile={profile}
         isOwnProfile={isOwnProfile}
         followCounts={followCounts}
-        canViewStats={canViewStats}
-        stats={stats}
         onFollowersClick={async () => {
           setFollowListType('Followers');
           setFollowListLoading(true);
