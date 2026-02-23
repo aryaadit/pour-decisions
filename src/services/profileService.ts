@@ -109,7 +109,6 @@ export async function searchUsers(
   const { data, error } = await supabase
     .from('profiles_public')
     .select('user_id, username, display_name, avatar_url, bio, is_public, activity_visibility, created_at')
-    .eq('is_public', true)
     .or(searchFilter)
     .limit(limit);
 

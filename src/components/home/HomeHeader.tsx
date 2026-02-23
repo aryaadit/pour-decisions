@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ProfileMenu } from '@/components/ProfileMenu';
+import { NotificationBell } from '@/components/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { Plus, Activity } from 'lucide-react';
 
@@ -54,6 +55,8 @@ export function HomeHeader({
             <Button variant="ghost" onClick={() => navigate('/collections')} className="hidden sm:inline-flex">
               <span>Collections</span>
             </Button>
+
+            <NotificationBell />
 
             <ProfileMenu
               avatarUrl={avatarUrl}

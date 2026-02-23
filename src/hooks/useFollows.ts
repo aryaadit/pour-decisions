@@ -1,15 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { FollowCounts, PublicProfile } from '@/types/social';
+import { FollowCounts, FollowRelationship } from '@/types/social';
 import { queryKeys } from '@/lib/queryKeys';
 import * as followService from '@/services/followService';
+import * as followRequestService from '@/services/followRequestService';
 
 export function useFollows(targetUserId?: string) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const userId = targetUserId || user?.id;
 
-  const { data: isFollowing = false, isLoading: statusLoading } = useQuery({
+  // Relationship query — replaces old boolean isFollowing
+  const { data: relationship = 'none' as FollowRelationship, isLoading: relationshipLoading } =
+    useQuery({
+      queryKey: queryKeys.follows.relationship(user?.id ?? '', targetUserId ?? ''),
+      queryFn: () => followService.checkFollowRelationship(user!.id, targetUserId!),
+      enabled: !!user && !!targetUserId && user.id !== targetUserId,
+    });
+
+  // Backward compat — keep isFollowing for existing consumers
+  const isFollowing = relationship === 'following';
+  const isRequested = relationship === 'requested';
+
+  // Also keep the old status query key in sync for canViewActivity checks
+  const { data: followStatusCheck = false, isLoading: statusLoading } = useQuery({
     queryKey: queryKeys.follows.status(user?.id ?? '', targetUserId ?? ''),
     queryFn: () => followService.checkFollowStatus(user!.id, targetUserId!),
     enabled: !!user && !!targetUserId && user.id !== targetUserId,
@@ -34,40 +48,31 @@ export function useFollows(targetUserId?: string) {
     enabled: false, // Only fetch on demand
   });
 
+  const invalidateFollowQueries = (targetId: string) => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.follows.counts(targetId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.follows.counts(user!.id) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.follows.followers(targetId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.follows.following(user!.id) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.follows.status(user!.id, targetId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.follows.relationship(user!.id, targetId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.profileStats.detail(targetId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.feed.userActivities(targetId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.followRequests.all });
+  };
+
   const followMutation = useMutation({
     mutationFn: (userIdToFollow: string) =>
       followService.followUser(user!.id, userIdToFollow),
-    onMutate: async (userIdToFollow) => {
-      // Optimistic update for follow status
+    onSuccess: (result, userIdToFollow) => {
       queryClient.setQueryData(
-        queryKeys.follows.status(user!.id, userIdToFollow),
-        true
+        queryKeys.follows.relationship(user!.id, userIdToFollow),
+        result === 'followed' ? 'following' : 'requested'
       );
-      // Optimistic update for counts of the target user
-      queryClient.setQueryData<FollowCounts>(
-        queryKeys.follows.counts(userIdToFollow),
-        (old) =>
-          old
-            ? { ...old, followers: old.followers + 1 }
-            : { followers: 1, following: 0 }
-      );
-    },
-    onSuccess: (_, userIdToFollow) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.follows.followers(userIdToFollow) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.follows.following(user!.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.follows.counts(user!.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.profileStats.detail(userIdToFollow) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.feed.userActivities(userIdToFollow) });
+      invalidateFollowQueries(userIdToFollow);
     },
     onError: (_, userIdToFollow) => {
-      queryClient.setQueryData(
-        queryKeys.follows.status(user!.id, userIdToFollow),
-        false
-      );
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.follows.counts(userIdToFollow),
-      });
+      invalidateFollowQueries(userIdToFollow);
     },
   });
 
@@ -76,43 +81,47 @@ export function useFollows(targetUserId?: string) {
       followService.unfollowUser(user!.id, userIdToUnfollow),
     onMutate: async (userIdToUnfollow) => {
       queryClient.setQueryData(
-        queryKeys.follows.status(user!.id, userIdToUnfollow),
-        false
-      );
-      queryClient.setQueryData<FollowCounts>(
-        queryKeys.follows.counts(userIdToUnfollow),
-        (old) =>
-          old
-            ? { ...old, followers: Math.max(0, old.followers - 1) }
-            : { followers: 0, following: 0 }
+        queryKeys.follows.relationship(user!.id, userIdToUnfollow),
+        'none'
       );
     },
     onSuccess: (_, userIdToUnfollow) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.follows.followers(userIdToUnfollow) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.follows.following(user!.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.follows.counts(user!.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.profileStats.detail(userIdToUnfollow) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.feed.userActivities(userIdToUnfollow) });
+      invalidateFollowQueries(userIdToUnfollow);
     },
     onError: (_, userIdToUnfollow) => {
+      invalidateFollowQueries(userIdToUnfollow);
+    },
+  });
+
+  const cancelRequestMutation = useMutation({
+    mutationFn: (targetId: string) =>
+      followRequestService.cancelFollowRequest(user!.id, targetId),
+    onMutate: async (targetId) => {
       queryClient.setQueryData(
-        queryKeys.follows.status(user!.id, userIdToUnfollow),
-        true
+        queryKeys.follows.relationship(user!.id, targetId),
+        'none'
       );
+    },
+    onSuccess: (_, targetId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.followRequests.all });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.follows.counts(userIdToUnfollow),
+        queryKey: queryKeys.follows.relationship(user!.id, targetId),
+      });
+    },
+    onError: (_, targetId) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.follows.relationship(user!.id, targetId),
       });
     },
   });
 
   const follow = async (userIdToFollow: string) => {
-    if (!user) return { error: new Error('Not authenticated') };
+    if (!user) return { error: new Error('Not authenticated'), result: null };
     try {
-      await followMutation.mutateAsync(userIdToFollow);
-      return { error: null };
+      const result = await followMutation.mutateAsync(userIdToFollow);
+      return { error: null, result };
     } catch (error) {
-      return { error: error as Error };
+      return { error: error as Error, result: null };
     }
   };
 
@@ -120,6 +129,16 @@ export function useFollows(targetUserId?: string) {
     if (!user) return { error: new Error('Not authenticated') };
     try {
       await unfollowMutation.mutateAsync(userIdToUnfollow);
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const cancelRequest = async (targetId: string) => {
+    if (!user) return { error: new Error('Not authenticated') };
+    try {
+      await cancelRequestMutation.mutateAsync(targetId);
       return { error: null };
     } catch (error) {
       return { error: error as Error };
@@ -141,13 +160,17 @@ export function useFollows(targetUserId?: string) {
   };
 
   return {
+    relationship,
     isFollowing,
+    isRequested,
     followCounts,
     followers,
     following,
-    isLoading: statusLoading || countsLoading,
+    isLoading: relationshipLoading || countsLoading,
+    isMutating: followMutation.isPending || unfollowMutation.isPending || cancelRequestMutation.isPending,
     follow,
     unfollow,
+    cancelRequest,
     fetchFollowers,
     fetchFollowing,
     refetch: () => {
@@ -157,6 +180,9 @@ export function useFollows(targetUserId?: string) {
         });
       }
       if (user && targetUserId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.follows.relationship(user.id, targetUserId),
+        });
         queryClient.invalidateQueries({
           queryKey: queryKeys.follows.status(user.id, targetUserId),
         });

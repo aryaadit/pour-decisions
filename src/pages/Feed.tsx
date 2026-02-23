@@ -13,10 +13,14 @@ import { ActivityCard } from '@/components/ActivityCard';
 import { UserSearch } from '@/components/UserSearch';
 import { DrinkDetailModal } from '@/components/DrinkDetailModal';
 import { DiscoverySection } from '@/components/DiscoverySection';
+import { NotificationBell } from '@/components/NotificationBell';
+import { SuggestedUsersSection } from '@/components/SuggestedUsersSection';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Drink } from '@/types/drink';
 import { DrinkOwner } from '@/components/DrinkDetailModal';
+import { PopularDrink, fetchDiscoveryDrinkDetail } from '@/services/discoveryService';
+import { toast } from 'sonner';
 
 export default function Feed() {
   const navigate = useNavigate();
@@ -44,6 +48,16 @@ export default function Feed() {
     setViewingOwner(owner);
   };
 
+  const handleDiscoveryDrinkClick = async (popular: PopularDrink) => {
+    const result = await fetchDiscoveryDrinkDetail(popular.name, popular.type);
+    if (result) {
+      setViewingDrink(result.drink);
+      setViewingOwner(result.owner);
+    } else {
+      toast.error('Could not load drink details');
+    }
+  };
+
   if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -66,6 +80,7 @@ export default function Feed() {
         title="Feed"
         icon={<Activity className="h-5 w-5" />}
         showBack={true}
+        rightContent={<NotificationBell />}
       />
 
       {/* Search Section */}
@@ -82,6 +97,7 @@ export default function Feed() {
             circlePopular={circlePopular}
             trending={trending}
             isLoading={discoveryLoading}
+            onDrinkClick={handleDiscoveryDrinkClick}
           />
         )}
 
@@ -92,20 +108,24 @@ export default function Feed() {
             ))}
           </div>
         ) : hasNoFollowing ? (
-          <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-              <Users className="h-8 w-8 text-muted-foreground" />
+          <div className="py-12 space-y-8">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                <Users className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-lg font-semibold text-foreground mb-2">
+                Your feed is empty
+              </h2>
+              <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                Follow friends to see their drink discoveries and ratings in your feed.
+              </p>
+              <Button onClick={() => document.querySelector('input')?.focus()}>
+                <Search className="h-4 w-4 mr-2" />
+                Find People
+              </Button>
             </div>
-            <h2 className="text-lg font-semibold text-foreground mb-2">
-              Your feed is empty
-            </h2>
-            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-              Follow friends to see their drink discoveries and ratings in your feed.
-            </p>
-            <Button onClick={() => document.querySelector('input')?.focus()}>
-              <Search className="h-4 w-4 mr-2" />
-              Find People
-            </Button>
+
+            <SuggestedUsersSection />
           </div>
         ) : (
           <div className="space-y-2">

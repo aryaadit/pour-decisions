@@ -10,12 +10,14 @@ interface DiscoverySectionProps {
   circlePopular: PopularDrink[];
   trending: PopularDrink[];
   isLoading: boolean;
+  onDrinkClick?: (drink: PopularDrink) => void;
 }
 
 export function DiscoverySection({
   circlePopular,
   trending,
   isLoading,
+  onDrinkClick,
 }: DiscoverySectionProps) {
   if (isLoading) {
     return (
@@ -42,6 +44,7 @@ export function DiscoverySection({
           title="Popular in Your Circle"
           icon={<Users className="h-4 w-4 text-primary" />}
           drinks={circlePopular}
+          onDrinkClick={onDrinkClick}
         />
       )}
       {hasTrending && (
@@ -49,6 +52,7 @@ export function DiscoverySection({
           title="Trending"
           icon={<TrendingUp className="h-4 w-4 text-primary" />}
           drinks={trending}
+          onDrinkClick={onDrinkClick}
         />
       )}
     </div>
@@ -59,10 +63,12 @@ function DiscoveryRow({
   title,
   icon,
   drinks,
+  onDrinkClick,
 }: {
   title: string;
   icon: React.ReactNode;
   drinks: PopularDrink[];
+  onDrinkClick?: (drink: PopularDrink) => void;
 }) {
   return (
     <div className="space-y-2">
@@ -72,20 +78,33 @@ function DiscoveryRow({
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
         {drinks.map((drink, i) => (
-          <DiscoveryCard key={`${drink.name}-${i}`} drink={drink} />
+          <DiscoveryCard
+            key={`${drink.name}-${i}`}
+            drink={drink}
+            onClick={onDrinkClick}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function DiscoveryCard({ drink }: { drink: PopularDrink }) {
+function DiscoveryCard({
+  drink,
+  onClick,
+}: {
+  drink: PopularDrink;
+  onClick?: (drink: PopularDrink) => void;
+}) {
   const typeIcon = isBuiltInDrinkType(drink.type)
     ? drinkTypeIcons[drink.type]
     : '🍹';
 
   return (
-    <Card className="w-36 flex-shrink-0 bg-card/50 border-border/50 overflow-hidden">
+    <Card
+      className="w-36 flex-shrink-0 bg-card/50 border-border/50 overflow-hidden cursor-pointer active:opacity-75 transition-opacity"
+      onClick={() => onClick?.(drink)}
+    >
       {/* Thumbnail */}
       <div className="h-16 bg-muted/50 flex items-center justify-center">
         {drink.sampleImage ? (

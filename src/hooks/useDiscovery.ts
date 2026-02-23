@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { queryKeys } from '@/lib/queryKeys';
 import * as discoveryService from '@/services/discoveryService';
 import { PopularDrink } from '@/services/discoveryService';
+import { SuggestedUser } from '@/types/social';
 
 export function useDiscovery() {
   const { user } = useAuth();
@@ -27,11 +28,23 @@ export function useDiscovery() {
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
+  const {
+    data: suggestedUsers = [],
+    isLoading: suggestedLoading,
+  } = useQuery({
+    queryKey: queryKeys.discovery.suggested(user?.id ?? ''),
+    queryFn: () => discoveryService.fetchSuggestedUsers(user!.id),
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
+  });
+
   return {
     circlePopular,
     trending,
+    suggestedUsers,
     isLoading: circleLoading || trendingLoading,
+    suggestedLoading,
   };
 }
 
-export type { PopularDrink };
+export type { PopularDrink, SuggestedUser };

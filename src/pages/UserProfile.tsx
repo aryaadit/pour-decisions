@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,6 +13,7 @@ import { TopDrinkEntry } from '@/types/taste';
 import { queryKeys } from '@/lib/queryKeys';
 
 import { PageHeader } from '@/components/PageHeader';
+import { PullToRefresh } from '@/components/PullToRefresh';
 import { FollowListModal } from '@/components/FollowListModal';
 import { DrinkDetailModal, DrinkOwner } from '@/components/DrinkDetailModal';
 import { CollectionCompareSection } from '@/components/CollectionCompareSection';
@@ -29,6 +30,7 @@ export default function UserProfile() {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { getProfileByUsername, isLoading: profileLoading } = useSocialProfile();
   const isMobile = useIsMobile();
 
@@ -103,6 +105,20 @@ export default function UserProfile() {
     setViewingOwner(owner);
   };
 
+  const handleRefresh = async () => {
+    if (!profile) return;
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile.byUsername(profile.username || '') }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.profileStats.detail(profile.userId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.follows.counts(profile.userId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.follows.followers(profile.userId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.follows.following(profile.userId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed.userActivities(profile.userId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.collections.publicForUser(profile.userId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.drinks.public(profile.userId) }),
+    ]);
+  };
+
   const handleCategoryDrinkClick = async (topDrink: TopDrinkEntry) => {
     const drink = await drinkService.fetchPublicDrinkById(topDrink.id);
     if (drink) {
@@ -149,6 +165,7 @@ export default function UserProfile() {
         showBack={true}
       />
 
+      <PullToRefresh onRefresh={handleRefresh}>
       <ProfileHeader
         profile={profile}
         isOwnProfile={isOwnProfile}
@@ -216,6 +233,7 @@ export default function UserProfile() {
           </TabsContent>
         </Tabs>
       </div>
+      </PullToRefresh>
 
       <DrinkDetailModal
         drink={viewingDrink}
