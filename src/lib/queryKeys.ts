@@ -22,9 +22,21 @@ export const queryKeys = {
     all: ['follows'] as const,
     status: (followerId: string, followingId: string) =>
       ['follows', 'status', followerId, followingId] as const,
+    relationship: (followerId: string, followingId: string) =>
+      ['follows', 'relationship', followerId, followingId] as const,
     counts: (userId: string) => ['follows', 'counts', userId] as const,
     followers: (userId: string) => ['follows', 'followers', userId] as const,
     following: (userId: string) => ['follows', 'following', userId] as const,
+  },
+  followRequests: {
+    all: ['followRequests'] as const,
+    pending: (userId: string) => ['followRequests', 'pending', userId] as const,
+    outgoing: (userId: string) => ['followRequests', 'outgoing', userId] as const,
+  },
+  notifications: {
+    all: ['notifications'] as const,
+    list: (userId: string) => ['notifications', 'list', userId] as const,
+    unreadCount: (userId: string) => ['notifications', 'unreadCount', userId] as const,
   },
   feed: {
     all: ['feed'] as const,
@@ -47,5 +59,6 @@ export const queryKeys = {
     all: ['discovery'] as const,
     circle: (userId: string) => ['discovery', 'circle', userId] as const,
     trending: () => ['discovery', 'trending'] as const,
+    suggested: (userId: string) => ['discovery', 'suggested', userId] as const,
   },
 };

@@ -1,4 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
+import { SuggestedUser } from '@/types/social';
+import { Drink } from '@/types/drink';
+import { DrinkOwner } from '@/components/DrinkDetailModal';
+import { mapDrinkRow, mapSuggestedUserRow } from '@/lib/mappers';
 
 export interface PopularDrink {
   name: string;
@@ -80,6 +84,24 @@ export async function fetchCirclePopular(
     }));
 }
 
+export async function fetchSuggestedUsers(
+  userId: string,
+  limit = 5
+): Promise<SuggestedUser[]> {
+  const { data, error } = await supabase.rpc('get_suggested_users', {
+    _user_id: userId,
+    _limit: limit,
+  });
+
+  if (error) {
+    console.warn('Suggested users RPC not available:', error.message);
+    return [];
+  }
+
+  if (!data) return [];
+  return (data as any[]).map(mapSuggestedUserRow);
+}
+
 export async function fetchGlobalTrending(limit = 10): Promise<PopularDrink[]> {
   const { data, error } = await supabase.rpc('get_trending_drinks', {
     days: 7,
@@ -101,4 +123,47 @@ export async function fetchGlobalTrending(limit = 10): Promise<PopularDrink[]> {
     avgRating: row.avg_rating ? Number(row.avg_rating) : null,
     sampleImage: row.sample_image || null,
   }));
+}
+
+export interface DiscoveryDrinkDetail {
+  drink: Drink;
+  owner: DrinkOwner;
+}
+
+export async function fetchDiscoveryDrinkDetail(
+  name: string,
+  type: string
+): Promise<DiscoveryDrinkDetail | null> {
+  const { data, error } = await supabase.rpc('get_discovery_drink_detail', {
+    drink_name: name,
+    drink_type: type,
+  });
+
+  if (error) {
+    console.error('Failed to fetch discovery drink detail:', error.message);
+    return null;
+  }
+
+  if (!data || (data as any[]).length === 0) return null;
+
+  const row = (data as any[])[0];
+
+  return {
+    drink: mapDrinkRow({
+      id: row.drink_id,
+      name: row.name,
+      type: row.type,
+      brand: row.brand,
+      rating: row.rating,
+      notes: row.notes,
+      location: row.location,
+      price: row.price,
+      image_url: row.image_url,
+      date_added: row.date_added,
+    }),
+    owner: {
+      username: row.owner_username || 'unknown',
+      displayName: row.owner_display_name,
+    },
+  };
 }

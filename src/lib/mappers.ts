@@ -1,5 +1,14 @@
 import { Drink, DrinkType, Collection } from '@/types/drink';
-import { PublicProfile, ActivityFeedItem, ActivityVisibility } from '@/types/social';
+import {
+  PublicProfile,
+  ActivityFeedItem,
+  ActivityVisibility,
+  FollowRequest,
+  FollowRequestStatus,
+  AppNotification,
+  NotificationType,
+  SuggestedUser,
+} from '@/types/social';
 import { Profile, SortOrder, ThemePreference, OnboardingStep } from '@/types/profile';
 
 export function mapDrinkRow(d: any): Drink {
@@ -90,5 +99,38 @@ export function mapActivityFeedItem(item: any, user?: PublicProfile): ActivityFe
     metadata: item.metadata as ActivityFeedItem['metadata'],
     createdAt: new Date(item.created_at),
     user,
+  };
+}
+
+export function mapFollowRequestRow(row: any, requester?: PublicProfile): FollowRequest {
+  return {
+    id: row.id,
+    requesterId: row.requester_id,
+    targetId: row.target_id,
+    status: row.status as FollowRequestStatus,
+    createdAt: new Date(row.created_at),
+    respondedAt: row.responded_at ? new Date(row.responded_at) : null,
+    requester,
+  };
+}
+
+export function mapNotificationRow(row: any, actor?: PublicProfile): AppNotification {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type as NotificationType,
+    actorId: row.actor_id,
+    referenceId: row.reference_id || null,
+    metadata: (row.metadata as Record<string, string>) || {},
+    isRead: row.is_read,
+    createdAt: new Date(row.created_at),
+    actor,
+  };
+}
+
+export function mapSuggestedUserRow(row: any): SuggestedUser {
+  return {
+    ...mapPublicProfileRow(row),
+    recentDrinkCount: Number(row.recent_drink_count) || 0,
   };
 }
