@@ -10,7 +10,7 @@ export async function fetchNotifications(
   limit = PAGE_SIZE,
   cursor?: string
 ): Promise<{ notifications: AppNotification[]; nextCursor: string | null }> {
-  let query = (supabase as any)
+  let query = supabase
     .from('notifications')
     .select('*')
     .eq('user_id', userId)
@@ -28,17 +28,18 @@ export async function fetchNotifications(
     return { notifications: [], nextCursor: null };
   }
 
-  const actorIds = [...new Set(data.map((n: any) => n.actor_id))];
+  // Fetch actor profiles
+  const actorIds = [...new Set(data.map((n) => n.actor_id))];
   const { data: profiles } = await supabase
     .from('profiles_public')
     .select('*')
-    .in('user_id', actorIds as string[]);
+    .in('user_id', actorIds);
 
   const profileMap = new Map(
     (profiles || []).map((p) => [p.user_id, mapPublicProfileRow(p)])
   );
 
-  const notifications = data.map((row: any) =>
+  const notifications = data.map((row) =>
     mapNotificationRow(row, profileMap.get(row.actor_id))
   );
 
@@ -49,7 +50,7 @@ export async function fetchNotifications(
 }
 
 export async function getUnreadCount(userId: string): Promise<number> {
-  const { count, error } = await (supabase as any)
+  const { count, error } = await supabase
     .from('notifications')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
@@ -60,7 +61,7 @@ export async function getUnreadCount(userId: string): Promise<number> {
 }
 
 export async function markAsRead(notificationId: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('notifications')
     .update({ is_read: true })
     .eq('id', notificationId);
@@ -69,7 +70,7 @@ export async function markAsRead(notificationId: string): Promise<void> {
 }
 
 export async function markAllAsRead(userId: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('notifications')
     .update({ is_read: true })
     .eq('user_id', userId)

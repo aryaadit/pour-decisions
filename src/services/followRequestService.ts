@@ -2,21 +2,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { FollowRequest, FollowRequestStatus } from '@/types/social';
 import { mapFollowRequestRow, mapPublicProfileRow } from '@/lib/mappers';
 
-// The follow_requests table exists in the DB but may not be in the generated types.
-// Use `as any` to bypass strict type checking for this table.
-
 export async function sendFollowRequest(
   requesterId: string,
   targetId: string
 ): Promise<void> {
-  await (supabase as any)
+  // Remove any stale follow request (accepted/rejected) before inserting
+  // to avoid UNIQUE constraint violation on (requester_id, target_id)
+  await supabase
     .from('follow_requests')
     .delete()
     .eq('requester_id', requesterId)
     .eq('target_id', targetId)
     .neq('status', 'pending');
 
-  const { error } = await (supabase as any).from('follow_requests').insert({
+  const { error } = await supabase.from('follow_requests').insert({
     requester_id: requesterId,
     target_id: targetId,
     status: 'pending',
@@ -29,7 +28,7 @@ export async function cancelFollowRequest(
   requesterId: string,
   targetId: string
 ): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('follow_requests')
     .delete()
     .eq('requester_id', requesterId)
@@ -40,7 +39,7 @@ export async function cancelFollowRequest(
 }
 
 export async function acceptFollowRequest(requestId: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('follow_requests')
     .update({ status: 'accepted' })
     .eq('id', requestId)
@@ -50,7 +49,7 @@ export async function acceptFollowRequest(requestId: string): Promise<void> {
 }
 
 export async function rejectFollowRequest(requestId: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('follow_requests')
     .update({ status: 'rejected' })
     .eq('id', requestId)
@@ -60,7 +59,7 @@ export async function rejectFollowRequest(requestId: string): Promise<void> {
 }
 
 export async function fetchPendingRequests(userId: string): Promise<FollowRequest[]> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('follow_requests')
     .select('*')
     .eq('target_id', userId)
@@ -70,7 +69,8 @@ export async function fetchPendingRequests(userId: string): Promise<FollowReques
   if (error) throw error;
   if (!data || data.length === 0) return [];
 
-  const requesterIds = data.map((r: any) => r.requester_id);
+  // Fetch requester profiles
+  const requesterIds = data.map((r) => r.requester_id);
   const { data: profiles } = await supabase
     .from('profiles_public')
     .select('*')
@@ -80,11 +80,11 @@ export async function fetchPendingRequests(userId: string): Promise<FollowReques
     (profiles || []).map((p) => [p.user_id, mapPublicProfileRow(p)])
   );
 
-  return data.map((row: any) => mapFollowRequestRow(row, profileMap.get(row.requester_id)));
+  return data.map((row) => mapFollowRequestRow(row, profileMap.get(row.requester_id)));
 }
 
 export async function fetchOutgoingRequests(userId: string): Promise<FollowRequest[]> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('follow_requests')
     .select('*')
     .eq('requester_id', userId)
@@ -92,14 +92,14 @@ export async function fetchOutgoingRequests(userId: string): Promise<FollowReque
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data || []).map((row: any) => mapFollowRequestRow(row));
+  return (data || []).map((row) => mapFollowRequestRow(row));
 }
 
 export async function checkFollowRequestStatus(
   requesterId: string,
   targetId: string
 ): Promise<FollowRequestStatus | 'none'> {
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from('follow_requests')
     .select('status')
     .eq('requester_id', requesterId)

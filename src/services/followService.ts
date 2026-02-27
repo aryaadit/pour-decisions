@@ -144,13 +144,11 @@ export async function unfollowUser(
   if (error) throw error;
 
   // Clean up any existing follow request regardless of status
-  try {
-    await (supabase as any)
-      .from('follow_requests')
-      .delete()
-      .eq('requester_id', followerId)
-      .eq('target_id', followingId);
-  } catch {
-    // ignore cleanup errors
-  }
+  await supabase
+    .from('follow_requests')
+    .delete()
+    .eq('requester_id', followerId)
+    .eq('target_id', followingId)
+    .then(() => {})
+    .catch(() => {});
 }
