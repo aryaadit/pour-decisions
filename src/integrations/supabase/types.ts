@@ -295,6 +295,33 @@ export type Database = {
         }
         Relationships: []
       }
+      follow_requests: {
+        Row: {
+          created_at: string
+          id: string
+          requester_id: string
+          responded_at: string | null
+          status: string
+          target_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+          target_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
+          target_id?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -316,6 +343,39 @@ export type Database = {
           following_id?: string
           id?: string
           status?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          metadata: Json | null
+          reference_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          metadata?: Json | null
+          reference_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          metadata?: Json | null
+          reference_id?: string | null
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -525,8 +585,41 @@ export type Database = {
       }
     }
     Functions: {
-      delete_user_account: { Args: Record<string, never>; Returns: undefined }
+      delete_user_account: { Args: never; Returns: undefined }
       get_activity_visibility: { Args: { _user_id: string }; Returns: string }
+      get_discovery_drink_detail: {
+        Args: { drink_name: string; drink_type: string }
+        Returns: {
+          brand: string
+          date_added: string
+          drink_id: string
+          image_url: string
+          location: string
+          name: string
+          notes: string
+          owner_avatar_url: string
+          owner_display_name: string
+          owner_user_id: string
+          owner_username: string
+          price: string
+          rating: number
+          type: string
+        }[]
+      }
+      get_suggested_users: {
+        Args: { _limit?: number; _user_id: string }
+        Returns: {
+          activity_visibility: string
+          avatar_url: string
+          bio: string
+          created_at: string
+          display_name: string
+          is_public: boolean
+          recent_drink_count: number
+          user_id: string
+          username: string
+        }[]
+      }
       get_trending_drinks: {
         Args: { days?: number; lim?: number }
         Returns: {

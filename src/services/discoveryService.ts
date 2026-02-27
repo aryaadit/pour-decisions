@@ -88,7 +88,7 @@ export async function fetchSuggestedUsers(
   userId: string,
   limit = 5
 ): Promise<SuggestedUser[]> {
-  const { data, error } = await supabase.rpc('get_suggested_users', {
+  const { data, error } = await (supabase as any).rpc('get_suggested_users', {
     _user_id: userId,
     _limit: limit,
   });
@@ -99,7 +99,7 @@ export async function fetchSuggestedUsers(
   }
 
   if (!data) return [];
-  return (data as any[]).map(mapSuggestedUserRow);
+  return ((data as any[]) || []).map(mapSuggestedUserRow);
 }
 
 export async function fetchGlobalTrending(limit = 10): Promise<PopularDrink[]> {
@@ -134,7 +134,7 @@ export async function fetchDiscoveryDrinkDetail(
   name: string,
   type: string
 ): Promise<DiscoveryDrinkDetail | null> {
-  const { data, error } = await supabase.rpc('get_discovery_drink_detail', {
+  const { data, error } = await (supabase as any).rpc('get_discovery_drink_detail', {
     drink_name: name,
     drink_type: type,
   });
