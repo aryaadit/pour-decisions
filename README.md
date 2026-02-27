@@ -52,8 +52,8 @@ android/              # Capacitor Android project
 
 1. Clone the repo:
    ```bash
-   git clone https://github.com/aryaadit/barkeeply.git
-   cd barkeeply
+   git clone https://github.com/aryaadit/pour-decisions.git
+   cd pour-decisions
    ```
 
 2. Install dependencies:

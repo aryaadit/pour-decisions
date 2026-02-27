@@ -1,4 +1,4 @@
-# CLAUDE.md — Pour Decisions (Barkeeply)
+# CLAUDE.md — Pour Decisions
 
 ## Project Overview
 
@@ -6,7 +6,7 @@ Pour Decisions is a mobile-first drink logging and social discovery app. Users l
 
 The app is **log-first** — each drink entry is a self-contained log, not linked to a canonical drink database. There is no master drink catalog. Matching across users is done via fuzzy matching on name + type + brand.
 
-**Primary target: Mobile (iOS and Android via Capacitor)**. There is a web version at barkeeply.com but mobile is the priority. Every decision should optimize for the mobile experience.
+**Primary target: Mobile (iOS and Android via Capacitor)**. There is a web version at onpalate.com/pour-decisions but mobile is the priority. Every decision should optimize for the mobile experience.
 
 ## Tech Stack
 

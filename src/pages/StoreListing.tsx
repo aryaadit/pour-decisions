@@ -356,7 +356,7 @@ export default function StoreListing() {
                     Required for apps with user accounts. Create a privacy policy and host it at:
                   </p>
                   <code className="text-sm bg-muted px-2 py-1 rounded">
-                    https://barkeeply.com/privacy
+                    https://onpalate.com/pour-decisions/privacy
                   </code>
                 </CardContent>
               </Card>

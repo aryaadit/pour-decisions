@@ -1,4 +1,4 @@
-# Barkeeply Database Schema
+# Pour Decisions Database Schema
 
 ## Tables
 
