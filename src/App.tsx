@@ -2,8 +2,8 @@ import { useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/ThemeProvider";
 import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import { OnboardingProvider } from "@/hooks/useOnboarding";
@@ -46,7 +46,15 @@ const ROUTES_WITHOUT_NAV = ['/auth', '/reset-password', '/share/', '/c/', '/stor
 
 function AppRoutes() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { isRecoveryMode } = useAuth();
+
+  useEffect(() => {
+    if (isRecoveryMode) {
+      navigate('/reset-password');
+    }
+  }, [isRecoveryMode, navigate]);
 
   const shouldShowNav = isMobile && !ROUTES_WITHOUT_NAV.some(route =>
     location.pathname === route || location.pathname.startsWith(route)

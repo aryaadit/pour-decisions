@@ -20,8 +20,12 @@ const ResetPassword = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
   
-  const { updatePassword, session, isLoading } = useAuth();
+  const { updatePassword, session, isLoading, clearRecoveryMode } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    clearRecoveryMode();
+  }, [clearRecoveryMode]);
 
   useEffect(() => {
     // If no session after loading, redirect to auth

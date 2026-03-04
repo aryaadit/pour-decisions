@@ -7,6 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  isRecoveryMode: boolean;
+  clearRecoveryMode: () => void;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
@@ -20,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -29,6 +32,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         setIsLoading(false);
         setCacheUserId(session?.user?.id ?? null);
+
+        if (event === 'PASSWORD_RECOVERY') {
+          setIsRecoveryMode(true);
+        }
       }
     );
 
@@ -86,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
-    const redirectUrl = `${window.location.origin}/reset-password`;
+    const redirectUrl = 'https://onpalate.com/pour-decisions/reset-password';
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl
@@ -99,9 +106,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   }, []);
 
+  const clearRecoveryMode = useCallback(() => {
+    setIsRecoveryMode(false);
+  }, []);
+
   const value = useMemo(() => ({
-    user, session, isLoading, signUp, signIn, signOut, resetPassword, updatePassword
-  }), [user, session, isLoading, signUp, signIn, signOut, resetPassword, updatePassword]);
+    user, session, isLoading, isRecoveryMode, clearRecoveryMode, signUp, signIn, signOut, resetPassword, updatePassword
+  }), [user, session, isLoading, isRecoveryMode, clearRecoveryMode, signUp, signIn, signOut, resetPassword, updatePassword]);
 
   return (
     <AuthContext.Provider value={value}>
