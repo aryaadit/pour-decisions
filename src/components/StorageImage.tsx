@@ -48,6 +48,7 @@ export function StorageImage({
     <img
       src={signedUrl}
       alt={alt}
+      loading="lazy"
       className={className}
       onError={() => setImageError(true)}
       {...props}

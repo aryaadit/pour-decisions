@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 
 // Keys to persist in localStorage
-const CACHE_KEY = "BARKEEPLY_QUERY_CACHE";
+const CACHE_KEY = "POUR_DECISIONS_QUERY_CACHE";
 const CACHE_VERSION = "v1";
 
 // ISO 8601 date pattern for JSON reviver
@@ -122,7 +122,7 @@ export function restoreQueryCache(userId: string) {
       }
     );
 
-    console.log(`Restored ${queries.length} cached queries`);
+    // Cache restored successfully
   } catch (e) {
     console.warn("Failed to restore query cache:", e);
   }

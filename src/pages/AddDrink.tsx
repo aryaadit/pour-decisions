@@ -289,7 +289,7 @@ export default function AddDrink() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" onClick={(e) => { if (e.target === e.currentTarget) (document.activeElement as HTMLElement)?.blur(); }}>
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="flex items-center justify-between px-4 h-14">

@@ -15,7 +15,7 @@ The app is **log-first** — each drink entry is a self-contained log, not linke
 - **State Management**: React Query (TanStack Query) for all server state
 - **Backend**: Supabase (Postgres database, Auth, Storage, Row Level Security)
 - **Mobile**: Capacitor (iOS + Android native wrappers)
-- **Package Manager**: Bun (bun.lockb)
+- **Package Manager**: npm
 
 ## Project Structure
 

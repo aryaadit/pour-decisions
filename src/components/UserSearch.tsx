@@ -71,6 +71,9 @@ export function UserSearch({
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          enterKeyHint="search"
+          autoCorrect="off"
+          autoCapitalize="off"
           className="pl-10"
         />
         {isLoading && (

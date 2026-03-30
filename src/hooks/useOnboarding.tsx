@@ -22,7 +22,7 @@ interface OnboardingContextType {
   isLoading: boolean;
 }
 
-const STORAGE_KEY = 'barkeeply_onboarding';
+const STORAGE_KEY = 'pour_decisions_onboarding';
 
 const defaultState: OnboardingState = {
   hasSeenWelcome: false,
@@ -85,7 +85,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
             onboardingStep: localData.currentStep,
             dismissedOnboardingSteps: localData.dismissedSteps,
           });
-          console.log('Migrated onboarding state from localStorage to database');
+          // Migrated onboarding state from localStorage to database
         }
         
         // Clear localStorage after migration attempt

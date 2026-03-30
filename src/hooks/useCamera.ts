@@ -86,7 +86,6 @@ export async function takePhoto(): Promise<CameraPhoto | null> {
   } catch (error: any) {
     // User cancelled - this is not an error
     if (error?.message?.includes('cancelled') || error?.message?.includes('User cancelled')) {
-      console.log('Photo capture cancelled by user');
       return null;
     }
     console.error('Error taking photo:', error);
@@ -119,7 +118,6 @@ export async function pickFromGallery(): Promise<CameraPhoto | null> {
   } catch (error: any) {
     // User cancelled - not an error
     if (error?.message?.includes('cancelled') || error?.message?.includes('User cancelled')) {
-      console.log('Gallery selection cancelled by user');
       return null;
     }
     console.error('Error picking from gallery:', error);

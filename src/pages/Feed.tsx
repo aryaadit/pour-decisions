@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Activity, Users, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { queryKeys } from '@/lib/queryKeys';
 import { useProfile } from '@/hooks/useProfile';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
 import { useDiscovery } from '@/hooks/useDiscovery';
@@ -24,6 +26,7 @@ import { toast } from 'sonner';
 
 export default function Feed() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
   const { isLoading: profileLoading } = useProfile();
   const { activities, isLoading: feedLoading, hasMore, loadMore, refetch: refetchFeed } = useActivityFeed();
@@ -89,7 +92,7 @@ export default function Feed() {
       </div>
 
       {/* Content */}
-      <PullToRefresh onRefresh={async () => { await refetchFeed(); }}>
+      <PullToRefresh onRefresh={async () => { await Promise.all([refetchFeed(), queryClient.invalidateQueries({ queryKey: queryKeys.discovery.all })]); }}>
       <main className="max-w-2xl mx-auto px-4 py-3 space-y-4">
         {/* Discovery Section - shown when user has follows */}
         {hasFollows && !hasNoFollowing && (

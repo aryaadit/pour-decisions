@@ -260,7 +260,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" onClick={(e) => { if (e.target === e.currentTarget) (document.activeElement as HTMLElement)?.blur(); }}>
       <PageHeader
         title="Settings"
         icon={<SettingsIcon className="h-5 w-5" />}

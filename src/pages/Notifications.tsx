@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Bell, BellOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useFollowRequests } from '@/hooks/useFollowRequests';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { queryKeys } from '@/lib/queryKeys';
 
 import { PageHeader } from '@/components/PageHeader';
 import { PullToRefresh } from '@/components/PullToRefresh';
@@ -15,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Notifications() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
   const {
     notifications,
@@ -36,7 +39,10 @@ export default function Notifications() {
   }, [authLoading, user, navigate]);
 
   const handleRefresh = async () => {
-    await refetch();
+    await Promise.all([
+      refetch(),
+      queryClient.invalidateQueries({ queryKey: queryKeys.followRequests.all }),
+    ]);
   };
 
   const isEmpty = notifications.length === 0 && pendingRequests.length === 0 && !isLoading;

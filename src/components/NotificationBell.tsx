@@ -11,7 +11,7 @@ export function NotificationBell() {
     <Button
       variant="ghost"
       size="icon"
-      className="relative"
+      className="relative min-w-[44px] min-h-[44px]"
       onClick={() => navigate('/notifications')}
     >
       <Bell className="h-5 w-5" />

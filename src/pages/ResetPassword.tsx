@@ -80,7 +80,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 pt-[calc(1rem+env(safe-area-inset-top))]" onClick={() => (document.activeElement as HTMLElement)?.blur()}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
