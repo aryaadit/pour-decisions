@@ -42,6 +42,7 @@ export default function AddDrink() {
   const [price, setPrice] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [isUploading, setIsUploading] = useState(false);
+  const [nameError, setNameError] = useState(false);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lookupInfo, setLookupInfo] = useState<{
@@ -233,7 +234,10 @@ export default function AddDrink() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setNameError(true);
+      return;
+    }
 
     setIsSaving(true);
     notification(NotificationType.Success);
@@ -327,13 +331,13 @@ export default function AddDrink() {
               <Input
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); if (nameError) setNameError(false); }}
                 onBlur={handleNameBlur}
                 placeholder="e.g., Lagavulin 16"
                 required
                 autoCapitalize="words"
                 enterKeyHint="next"
-                className="bg-secondary/50 flex-1 h-12 text-base"
+                className={`bg-secondary/50 flex-1 h-12 text-base${nameError ? ' border-destructive' : ''}`}
               />
               <Button
                 type="button"
@@ -351,6 +355,9 @@ export default function AddDrink() {
                 )}
               </Button>
             </div>
+            {nameError && (
+              <p className="text-sm text-destructive">Name is required</p>
+            )}
           </div>
 
           {/* Type */}

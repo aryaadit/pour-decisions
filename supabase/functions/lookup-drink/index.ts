@@ -16,8 +16,8 @@ const MAX_DRINK_NAME_LENGTH = 200;
 const MAX_BRAND_LENGTH = 100;
 const MAX_URL_LENGTH = 500;
 
-// Supabase storage URL prefix for validation
-const SUPABASE_STORAGE_PREFIX = "https://vfveigsnfatlmiiunprc.supabase.co/storage/";
+// Supabase storage URL prefix for validation (derived from SUPABASE_URL env var)
+const SUPABASE_STORAGE_PREFIX = `${Deno.env.get("SUPABASE_URL")}/storage/`;
 
 function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") || "";
