@@ -22,7 +22,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Drink } from '@/types/drink';
 import { DrinkOwner } from '@/components/DrinkDetailModal';
 import { PopularDrink, fetchDiscoveryDrinkDetail } from '@/services/discoveryService';
-import { toast } from 'sonner';
 
 export default function Feed() {
   const navigate = useNavigate();
@@ -56,8 +55,6 @@ export default function Feed() {
     if (result) {
       setViewingDrink(result.drink);
       setViewingOwner(result.owner);
-    } else {
-      toast.error('Could not load drink details');
     }
   };
 

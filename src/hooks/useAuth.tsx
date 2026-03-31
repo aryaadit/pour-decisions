@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     // Clear React Query cache to prevent cross-user data leaks
     queryClient.clear();
-    clearQueryCache();
+    await clearQueryCache();
 
     // Use global scope to sign out from all devices
     const { error } = await supabase.auth.signOut({ scope: 'global' });

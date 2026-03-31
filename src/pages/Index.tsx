@@ -22,7 +22,7 @@ import { OnboardingSection } from '@/components/home/OnboardingSection';
 import { SearchAndFilterBar } from '@/components/home/SearchAndFilterBar';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
-import { toast } from 'sonner';
+
 
 const Index = () => {
   const { user, isLoading: authLoading, signOut } = useAuth();
@@ -139,17 +139,11 @@ const Index = () => {
   const handleSave = async (drinkData: Omit<Drink, 'id' | 'dateAdded'>) => {
     if (editingDrink) {
       await updateDrink(editingDrink.id, drinkData);
-      toast.success('Drink updated', { description: `${drinkData.name} has been updated.` });
     } else {
       const result = await addDrink(drinkData);
       if (result && 'isDuplicate' in result && result.isDuplicate) {
-        toast.error('This drink already exists', {
-          description: 'You can edit the existing drink or use a different name.',
-          duration: 5000,
-        });
         return;
       }
-      toast.success('Drink added', { description: `${drinkData.name} has been added to your collection.` });
     }
     setEditingDrink(null);
   };
@@ -173,9 +167,7 @@ const Index = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const drink = drinks.find(d => d.id === id);
     await deleteDrink(id);
-    toast.success('Drink removed', { description: `${drink?.name} has been removed from your collection.` });
   };
 
   const handleClearFilters = () => {
@@ -191,7 +183,6 @@ const Index = () => {
   const handleSignOut = async () => {
     const { error } = await signOut();
     if (error) console.warn('Sign out error (proceeding anyway):', error.message);
-    toast.success('Signed out', { description: 'You have been signed out successfully.' });
     navigate('/auth');
   };
 

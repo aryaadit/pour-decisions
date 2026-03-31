@@ -6,7 +6,6 @@ import { StorageAvatar } from '@/components/StorageAvatar';
 import { useFollowRequests } from '@/hooks/useFollowRequests';
 import { useHaptics } from '@/hooks/useHaptics';
 import { ImpactStyle } from '@capacitor/haptics';
-import { toast } from 'sonner';
 import { FollowRequest } from '@/types/social';
 
 interface FollowRequestCardProps {
@@ -19,6 +18,7 @@ export function FollowRequestCard({ request }: FollowRequestCardProps) {
   const { impact } = useHaptics();
   const [isAccepting, setIsAccepting] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const profile = request.requester;
   const displayName = profile?.displayName || profile?.username || 'Someone';
@@ -29,10 +29,10 @@ export function FollowRequestCard({ request }: FollowRequestCardProps) {
     setIsAccepting(true);
     impact(ImpactStyle.Light);
     try {
+      setError(null);
       await accept(request.id);
-      toast.success(`Accepted ${displayName}'s request`);
     } catch {
-      toast.error('Failed to accept request');
+      setError('Failed to accept');
     } finally {
       setIsAccepting(false);
     }
@@ -43,10 +43,10 @@ export function FollowRequestCard({ request }: FollowRequestCardProps) {
     setIsRejecting(true);
     impact(ImpactStyle.Light);
     try {
+      setError(null);
       await reject(request.id);
-      toast.success('Request declined');
     } catch {
-      toast.error('Failed to decline request');
+      setError('Failed to decline');
     } finally {
       setIsRejecting(false);
     }
@@ -107,6 +107,7 @@ export function FollowRequestCard({ request }: FollowRequestCardProps) {
           )}
         </Button>
       </div>
+      {error && <p className="text-sm text-destructive mt-1">{error}</p>}
     </div>
   );
 }

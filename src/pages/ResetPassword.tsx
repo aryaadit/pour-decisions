@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GlassWater, Lock, Loader2, Eye, EyeOff, CheckCircle } from 'lucide-react';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -19,7 +18,8 @@ const ResetPassword = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
-  
+  const [updateError, setUpdateError] = useState<string | null>(null);
+
   const { updatePassword, session, isLoading, clearRecoveryMode } = useAuth();
   const navigate = useNavigate();
 
@@ -30,10 +30,9 @@ const ResetPassword = () => {
   useEffect(() => {
     // If no session after loading, redirect to auth
     if (!isLoading && !session) {
-      toast.error('Invalid or expired link', { description: 'Please request a new password reset link.' });
       navigate('/auth');
     }
-  }, [session, isLoading, navigate, toast]);
+  }, [session, isLoading, navigate]);
 
   const validateForm = () => {
     const newErrors: { password?: string; confirmPassword?: string } = {};
@@ -57,14 +56,14 @@ const ResetPassword = () => {
     if (!validateForm()) return;
     
     setIsSubmitting(true);
-    
+    setUpdateError(null);
+
     try {
       const { error } = await updatePassword(password);
       if (error) {
-        toast.error('Update failed', { description: error.message });
+        setUpdateError(error.message || 'Failed to update password. Please try again.');
       } else {
         setIsSuccess(true);
-        toast.success('Password updated', { description: 'Your password has been successfully changed.' });
       }
     } finally {
       setIsSubmitting(false);
@@ -169,6 +168,10 @@ const ResetPassword = () => {
                     <p className="text-sm text-destructive">{errors.confirmPassword}</p>
                   )}
                 </div>
+
+                {updateError && (
+                  <p className="text-sm text-destructive">{updateError}</p>
+                )}
 
                 <Button
                   type="submit"

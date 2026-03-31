@@ -20,7 +20,6 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Settings, Globe, Lock, Plus, Loader2, Wine } from 'lucide-react';
 import { Drink, Collection } from '@/types/drink';
-import { toast } from 'sonner';
 
 const CollectionDetail = () => {
   const navigate = useNavigate();
@@ -50,7 +49,6 @@ const CollectionDetail = () => {
         loadDrinks(id);
       } else {
         // Collection not found
-        toast.error('Collection not found');
         navigate('/collections');
       }
     }
@@ -74,7 +72,6 @@ const CollectionDetail = () => {
     const success = await removeDrinkFromCollection(collection.id, drinkId);
     if (success) {
       setCollectionDrinks((prev) => prev.filter((d) => d.id !== drinkId));
-      toast.success('Removed from collection');
     }
   };
 
@@ -104,7 +101,6 @@ const CollectionDetail = () => {
 
     await loadDrinks(collection.id);
     setShowAddDrinksDialog(false);
-    toast.success('Collection updated');
   };
 
   const handleRefresh = async () => {

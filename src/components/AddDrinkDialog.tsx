@@ -9,7 +9,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { Loader2, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
 import * as drinkService from '@/services/drinkService';
 import { PhotoCaptureArea } from '@/components/drink-form/PhotoCaptureArea';
 import { LookupResultsPanel, LookupInfo } from '@/components/drink-form/LookupResultsPanel';
@@ -151,11 +150,9 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
         }
 
         setLookupInfo(info);
-        toast.success(`Identified: ${info.drinkName || 'drink'}!`);
       }
     } catch (err) {
       console.error('Lookup error:', err);
-      toast.error('Failed to identify drink');
     } finally {
       setIsLookingUp(false);
     }
@@ -180,7 +177,6 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
     const hasImage = useImage && imageUrl;
 
     if (!hasName && !hasImage) {
-      toast.error('Enter a drink name or add a photo first');
       return;
     }
 
@@ -207,11 +203,9 @@ export function AddDrinkDialog({ open, onOpenChange, onSave, editDrink, defaultT
           if (info.drinkType && !userSetTypeRef.current) setType(info.drinkType as DrinkType);
         }
 
-        toast.success(useImage ? 'Identified drink from photo!' : 'Found drink information!');
       }
     } catch (err) {
       console.error('Lookup error:', err);
-      toast.error('Failed to look up drink info');
     } finally {
       setIsLookingUp(false);
     }

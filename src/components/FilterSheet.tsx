@@ -8,7 +8,6 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useCustomDrinkTypes, CustomDrinkType } from '@/hooks/useCustomDrinkTypes';
 import { CustomDrinkTypeDialog } from '@/components/AddCustomDrinkTypeDialog';
 import { Plus, X, Pencil, AlertTriangle, SlidersHorizontal, RotateCcw } from 'lucide-react';
-import { toast } from 'sonner';
 import {
   Sheet,
   SheetContent,
@@ -102,13 +101,11 @@ export function FilterSheet({
       if (selectedType === oldName && name !== oldName) {
         onSelectType(name);
       }
-      toast.success('Drink type updated', { description: `${name} has been updated.` });
     } else {
       const result = await addCustomType(name, icon, color);
       if (result?.error) {
         return { error: result.error };
       }
-      toast.success('Drink type added', { description: `${name} is now available.` });
     }
     return null;
   };
@@ -134,17 +131,11 @@ export function FilterSheet({
     }
     const result = await deleteCustomType(customType.id);
     if (result?.error) {
-      toast.error('Failed to delete', { description: result.error });
       return;
     }
     if (selectedType === customType.name) {
       onSelectType(null);
     }
-    toast.success('Drink type removed', { 
-      description: drinkCount > 0 
-        ? `${customType.name} removed. ${drinkCount} drink${drinkCount > 1 ? 's' : ''} moved to Other.`
-        : `${customType.name} has been removed.` 
-    });
   };
 
   const handleDialogClose = (open: boolean) => {

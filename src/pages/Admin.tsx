@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Bug, Loader2, Trash2, RefreshCw, Image as ImageIcon, BarChart3, Wrench, RotateCcw, Users, Search, Check, X, ExternalLink, FileText, ImageIcon as ImageLucide } from 'lucide-react';
-import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -43,15 +42,17 @@ export default function Admin() {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isUpdatingUser, setIsUpdatingUser] = useState(false);
+  const [adminError, setAdminError] = useState<string | null>(null);
 
   const fetchBugReports = async () => {
     setIsLoading(true);
+    setAdminError(null);
     try {
       const data = await adminService.fetchBugReports();
       setBugReports(data);
     } catch (error) {
       console.error('Error fetching bug reports:', error);
-      toast.error('Failed to load bug reports');
+      setAdminError('Failed to load bug reports');
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +70,7 @@ export default function Admin() {
       setSearchResults(data);
     } catch (error) {
       console.error('Error searching users:', error);
-      toast.error('Failed to search users');
+      setAdminError('Failed to search users');
     } finally {
       setIsSearching(false);
     }
@@ -84,10 +85,9 @@ export default function Admin() {
       if (selectedUser && selectedUser.user_id === userId) {
         setSelectedUser({ ...selectedUser, ...updates });
       }
-      toast.success('User onboarding updated');
     } catch (error) {
       console.error('Error updating user onboarding:', error);
-      toast.error('Failed to update user onboarding');
+      setAdminError('Failed to update user onboarding');
     } finally {
       setIsUpdatingUser(false);
     }
@@ -116,7 +116,6 @@ export default function Admin() {
     }
 
     if (!adminLoading && !isAdmin) {
-      toast.error('Access denied', { description: 'You do not have admin privileges.' });
       navigate('/');
       return;
     }
@@ -143,10 +142,9 @@ export default function Admin() {
           report.id === reportId ? { ...report, status: newStatus } : report
         )
       );
-      toast.success('Status updated');
     } catch (error) {
       console.error('Error updating status:', error);
-      toast.error('Failed to update status');
+      setAdminError('Failed to update status');
     }
   };
 
@@ -157,10 +155,9 @@ export default function Admin() {
       await adminService.deleteBugReport(reportId);
 
       setBugReports(prev => prev.filter(report => report.id !== reportId));
-      toast.success('Bug report deleted');
     } catch (error) {
       console.error('Error deleting bug report:', error);
-      toast.error('Failed to delete bug report');
+      setAdminError('Failed to delete bug report');
     }
   };
 
@@ -206,6 +203,11 @@ export default function Admin() {
       </header>
 
       <main className="container mx-auto px-4 py-6">
+        {adminError && (
+          <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+            <p className="text-sm text-destructive">{adminError}</p>
+          </div>
+        )}
         <Tabs defaultValue="analytics" className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-3">
             <TabsTrigger value="analytics" className="flex items-center gap-2">

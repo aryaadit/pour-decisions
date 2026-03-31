@@ -8,7 +8,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ResponsiveModal } from '@/components/ResponsiveModal';
 import { Plus, Loader2, FolderPlus } from 'lucide-react';
 import { useHaptics } from '@/hooks/useHaptics';
-import { toast } from 'sonner';
 
 interface AddToCollectionModalProps {
   open: boolean;
@@ -38,6 +37,7 @@ export function AddToCollectionModal({
   const [isCreating, setIsCreating] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && drinkId) {
@@ -74,9 +74,9 @@ export function AddToCollectionModal({
       setSelectedCollections((prev) => new Set(prev).add(collection.id));
       setNewCollectionName('');
       setIsCreating(false);
-      toast.success(`Created "${collection.name}"`);
+      setError(null);
     } else {
-      toast.error('Failed to create collection');
+      setError('Failed to create collection');
     }
   };
 
@@ -95,23 +95,12 @@ export function AddToCollectionModal({
 
     setIsSaving(false);
     notification(NotificationType.Success);
-
-    const addedCount = toAdd.length;
-    const removedCount = toRemove.length;
-
-    if (addedCount > 0 && removedCount > 0) {
-      toast.success(`Updated collections for "${drinkName}"`);
-    } else if (addedCount > 0) {
-      toast.success(`Added to ${addedCount} collection${addedCount > 1 ? 's' : ''}`);
-    } else if (removedCount > 0) {
-      toast.success(`Removed from ${removedCount} collection${removedCount > 1 ? 's' : ''}`);
-    }
-
     onOpenChange(false);
   };
 
   const content = (
     <div className="space-y-4">
+      {error && <p className="text-sm text-destructive">{error}</p>}
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

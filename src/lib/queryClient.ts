@@ -1,16 +1,17 @@
 import { QueryClient } from "@tanstack/react-query";
+import { get, set, del } from "idb-keyval";
 
-// Keys to persist in localStorage
 const CACHE_KEY = "POUR_DECISIONS_QUERY_CACHE";
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
+const TWENTY_FOUR_HOURS = 1000 * 60 * 60 * 24;
 
 // ISO 8601 date pattern for JSON reviver
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
 
 /**
  * JSON reviver that converts ISO date strings back to Date objects.
- * Needed because JSON.stringify turns Date objects into strings,
- * and our domain types (Drink, Profile, etc.) expect real Date instances.
+ * Needed because structured clone in IDB preserves Dates, but our
+ * manual JSON step (for size / compat) turns them into strings.
  */
 function dateReviver(_key: string, value: unknown): unknown {
   if (typeof value === "string" && ISO_DATE_RE.test(value)) {
@@ -20,92 +21,106 @@ function dateReviver(_key: string, value: unknown): unknown {
   return value;
 }
 
+/**
+ * Query key prefixes that should be persisted to disk.
+ * These are personal, read-heavy data that the user should see offline.
+ */
+const PERSISTABLE_PREFIXES = [
+  "drinks",
+  "collections",
+  "profile",
+  "profileStats",
+  "customDrinkTypes",
+];
+
+function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
+  const prefix = queryKey[0];
+  return typeof prefix === "string" && PERSISTABLE_PREFIXES.includes(prefix);
+}
+
 // Create query client with offline-first configuration
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Keep data fresh for 5 minutes when online
-      staleTime: 1000 * 60 * 5,
-      // Cache data for 24 hours (for offline use)
-      gcTime: 1000 * 60 * 60 * 24,
-      // Retry failed requests 3 times
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: TWENTY_FOUR_HOURS,
       retry: 3,
-      // Don't refetch on window focus when offline
       refetchOnWindowFocus: () => navigator.onLine,
-      // Use cached data when offline
       networkMode: "offlineFirst",
     },
     mutations: {
-      // Keep mutations in cache for retry when back online
       networkMode: "offlineFirst",
     },
   },
 });
 
-// Track the current user for cache scoping
+// ── User-scoped cache ──────────────────────────────────────────────────────
+
 let _cacheUserId: string | null = null;
 
 export function setCacheUserId(userId: string | null) {
   _cacheUserId = userId;
 }
 
-// Clear both in-memory and persisted cache (call on logout)
-export function clearQueryCache() {
+export async function clearQueryCache() {
   queryClient.clear();
-  localStorage.removeItem(CACHE_KEY);
+  try {
+    await del(CACHE_KEY);
+  } catch {
+    // IndexedDB may be unavailable
+  }
 }
 
-// Simple cache persistence utilities
-export function saveQueryCache() {
-  if (!_cacheUserId) return; // Don't persist cache without an authenticated user
+// ── Persist / Restore ──────────────────────────────────────────────────────
+
+export async function saveQueryCache() {
+  if (!_cacheUserId) return;
+
   try {
     const cache = queryClient.getQueryCache().getAll();
     const serializable = cache
-      .filter((query) => query.state.data !== undefined)
+      .filter(
+        (query) =>
+          query.state.data !== undefined && shouldPersistQuery(query.queryKey)
+      )
       .map((query) => ({
         queryKey: query.queryKey,
         data: query.state.data,
         dataUpdatedAt: query.state.dataUpdatedAt,
       }));
 
-    localStorage.setItem(
-      CACHE_KEY,
-      JSON.stringify({
-        version: CACHE_VERSION,
-        userId: _cacheUserId,
-        timestamp: Date.now(),
-        queries: serializable,
-      })
-    );
+    await set(CACHE_KEY, JSON.stringify({
+      version: CACHE_VERSION,
+      userId: _cacheUserId,
+      timestamp: Date.now(),
+      queries: serializable,
+    }));
   } catch (e) {
     console.warn("Failed to save query cache:", e);
   }
 }
 
-export function restoreQueryCache(userId: string) {
+export async function restoreQueryCache(userId: string) {
   try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (!cached) return;
+    const raw = await get<string>(CACHE_KEY);
+    if (!raw) return;
 
     const { version, userId: cachedUserId, timestamp, queries } = JSON.parse(
-      cached,
+      raw,
       dateReviver
     );
 
-    // Check version and age (24 hours max)
     if (version !== CACHE_VERSION) return;
-    if (Date.now() - timestamp > 1000 * 60 * 60 * 24) {
-      localStorage.removeItem(CACHE_KEY);
+    if (Date.now() - timestamp > TWENTY_FOUR_HOURS) {
+      await del(CACHE_KEY);
       return;
     }
 
-    // Reject cache if it belongs to a different user
     if (cachedUserId && cachedUserId !== userId) {
-      localStorage.removeItem(CACHE_KEY);
+      await del(CACHE_KEY);
       return;
     }
 
-    // Restore cached queries
     queries.forEach(
       ({
         queryKey,
@@ -121,31 +136,26 @@ export function restoreQueryCache(userId: string) {
         });
       }
     );
-
-    // Cache restored successfully
   } catch (e) {
     console.warn("Failed to restore query cache:", e);
   }
 }
 
-// Auto-save cache periodically and on visibility change
-let saveTimeout: NodeJS.Timeout | null = null;
+// ── Auto-save on visibility change, unload, and cache updates ──────────────
+
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
 export function setupCachePersistence() {
-
-  // Save cache when page is hidden (user switches apps)
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       saveQueryCache();
     }
   });
 
-  // Save cache before unload
   window.addEventListener("beforeunload", () => {
     saveQueryCache();
   });
 
-  // Debounced save on cache updates
   queryClient.getQueryCache().subscribe(() => {
     if (saveTimeout) clearTimeout(saveTimeout);
     saveTimeout = setTimeout(saveQueryCache, 5000);

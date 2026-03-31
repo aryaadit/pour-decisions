@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import { useHaptics } from '@/hooks/useHaptics';
-import { toast } from 'sonner';
 
 export interface LookupInfo {
   tastingNotes?: string | null;
@@ -24,9 +23,6 @@ export function LookupResultsPanel({ lookupInfo, onApply }: LookupResultsPanelPr
   const handleApply = (field: 'notes' | 'price' | 'all') => {
     impact(ImpactStyle.Light);
     onApply(field);
-    if (field === 'all') {
-      toast.success('Applied drink info');
-    }
   };
 
   return (

@@ -15,7 +15,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GlassWater, Mail, Lock, Loader2, Eye, EyeOff, AtSign, Check, X } from 'lucide-react';
-import { toast } from 'sonner';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +32,7 @@ const Auth = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [serverError, setServerError] = useState<{ field: 'email' | 'password' | 'general'; message: string } | null>(null);
   const [resetSent, setResetSent] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const [signupStep, setSignupStep] = useState<'auth' | 'carousel' | 'profile-setup'>('auth');
 
   // Profile setup state
@@ -41,6 +41,7 @@ const Auth = () => {
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileSetupError, setProfileSetupError] = useState<string | null>(null);
 
   const { signIn, signUp, resetPassword, user, isLoading } = useAuth();
   const { trackEvent } = useAnalytics();
@@ -108,10 +109,10 @@ const Auth = () => {
       try {
         const { error } = await resetPassword(email);
         if (error) {
-          toast.error('Reset failed', { description: error.message });
+          setServerError({ field: 'general', message: error.message });
         } else {
           setResetSent(true);
-          toast.success('Check your email', { description: 'We sent you a password reset link.' });
+          setResetEmailSent(true);
         }
       } finally {
         setIsSubmitting(false);
@@ -131,11 +132,10 @@ const Auth = () => {
           if (error.message.includes('Invalid login credentials')) {
             setServerError({ field: 'password', message: 'Invalid email or password' });
           } else {
-            toast.error('Login failed', { description: error.message });
+            setServerError({ field: 'general', message: error.message });
           }
         } else {
           trackEvent('sign_in', 'action', { method: 'email' });
-          toast.success('Welcome back!', { description: 'You have successfully logged in.' });
         }
       } else {
         const { error } = await signUp(email, password);
@@ -144,7 +144,7 @@ const Auth = () => {
           if (error.message.includes('User already registered')) {
             setServerError({ field: 'email', message: 'An account with this email already exists' });
           } else {
-            toast.error('Sign up failed', { description: error.message });
+            setServerError({ field: 'general', message: error.message });
           }
         } else {
           trackEvent('sign_up', 'action', { method: 'email' });
@@ -160,6 +160,7 @@ const Auth = () => {
     if (!isUsernameAvailable || !isValidUsernameFormat) return;
 
     setIsSavingProfile(true);
+    setProfileSetupError(null);
     const { error } = await updateProfile({
       username,
       bio: bio.trim() || null,
@@ -169,12 +170,11 @@ const Auth = () => {
     });
 
     if (error) {
-      toast.error('Failed to save profile');
+      setProfileSetupError('Failed to save profile. Please try again.');
       setIsSavingProfile(false);
       return;
     }
 
-    toast.success('Profile set up successfully!');
     navigate('/');
   };
 
@@ -265,6 +265,10 @@ const Auth = () => {
                   {bio.length}/160
                 </p>
               </div>
+
+              {profileSetupError && (
+                <p className="text-sm text-destructive">{profileSetupError}</p>
+              )}
 
               <Button
                 variant="glow"
@@ -408,6 +412,14 @@ const Auth = () => {
                       Forgot password?
                     </button>
                   </div>
+                )}
+
+                {serverError?.field === 'general' && (
+                  <p className="text-sm text-destructive">{serverError.message}</p>
+                )}
+
+                {resetEmailSent && mode === 'forgot' && (
+                  <p className="text-sm text-green-500">Check your email for a reset link.</p>
                 )}
 
                 <Button

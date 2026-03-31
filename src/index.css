@@ -382,13 +382,3 @@ nav[class*="fixed"][class*="bottom"] {
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
 }
-
-/* Toast mobile styling */
-[data-sonner-toaster] {
-  --width: calc(100% - 2rem) !important;
-  max-width: 400px !important;
-}
-
-[data-sonner-toast] {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-}

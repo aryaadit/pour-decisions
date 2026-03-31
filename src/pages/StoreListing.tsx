@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
 
 const SHORT_DESCRIPTION = "Your personal drink journal. Snap, identify, rate & discover favorite drinks.";
 
@@ -79,7 +78,6 @@ export default function StoreListing() {
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
-    toast.success('Copied to clipboard');
     setTimeout(() => setCopiedField(null), 2000);
   };
 

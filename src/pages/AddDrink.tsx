@@ -18,7 +18,6 @@ import { useDrinks } from '@/hooks/useDrinks';
 import * as drinkService from '@/services/drinkService';
 import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { Loader2, Search, Sparkles, ChevronDown, ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
 import { PhotoCaptureArea } from '@/components/drink-form/PhotoCaptureArea';
 import { detectDrinkType } from '@/lib/drinkTypeKeywords';
 
@@ -55,6 +54,8 @@ export default function AddDrink() {
     drinkType?: string;
   } | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const userSetTypeRef = useRef(false);
 
   // Load edit drink data
@@ -80,6 +81,7 @@ export default function AddDrink() {
     impact(ImpactStyle.Light);
     setIsLookingUp(true);
     setLookupInfo(null);
+    setLookupError(null);
 
     try {
       const data = await drinkService.lookupDrink({
@@ -123,11 +125,10 @@ export default function AddDrink() {
         }
 
         setLookupInfo(info);
-        toast.success(`Identified: ${info.drinkName || 'drink'}!`);
       }
     } catch (err) {
       console.error('Lookup error:', err);
-      toast.error('Failed to identify drink');
+      setLookupError('Failed to identify drink. Try again or enter details manually.');
     } finally {
       setIsLookingUp(false);
     }
@@ -152,13 +153,13 @@ export default function AddDrink() {
     const hasImage = useImage && imageUrl;
 
     if (!hasName && !hasImage) {
-      toast.error('Enter a drink name or add a photo first');
       return;
     }
 
     impact(ImpactStyle.Light);
     setIsLookingUp(true);
     setLookupInfo(null);
+    setLookupError(null);
 
     try {
       const data = await drinkService.lookupDrink({
@@ -184,12 +185,10 @@ export default function AddDrink() {
             setType(info.drinkType);
           }
         }
-
-        toast.success(useImage ? 'Identified drink from photo!' : 'Found drink information!');
       }
     } catch (err) {
       console.error('Lookup error:', err);
-      toast.error('Failed to look up drink info');
+      setLookupError('Failed to look up drink info. Try again or enter details manually.');
     } finally {
       setIsLookingUp(false);
     }
@@ -215,7 +214,6 @@ export default function AddDrink() {
     if (field === 'all') {
       setDetailsOpen(true);
       setLookupInfo(null);
-      toast.success('Applied drink info');
     }
   };
 
@@ -240,6 +238,7 @@ export default function AddDrink() {
     }
 
     setIsSaving(true);
+    setSubmitError(null);
     notification(NotificationType.Success);
 
     const drinkData = {
@@ -256,26 +255,21 @@ export default function AddDrink() {
     try {
       if (editId) {
         await updateDrink(editId, drinkData);
-        toast.success('Drink updated');
         navigate(-1);
       } else {
         const result = await addDrink(drinkData);
 
         if (result && 'isDuplicate' in result && result.isDuplicate) {
-          toast.error('This drink already exists in your collection', {
-            description: 'You can edit the existing drink or use a different name.',
-            duration: 5000,
-          });
+          setSubmitError('This drink already exists in your collection. You can edit the existing drink or use a different name.');
           setIsSaving(false);
           return;
         }
 
-        toast.success('Drink added');
         navigate(-1);
       }
     } catch (error) {
       console.error('Error saving drink:', error);
-      toast.error('Failed to save drink');
+      setSubmitError('Failed to save drink. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -357,6 +351,9 @@ export default function AddDrink() {
             </div>
             {nameError && (
               <p className="text-sm text-destructive">Name is required</p>
+            )}
+            {lookupError && (
+              <p className="text-sm text-destructive">{lookupError}</p>
             )}
           </div>
 
@@ -497,6 +494,9 @@ export default function AddDrink() {
 
         {/* Footer */}
         <div className="border-t border-border p-4 pb-28">
+          {submitError && (
+            <p className="text-sm text-destructive mb-3">{submitError}</p>
+          )}
           <div className="flex gap-3">
             <Button
               type="button"

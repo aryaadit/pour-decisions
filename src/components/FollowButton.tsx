@@ -6,7 +6,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useHaptics } from '@/hooks/useHaptics';
 import { ResponsiveModal } from '@/components/ResponsiveModal';
 import { ImpactStyle } from '@capacitor/haptics';
-import { toast } from 'sonner';
 
 interface FollowButtonProps {
   userId: string;
@@ -36,14 +35,7 @@ export function FollowButton({
 
   const handleFollowClick = async () => {
     impact(ImpactStyle.Light);
-    const { error, result } = await follow(userId);
-    if (error) {
-      toast.error('Failed to follow');
-    } else if (result === 'requested') {
-      toast.success(`Follow request sent to ${displayName}`);
-    } else {
-      toast.success(`Following ${displayName}`);
-    }
+    await follow(userId);
   };
 
   const handleConfirmAction = async () => {
@@ -51,19 +43,9 @@ export function FollowButton({
     setConfirmOpen(false);
 
     if (confirmAction === 'unfollow') {
-      const { error } = await unfollow(userId);
-      if (error) {
-        toast.error('Failed to unfollow');
-      } else {
-        toast.success(`Unfollowed ${displayName}`);
-      }
+      await unfollow(userId);
     } else {
-      const { error } = await cancelRequest(userId);
-      if (error) {
-        toast.error('Failed to cancel request');
-      } else {
-        toast.success('Follow request cancelled');
-      }
+      await cancelRequest(userId);
     }
   };
 

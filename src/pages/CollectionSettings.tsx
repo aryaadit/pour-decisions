@@ -25,7 +25,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Loader2, Share2, Settings } from 'lucide-react';
-import { toast } from 'sonner';
 
 const COLORS = [
   '#8B5CF6', '#EC4899', '#EF4444', '#F97316', '#EAB308',
@@ -45,6 +44,8 @@ const CollectionSettings = () => {
   const [isPublic, setIsPublic] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const collection = collections.find((c) => c.id === id);
 
@@ -68,6 +69,7 @@ const CollectionSettings = () => {
     if (!collection || !name.trim()) return;
 
     setIsSaving(true);
+    setUpdateError(null);
     const success = await updateCollection(collection.id, {
       name: name.trim(),
       description: description.trim() || undefined,
@@ -79,22 +81,21 @@ const CollectionSettings = () => {
 
     if (success) {
       refetch();
-      toast.success('Collection updated');
       navigate(`/collections/${collection.id}`);
     } else {
-      toast.error('Failed to update collection');
+      setUpdateError('Failed to update collection. Please try again.');
     }
   };
 
   const handleDelete = async () => {
     if (!collection) return;
 
+    setDeleteError(null);
     const success = await deleteCollection(collection.id);
     if (success) {
-      toast.success('Collection deleted');
       navigate('/collections');
     } else {
-      toast.error('Failed to delete collection');
+      setDeleteError('Failed to delete collection. Please try again.');
     }
   };
 
@@ -106,7 +107,6 @@ const CollectionSettings = () => {
     if (!collection) return;
     const shareUrl = `${window.location.origin}/share/${collection.shareId}`;
     navigator.clipboard.writeText(shareUrl);
-    toast.success('Share link copied!');
   };
 
   if (!collection || authLoading) {
@@ -207,6 +207,9 @@ const CollectionSettings = () => {
         )}
 
         {/* Save */}
+        {updateError && (
+          <p className="text-sm text-destructive">{updateError}</p>
+        )}
         <Button
           onClick={handleSave}
           disabled={!name.trim() || isSaving}
@@ -217,6 +220,9 @@ const CollectionSettings = () => {
         </Button>
 
         {/* Delete */}
+        {deleteError && (
+          <p className="text-sm text-destructive">{deleteError}</p>
+        )}
         <Button
           variant="outline"
           onClick={() => setShowDeleteConfirm(true)}

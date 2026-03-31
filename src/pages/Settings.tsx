@@ -8,7 +8,6 @@ import { useCustomDrinkTypes } from '@/hooks/useCustomDrinkTypes';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import { toast } from 'sonner';
 import { DrinkType, builtInDrinkTypes, drinkTypeLabels, drinkTypeIcons } from '@/types/drink';
 import { SortOrder, sortOrderLabels, ThemePreference } from '@/types/profile';
 import { Button } from '@/components/ui/button';
@@ -70,6 +69,9 @@ const Settings = () => {
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null);
 
   const drinkCountByType = drinks.reduce<Record<string, number>>((acc, d) => {
     acc[d.type] = (acc[d.type] || 0) + 1;
@@ -147,11 +149,9 @@ const Settings = () => {
     if (editingDrinkType) {
       const result = await updateCustomType(editingDrinkType.id, { name, icon, color });
       if (result?.error) return { error: result.error };
-      toast.success('Drink type updated');
     } else {
       const result = await addCustomType(name, icon, color);
       if (result?.error) return { error: result.error };
-      toast.success('Drink type added');
     }
     return null;
   };
@@ -161,38 +161,26 @@ const Settings = () => {
     if (count > 0) {
       setDeleteWarningType(ct);
     } else {
-      const result = await deleteCustomType(ct.id);
-      if (result?.error) {
-        toast.error('Failed to delete', { description: result.error });
-      } else {
-        toast.success('Drink type removed');
-      }
+      await deleteCustomType(ct.id);
     }
   };
 
   const confirmDeleteDrinkType = async () => {
     if (!deleteWarningType) return;
-    const result = await deleteCustomType(deleteWarningType.id);
-    if (result?.error) {
-      toast.error('Failed to delete', { description: result.error });
-    } else {
-      toast.success('Drink type removed', {
-        description: `Drinks will keep their type but won't have a filter chip.`,
-      });
-    }
+    await deleteCustomType(deleteWarningType.id);
     setDeleteWarningType(null);
   };
 
   const handleSave = async () => {
     // Validate username before saving
     if (usernameError) {
-      toast.error('Invalid username', { description: usernameError });
       return;
     }
 
     setIsSaving(true);
+    setSaveError(null);
     const trimmedUsername = username.trim().toLowerCase() || null;
-    
+
     const { error } = await updateProfile({
       displayName: displayName || null,
       username: trimmedUsername,
@@ -205,7 +193,7 @@ const Settings = () => {
     setIsSaving(false);
 
     if (error) {
-      toast.error('Error', { description: 'Failed to save settings.' });
+      setSaveError('Failed to save settings. Please try again.');
     } else {
       trackEvent('settings_saved', 'action', {
         theme_changed: themePreference !== profile?.themePreference,
@@ -214,7 +202,6 @@ const Settings = () => {
         username_changed: trimmedUsername !== profile?.username,
       });
       await refetch();
-      toast.success('Settings saved', { description: 'Your preferences have been updated.' });
     }
   };
 
@@ -226,8 +213,10 @@ const Settings = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setAvatarError(null);
+
     if (!file.type.startsWith('image/')) {
-      toast.error('Invalid file', { description: 'Please select an image file.' });
+      setAvatarError('Please select an image file.');
       return;
     }
 
@@ -236,9 +225,7 @@ const Settings = () => {
     setIsUploading(false);
 
     if (error) {
-      toast.error('Upload failed', { description: 'Failed to upload avatar.' });
-    } else {
-      toast.success('Avatar updated', { description: 'Your profile picture has been changed.' });
+      setAvatarError('Failed to upload avatar. Please try again.');
     }
   };
 
@@ -302,6 +289,9 @@ const Settings = () => {
                   />
                 </div>
                 <div className="flex-1">
+                  {avatarError && (
+                    <p className="text-sm text-destructive mb-1">{avatarError}</p>
+                  )}
                   <Label htmlFor="displayName">Display Name</Label>
                   <Input
                     id="displayName"
@@ -579,12 +569,11 @@ const Settings = () => {
             <CardDescription>Learn how to use the app or share feedback</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 showTour();
                 navigate('/');
-                toast.success('Tour started!', { description: 'Follow the tips to learn the app.' });
               }}
               className="w-full"
             >
@@ -647,6 +636,9 @@ const Settings = () => {
                 autoCorrect="off"
               />
             </div>
+            {deleteAccountError && (
+              <p className="text-sm text-destructive px-1">{deleteAccountError}</p>
+            )}
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
@@ -654,16 +646,16 @@ const Settings = () => {
                 onClick={async (e) => {
                   e.preventDefault();
                   setIsDeleting(true);
+                  setDeleteAccountError(null);
                   const { error } = await deleteAccount();
                   if (error) {
                     setIsDeleting(false);
-                    toast.error('Failed to delete account', { description: 'Please try again or contact support.' });
+                    setDeleteAccountError('Failed to delete account. Please try again or contact support.');
                     return;
                   }
                   queryClient.clear();
                   await signOut();
                   navigate('/auth');
-                  toast.success('Account deleted', { description: 'Your account and all data have been removed.' });
                 }}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
@@ -674,7 +666,10 @@ const Settings = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        <Button onClick={handleSave} disabled={isSaving} className="w-full">
+        {saveError && (
+          <p className="text-sm text-destructive">{saveError}</p>
+        )}
+        <Button onClick={handleSave} disabled={isSaving || !!usernameError} className="w-full">
           {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
           Save Changes
         </Button>

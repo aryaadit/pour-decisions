@@ -10,7 +10,6 @@ import { CreateCollectionDialog } from '@/components/CreateCollectionDialog';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Plus, FolderPlus, Loader2, FolderOpen } from 'lucide-react';
-import { toast } from 'sonner';
 
 const Collections = () => {
   const navigate = useNavigate();
@@ -38,13 +37,7 @@ const Collections = () => {
     coverColor?: string
   ) => {
     const collection = await createCollection(name, description, icon, coverColor);
-    if (collection) {
-      toast.success(`Created "${name}"`);
-      return collection;
-    } else {
-      toast.error('Failed to create collection');
-      return null;
-    }
+    return collection || null;
   };
 
   return (

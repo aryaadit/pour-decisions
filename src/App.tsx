@@ -1,5 +1,4 @@
 import { useEffect, lazy, Suspense } from "react";
-import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
@@ -9,7 +8,6 @@ import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import { OnboardingProvider } from "@/hooks/useOnboarding";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "@/components/BottomNavigation";
-import { OfflineBanner } from "@/components/OfflineBanner";
 import { queryClient, setupCachePersistence } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 
@@ -105,8 +103,6 @@ const App = () => {
         <ThemeProvider>
           <AuthProvider>
             <OnboardingProvider>
-              <Toaster />
-              <OfflineBanner />
               <BrowserRouter>
                 <AnalyticsProvider>
                   <AppRoutes />

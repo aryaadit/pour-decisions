@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
 import { StorageImage } from '@/components/StorageImage';
 import { Button } from '@/components/ui/button';
 import { Camera, ImagePlus, Loader2, RotateCcw, Upload } from 'lucide-react';
@@ -7,7 +7,6 @@ import { Capacitor } from '@capacitor/core';
 import { useAuth } from '@/hooks/useAuth';
 import { useHaptics } from '@/hooks/useHaptics';
 import * as drinkService from '@/services/drinkService';
-import { toast } from 'sonner';
 
 interface PhotoCaptureAreaProps {
   imageUrl: string | undefined;
@@ -30,16 +29,18 @@ export function PhotoCaptureArea({
   const { impact, ImpactStyle } = useHaptics();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isNative = Capacitor.isNativePlatform();
+  const [error, setError] = useState<string | null>(null);
 
   const uploadFile = async (file: File | Blob) => {
     if (!user) return;
+    setError(null);
     onUploadingChange(true);
     try {
       const storagePath = await drinkService.uploadDrinkImage(user.id, file);
       onImageChange(storagePath);
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      setError('Failed to upload image');
     } finally {
       onUploadingChange(false);
     }
@@ -53,6 +54,7 @@ export function PhotoCaptureArea({
 
   const handleTakePhoto = async () => {
     impact(ImpactStyle.Light);
+    setError(null);
     if (isCameraActiveRef) isCameraActiveRef.current = true;
     try {
       const photo = await takePhoto();
@@ -60,9 +62,9 @@ export function PhotoCaptureArea({
         const blob = dataUrlToBlob(photo.dataUrl);
         await uploadFile(blob);
       }
-    } catch (error: any) {
-      console.error('Camera error:', error);
-      toast.error(error?.message || 'Failed to take photo. Please check camera permissions.');
+    } catch (err: any) {
+      console.error('Camera error:', err);
+      setError(err?.message || 'Failed to take photo. Please check camera permissions.');
     } finally {
       if (isCameraActiveRef) {
         setTimeout(() => {
@@ -74,6 +76,7 @@ export function PhotoCaptureArea({
 
   const handlePickFromGallery = async () => {
     impact(ImpactStyle.Light);
+    setError(null);
     if (isCameraActiveRef) isCameraActiveRef.current = true;
     try {
       const photo = await pickFromGallery();
@@ -81,9 +84,9 @@ export function PhotoCaptureArea({
         const blob = dataUrlToBlob(photo.dataUrl);
         await uploadFile(blob);
       }
-    } catch (error: any) {
-      console.error('Gallery error:', error);
-      toast.error(error?.message || 'Failed to access photos. Please check photo library permissions.');
+    } catch (err: any) {
+      console.error('Gallery error:', err);
+      setError(err?.message || 'Failed to access photos. Please check photo library permissions.');
     } finally {
       if (isCameraActiveRef) {
         setTimeout(() => {
@@ -185,6 +188,7 @@ export function PhotoCaptureArea({
             </Button>
           )}
         </div>
+        {error && <p className="text-sm text-destructive text-center mt-2">{error}</p>}
       </div>
       <input
         ref={fileInputRef}

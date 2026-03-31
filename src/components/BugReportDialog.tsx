@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import * as storageService from '@/services/storageService';
 import * as adminService from '@/services/adminService';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -61,6 +60,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!isControlled) {
@@ -83,13 +83,13 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+      setFormError('Please select an image file');
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
+      setFormError('Image must be less than 5MB');
       return;
     }
 
@@ -123,13 +123,15 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    setFormError(null);
+
     if (!user) {
-      toast.error('You must be logged in to submit feedback');
+      setFormError('You must be logged in to submit feedback');
       return;
     }
 
     if (!title.trim() || !description.trim()) {
-      toast.error('Please fill in all fields');
+      setFormError('Please fill in all required fields');
       return;
     }
 
@@ -141,7 +143,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
       if (selectedImage) {
         imageUrl = await uploadImage(selectedImage);
         if (!imageUrl) {
-          toast.error('Failed to upload screenshot');
+          setFormError('Failed to upload screenshot');
           setIsSubmitting(false);
           return;
         }
@@ -155,16 +157,10 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
         imageUrl,
       );
 
-      toast.success('Feedback submitted', {
-        description: 'Thank you for your input!',
-      });
-      
       handleOpenChange(false);
     } catch (error) {
       console.error('Error submitting bug report:', error);
-      toast.error('Failed to submit feedback', {
-        description: 'Please try again later.',
-      });
+      setFormError('Failed to submit feedback. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -251,6 +247,7 @@ export function BugReportDialog({ trigger, open: controlledOpen, onOpenChange }:
         )}
       </div>
 
+      {formError && <p className="text-sm text-destructive">{formError}</p>}
       <div className="flex justify-end gap-2 pt-2">
         <Button
           type="button"
