@@ -65,15 +65,14 @@ const BottomNavigation = ({ onSearchFocus }: BottomNavigationProps) => {
               <button
                 key={tab.id}
                 onClick={() => handleTabPress(tab)}
-                className="flex flex-col items-center justify-center relative -mt-5"
+                className="flex flex-col items-center justify-center min-w-[64px] min-h-[48px] active:scale-95 transition-transform"
               >
-                {/* Elevated pill button like United's Travel */}
-                <div className="flex flex-col items-center bg-primary rounded-full px-5 py-2.5 shadow-lg shadow-primary/30 active:scale-95 transition-transform">
+                <div className="flex items-center justify-center bg-primary rounded-full w-10 h-10">
                   <Icon className="w-5 h-5 text-primary-foreground" />
-                  <span className="text-[10px] font-semibold text-primary-foreground mt-0.5">
-                    {tab.label}
-                  </span>
                 </div>
+                <span className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                  {tab.label}
+                </span>
               </button>
             );
           }
