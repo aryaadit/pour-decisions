@@ -148,52 +148,6 @@ export default function AddDrink() {
     }
   }, []);
 
-  const handleLookup = async (useImage = false) => {
-    const hasName = name.trim();
-    const hasImage = useImage && imageUrl;
-
-    if (!hasName && !hasImage) {
-      return;
-    }
-
-    impact(ImpactStyle.Light);
-    setIsLookingUp(true);
-    setLookupInfo(null);
-    setLookupError(null);
-
-    try {
-      const data = await drinkService.lookupDrink({
-        drinkName: hasName ? name.trim() : undefined,
-        drinkType: type,
-        brand: brand.trim() || undefined,
-        imageUrl: hasImage ? imageUrl : undefined,
-      });
-
-      if (data?.success && data?.data) {
-        notification(NotificationType.Success);
-        const info = data.data;
-        setLookupInfo(info);
-
-        if (useImage) {
-          if (info.drinkName && !name.trim()) {
-            setName(info.drinkName);
-          }
-          if (info.drinkBrand && !brand.trim()) {
-            setBrand(info.drinkBrand);
-          }
-          if (info.drinkType && !userSetTypeRef.current) {
-            setType(info.drinkType);
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Lookup error:', err);
-      setLookupError('Failed to look up drink info. Try again or enter details manually.');
-    } finally {
-      setIsLookingUp(false);
-    }
-  };
-
   const applyLookupInfo = (field: 'notes' | 'price' | 'all') => {
     impact(ImpactStyle.Light);
     if (!lookupInfo) return;
@@ -321,34 +275,17 @@ export default function AddDrink() {
           {/* Name with Lookup */}
           <div className="space-y-2">
             <Label htmlFor="name">Name *</Label>
-            <div className="flex gap-2 items-center">
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => { setName(e.target.value); if (nameError) setNameError(false); }}
-                onBlur={handleNameBlur}
-                placeholder="e.g., Lagavulin 16"
-                required
-                autoCapitalize="words"
-                enterKeyHint="next"
-                className={`bg-secondary/50 flex-1 h-12 text-base${nameError ? ' border-destructive' : ''}`}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => handleLookup(!!imageUrl)}
-                disabled={isLookingUp || (!name.trim() && !imageUrl)}
-                title={imageUrl ? "Identify drink from photo" : "Look up drink info"}
-                className="min-w-[44px] min-h-[44px]"
-              >
-                {isLookingUp ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => { setName(e.target.value); if (nameError) setNameError(false); }}
+              onBlur={handleNameBlur}
+              placeholder="e.g., Lagavulin 16"
+              required
+              autoCapitalize="words"
+              enterKeyHint="next"
+              className={`bg-secondary/50 h-12 text-base${nameError ? ' border-destructive' : ''}`}
+            />
             {nameError && (
               <p className="text-sm text-destructive">Name is required</p>
             )}

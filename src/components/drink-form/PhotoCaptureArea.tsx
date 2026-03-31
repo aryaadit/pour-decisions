@@ -188,6 +188,7 @@ export function PhotoCaptureArea({
             </Button>
           )}
         </div>
+        <p className="text-xs text-muted-foreground text-center">Snap a photo and AI will fill in the details for you</p>
         {error && <p className="text-sm text-destructive text-center mt-2">{error}</p>}
       </div>
       <input

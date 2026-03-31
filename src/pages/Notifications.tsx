@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Bell, BellOff } from 'lucide-react';
+import { Bell, BellOff, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useFollowRequests } from '@/hooks/useFollowRequests';
@@ -27,6 +27,8 @@ export default function Notifications() {
     loadMore,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
+    clearAllNotifications,
     refetch,
   } = useNotifications();
   const { pendingRequests } = useFollowRequests();
@@ -54,15 +56,27 @@ export default function Notifications() {
         icon={<Bell className="h-5 w-5" />}
         showBack={true}
         rightContent={
-          unreadCount > 0 ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => markAllAsRead()}
-              className="text-xs text-muted-foreground"
-            >
-              Mark all read
-            </Button>
+          notifications.length > 0 ? (
+            <div className="flex items-center gap-1">
+              {unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => markAllAsRead()}
+                  className="text-xs text-muted-foreground"
+                >
+                  Mark all read
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => clearAllNotifications()}
+                className="text-muted-foreground min-w-[44px] min-h-[44px]"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -115,6 +129,7 @@ export default function Notifications() {
                   key={notification.id}
                   notification={notification}
                   onRead={markAsRead}
+                  onDelete={deleteNotification}
                 />
               ))}
 

@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
+import { AppNotification } from '@/types/social';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { queryKeys } from '@/lib/queryKeys';
@@ -228,6 +229,63 @@ export function useNotifications() {
     },
   });
 
+  const deleteNotificationMutation = useMutation({
+    mutationFn: (notificationId: string) =>
+      notificationService.deleteNotification(notificationId),
+    onMutate: async (notificationId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.list(user!.id) });
+
+      // Find the notification to check if it was unread
+      const wasUnread = notifications.find((n) => n.id === notificationId && !n.isRead);
+
+      // Optimistically remove from list
+      queryClient.setQueryData(
+        queryKeys.notifications.list(user!.id),
+        (old: typeof data) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: { notifications: AppNotification[]; nextCursor: string | null }) => ({
+              ...page,
+              notifications: page.notifications.filter((n: AppNotification) => n.id !== notificationId),
+            })),
+          };
+        }
+      );
+
+      // Decrement unread count if it was unread
+      if (wasUnread) {
+        queryClient.setQueryData<number>(
+          queryKeys.notifications.unreadCount(user!.id),
+          (old) => Math.max((old ?? 1) - 1, 0)
+        );
+      }
+    },
+  });
+
+  const clearAllNotificationsMutation = useMutation({
+    mutationFn: () => notificationService.clearAllNotifications(user!.id),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.list(user!.id) });
+
+      // Optimistically clear all
+      queryClient.setQueryData(
+        queryKeys.notifications.list(user!.id),
+        (old: typeof data) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: [{ notifications: [], nextCursor: null }],
+          };
+        }
+      );
+      queryClient.setQueryData<number>(
+        queryKeys.notifications.unreadCount(user!.id),
+        0
+      );
+    },
+  });
+
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -242,6 +300,8 @@ export function useNotifications() {
     loadMore,
     markAsRead: (id: string) => markAsReadMutation.mutateAsync(id),
     markAllAsRead: () => markAllAsReadMutation.mutateAsync(),
+    deleteNotification: (id: string) => deleteNotificationMutation.mutateAsync(id),
+    clearAllNotifications: () => clearAllNotificationsMutation.mutateAsync(),
     refetch,
   };
 }
