@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pour Decisions — Test Checklist</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f9f9f7;
+      --surface: #ffffff;
+      --border: #e5e4de;
+      --border-strong: #cccbc4;
+      --text: #1a1a18;
+      --text-muted: #6b6a64;
+      --text-faint: #9b9a93;
+      --green: #1D9E75;
+      --green-bg: #EAF3DE;
+      --green-text: #3B6D11;
+      --red-bg: #FCEBEB;
+      --red-text: #A32D2D;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a18;
+        --surface: #242422;
+        --border: #2e2e2b;
+        --border-strong: #3e3e3a;
+        --text: #f0efea;
+        --text-muted: #9b9a93;
+        --text-faint: #6b6a64;
+        --green-bg: #173404;
+        --green-text: #C0DD97;
+        --red-bg: #501313;
+        --red-text: #F7C1C1;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .container { max-width: 680px; margin: 0 auto; }
+
+    header { margin-bottom: 2rem; }
+    header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; }
+    header p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+    .progress-wrap { margin-bottom: 2rem; }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+    .progress-track { background: var(--border); border-radius: 999px; height: 5px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--green); border-radius: 999px; transition: width 0.3s ease; }
+
+    .actions { display: flex; gap: 8px; margin-bottom: 2rem; flex-wrap: wrap; }
+    .btn { font-size: 12px; padding: 6px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted); cursor: pointer; font-family: inherit; transition: background 0.15s; }
+    .btn:hover { background: var(--border); }
+    .btn-danger { border-color: #f09595; color: var(--red-text); }
+    .btn-danger:hover { background: var(--red-bg); }
+
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1rem; overflow: hidden; }
+
+    .section-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+    .section-header:hover { background: var(--bg); }
+    .section-left { display: flex; align-items: center; gap: 10px; }
+    .section-title { font-size: 14px; font-weight: 500; }
+    .section-count { font-size: 11px; color: var(--text-faint); }
+    .section-chevron { font-size: 12px; color: var(--text-faint); transition: transform 0.2s; }
+    .section.collapsed .section-chevron { transform: rotate(-90deg); }
+    .section.collapsed .section-body { display: none; }
+
+    .badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 999px; }
+
+    .section-body { padding: 0 16px; }
+
+    .item { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+    .item:last-child { border-bottom: none; }
+    .item:hover .checkbox { border-color: var(--green); }
+
+    .checkbox { width: 18px; height: 18px; min-width: 18px; border-radius: 4px; border: 1.5px solid var(--border-strong); background: var(--surface); display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: background 0.15s, border-color 0.15s; }
+    .checkbox.checked { background: var(--green); border-color: var(--green); }
+    .checkmark { display: none; }
+    .checkbox.checked .checkmark { display: block; }
+
+    .item-content { flex: 1; }
+    .item-label { font-size: 13px; line-height: 1.45; color: var(--text); }
+    .item-label.done { color: var(--text-faint); text-decoration: line-through; }
+    .item-note { font-size: 11px; color: var(--text-faint); margin-top: 3px; line-height: 1.4; }
+    .bug-pill { display: inline-block; font-size: 10px; font-weight: 500; background: var(--red-bg); color: var(--red-text); padding: 1px 6px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+
+    .last-reset { font-size: 11px; color: var(--text-faint); margin-top: 1.5rem; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Pour Decisions — Release Checklist</h1>
+    <p>Run before every build push. ~15 min. Progress saved in browser.</p>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="prog-text">0 of 0 checked</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" onclick="expandAll()">Expand all</button>
+    <button class="btn" onclick="collapseAll()">Collapse all</button>
+    <button class="btn btn-danger" onclick="resetAll()">Reset checklist</button>
+  </div>
+
+  <div id="checklist"></div>
+  <div class="last-reset" id="last-reset"></div>
+</div>
+
+<script>
+const SECTIONS = [
+  {
+    title: "Auth & login",
+    badge: { label: "Auth", bg: "#E6F1FB", color: "#0C447C", darkBg: "#042C53", darkColor: "#B5D4F4" },
+    items: [
+      { label: "Tap into email input — keyboard appears on device", note: "Known bug fix: outer div blur handler was intercepting taps. Fixed via e.target === e.currentTarget check.", bug: true },
+      { label: "Tap into password input — keyboard appears on device" },
+      { label: "Submit with empty fields — validation errors show" },
+      { label: "Login with valid credentials — navigates to home" },
+      { label: "Login with wrong password — shows error, doesn't crash" },
+      { label: "Forgot password — email received, reset page loads at onpalate.com/pour-decisions/reset-password" },
+      { label: "Password reset — can set new password and log back in" },
+    ]
+  },
+  {
+    title: "Add drink",
+    badge: { label: "Add", bg: "#EAF3DE", color: "#3B6D11", darkBg: "#173404", darkColor: "#C0DD97" },
+    items: [
+      { label: "Open Add screen — all fields are editable from the start" },
+      { label: "AI hint text visible below camera/gallery buttons" },
+      { label: "AI search button is NOT present next to the name field", note: "Removed during cleanup." },
+      { label: "'Apply to all' prompt is NOT present after AI processing", note: "Removed during cleanup." },
+      { label: "Take photo — AI autofills name, type, tasting notes, price range" },
+      { label: "Choose from gallery — AI autofills correctly" },
+      { label: "Manual entry without photo — all fields work" },
+      { label: "Submit drink — appears in your drink list" },
+      { label: "Submit drink — appears in followers' feeds" },
+    ]
+  },
+  {
+    title: "Feed & discovery",
+    badge: { label: "Feed", bg: "#EEEDFE", color: "#3C3489", darkBg: "#26215C", darkColor: "#CECBF6" },
+    items: [
+      { label: "Feed loads — shows drinks from followed users" },
+      { label: "Trending section loads with drink name, type, and rating" },
+      { label: "Scan menu icon visible next to search bar in Feed" },
+      { label: "Scan menu — camera and gallery options work" },
+      { label: "Scan menu — returns ranked recommendations (up to 5)" },
+      { label: "Scan menu — shows correct personalization tier label (general / light profile / personalized)", note: "Threshold: <5 drinks = general, 5–14 = light, 15+ = personalized." },
+      { label: "Pull to refresh — feed reloads" },
+      { label: "Empty state shows correctly when following nobody" },
+    ]
+  },
+  {
+    title: "Notifications",
+    badge: { label: "Notifications", bg: "#FAEEDA", color: "#854F0B", darkBg: "#412402", darkColor: "#FAC775" },
+    items: [
+      { label: "Bell icon shows unread badge when new notifications exist" },
+      { label: "Badge clears after opening notifications screen" },
+      { label: "New follow request — notification appears in real time", note: "Powered by Supabase Realtime. Polling was replaced — verify no regression." },
+      { label: "Follow request accepted — notification appears on requester's device" },
+      { label: "New follower (public profile) — notification appears" },
+      { label: "Swipe to dismiss single notification — removed from list" },
+      { label: "'Clear all' button removes all notifications" },
+      { label: "'Clear all' button NOT visible when notification list is empty" },
+    ]
+  },
+  {
+    title: "Social & follow system",
+    badge: { label: "Social", bg: "#FBEAF0", color: "#72243E", darkBg: "#4B1528", darkColor: "#F4C0D1" },
+    items: [
+      { label: "Follow a public profile — instant follow, button shows 'Following'", note: "Known bug fix: was ignoring profile visibility and instant-following everyone.", bug: true },
+      { label: "Follow a private/followers-only profile — button shows 'Requested'" },
+      { label: "Accept follow request on device A — button on device B updates to 'Following' quickly", note: "Known bug fix: was slow. Fixed by wiring follow_accepted notification to query invalidation.", bug: true },
+      { label: "Follower count matches on own profile vs. when others view your profile", note: "Known bug fix: separate queries hit different data sources. Fixed with single source of truth.", bug: true },
+      { label: "Unfollow — button resets correctly to 'Follow'" },
+      { label: "User search — finding people by username works" },
+      { label: "Empty state shows on Following list when following nobody" },
+    ]
+  },
+  {
+    title: "Navigation & tab bar",
+    badge: { label: "Nav", bg: "#F1EFE8", color: "#444441", darkBg: "#2C2C2A", darkColor: "#D3D1C7" },
+    items: [
+      { label: "Add button sits flush in the tab bar — no excessive lift" },
+      { label: "'Add' label sits below the circle at the same baseline as other tab labels" },
+      { label: "Home, Feed, Collections, Profile tabs navigate correctly" },
+      { label: "Active tab highlights correctly" },
+      { label: "Back swipe (iOS) works without re-triggering data loads" },
+      { label: "Safe area insets respected on iPhone with home indicator" },
+    ]
+  },
+  {
+    title: "Performance & stability",
+    badge: { label: "Perf", bg: "#FCEBEB", color: "#791F1F", darkBg: "#501313", darkColor: "#F7C1C1" },
+    items: [
+      { label: "Switching tabs doesn't show loading spinner on already-loaded data", note: "Known bug fix: React Query stale times were at defaults. Fixed.", bug: true },
+      { label: "Drink list scrolls without jank" },
+      { label: "Feed scrolls without jank" },
+      { label: "Drink photos load progressively — no layout shifts" },
+      { label: "App recovers gracefully after backgrounding and returning" },
+    ]
+  }
+];
+
+const KEY = 'pd_checklist_v2';
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) {}
+
+const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+function saveState() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} }
+
+function updateProgress() {
+  const all = document.querySelectorAll('.item');
+  const done = document.querySelectorAll('.checkbox.checked');
+  const total = all.length;
+  const count = done.length;
+  const pct = total ? Math.round(count / total * 100) : 0;
+  document.getElementById('prog-text').textContent = `${count} of ${total} checked`;
+  document.getElementById('prog-pct').textContent = `${pct}%`;
+  document.getElementById('prog-fill').style.width = pct + '%';
+}
+
+function toggle(id) {
+  state[id] = !state[id];
+  saveState();
+  const cb = document.getElementById('cb-' + id);
+  const lbl = document.getElementById('lbl-' + id);
+  if (state[id]) { cb.classList.add('checked'); lbl.classList.add('done'); }
+  else { cb.classList.remove('checked'); lbl.classList.remove('done'); }
+  updateProgress();
+}
+
+function resetAll() {
+  if (!confirm('Reset all checks?')) return;
+  state = {};
+  saveState();
+  document.querySelectorAll('.checkbox').forEach(el => el.classList.remove('checked'));
+  document.querySelectorAll('.item-label').forEach(el => el.classList.remove('done'));
+  updateProgress();
+  document.getElementById('last-reset').textContent = 'Reset ' + new Date().toLocaleString();
+}
+
+function expandAll() { document.querySelectorAll('.section').forEach(s => s.classList.remove('collapsed')); }
+function collapseAll() { document.querySelectorAll('.section').forEach(s => s.classList.add('collapsed')); }
+
+function toggleSection(el) { el.closest('.section').classList.toggle('collapsed'); }
+
+const cl = document.getElementById('checklist');
+let idx = 0;
+
+SECTIONS.forEach(section => {
+  const badgeBg = isDark ? section.badge.darkBg : section.badge.bg;
+  const badgeColor = isDark ? section.badge.darkColor : section.badge.color;
+
+  const sec = document.createElement('div');
+  sec.className = 'section';
+
+  const total = section.items.length;
+  const header = document.createElement('div');
+  header.className = 'section-header';
+  header.innerHTML = `
+    <div class="section-left">
+      <span class="badge" style="background:${badgeBg};color:${badgeColor}">${section.badge.label}</span>
+      <span class="section-title">${section.title}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="section-count">${total} checks</span>
+      <span class="section-chevron">▾</span>
+    </div>`;
+  header.onclick = () => toggleSection(header);
+  sec.appendChild(header);
+
+  const body = document.createElement('div');
+  body.className = 'section-body';
+
+  section.items.forEach(item => {
+    const id = 'item-' + idx++;
+    const checked = !!state[id];
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.onclick = () => toggle(id);
+    div.innerHTML = `
+      <div class="checkbox ${checked ? 'checked' : ''}" id="cb-${id}">
+        <svg class="checkmark" width="10" height="8" viewBox="0 0 10 8" fill="none">
+          <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="item-content">
+        <div class="item-label ${checked ? 'done' : ''}" id="lbl-${id}">
+          ${item.label}${item.bug ? '<span class="bug-pill">known bug</span>' : ''}
+        </div>
+        ${item.note ? `<div class="item-note">${item.note}</div>` : ''}
+      </div>`;
+    body.appendChild(div);
+  });
+
+  sec.appendChild(body);
+  cl.appendChild(sec);
+});
+
+updateProgress();
+
+const lastReset = state['_last_reset'];
+if (lastReset) document.getElementById('last-reset').textContent = 'Last reset: ' + lastReset;
+</script>
+</body>
+</html>

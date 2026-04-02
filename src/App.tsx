@@ -27,6 +27,7 @@ const CollectionDetail = lazy(() => import("./pages/CollectionDetail"));
 const CollectionSettings = lazy(() => import("./pages/CollectionSettings"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const SharedCollection = lazy(() => import("./pages/SharedCollection"));
+const ScanMenu = lazy(() => import("./pages/ScanMenu"));
 const StoreListing = lazy(() => import("./pages/StoreListing"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -75,6 +76,7 @@ function AppRoutes() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/scan-menu" element={<ScanMenu />} />
           <Route path="/collections/:id" element={<CollectionDetail />} />
           <Route path="/collections/:id/settings" element={<CollectionSettings />} />
           <Route path="/share/:shareId" element={<SharedCollection />} />

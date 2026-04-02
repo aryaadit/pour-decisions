@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Activity, Users, Search } from 'lucide-react';
+import { Activity, Users, Search, ScanLine } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { queryKeys } from '@/lib/queryKeys';
 import { useProfile } from '@/hooks/useProfile';
@@ -84,8 +84,18 @@ export default function Feed() {
       />
 
       {/* Search Section */}
-      <div className="max-w-2xl mx-auto px-4 py-2 border-b border-border/50">
-        <UserSearch placeholder="Find people to follow..." />
+      <div className="max-w-2xl mx-auto px-4 py-2 border-b border-border/50 flex items-center gap-2">
+        <div className="flex-1">
+          <UserSearch placeholder="Find people to follow..." />
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/scan-menu')}
+          className="min-w-[44px] min-h-[44px] flex-shrink-0"
+        >
+          <ScanLine className="w-5 h-5" />
+        </Button>
       </div>
 
       {/* Content */}
