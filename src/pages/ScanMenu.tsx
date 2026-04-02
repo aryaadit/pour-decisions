@@ -132,11 +132,12 @@ export default function ScanMenu() {
         body: {
           image: imageBase64 || undefined,
           menuText: menuText.trim() || undefined,
-          userId: user.id,
         },
       });
 
-      if (fnError) throw fnError;
+      if (fnError) {
+        throw new Error(data?.error || fnError.message || 'Failed to analyze menu');
+      }
 
       if (data?.success && data?.data) {
         setResult(data.data as ScanResult);
