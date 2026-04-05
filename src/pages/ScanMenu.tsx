@@ -13,6 +13,7 @@ import {
   Trophy,
   Users,
   AlertCircle,
+  FileText,
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { takePhoto, pickFromGallery } from '@/hooks/useCamera';
@@ -52,6 +53,15 @@ const MATCH_COLORS: Record<string, string> = {
 type DrinkTypeFilter = 'All' | 'Wine' | 'Whiskey' | 'Beer' | 'Cocktail' | 'Other';
 const DRINK_TYPE_FILTERS: DrinkTypeFilter[] = ['All', 'Wine', 'Whiskey', 'Beer', 'Cocktail', 'Other'];
 
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const FILE_TOO_LARGE_MESSAGE = 'File too large. Please use a file under 5MB.';
+
+/** Approximate raw byte size of a base64 string (ignoring padding slop). */
+function base64Bytes(base64: string): number {
+  // 4 base64 chars = 3 bytes
+  return Math.floor((base64.length * 3) / 4);
+}
+
 function ReasonText({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -83,9 +93,12 @@ export default function ScanMenu() {
   const { impact, ImpactStyle } = useHaptics();
   const isNative = Capacitor.isNativePlatform();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadMimeType, setUploadMimeType] = useState<string | null>(null);
+  const [pdfFileName, setPdfFileName] = useState<string | null>(null);
   const [menuText, setMenuText] = useState('');
   const [showTextInput, setShowTextInput] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -96,10 +109,17 @@ export default function ScanMenu() {
   const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
   const [appliedType, setAppliedType] = useState<DrinkTypeFilter>('All');
 
-  const handlePhotoCapture = async (dataUrl: string) => {
-    setImagePreview(dataUrl);
+  const handlePhotoCapture = async (dataUrl: string, mimeType: string) => {
     const base64 = dataUrl.split(',')[1];
+    // Size check on base64-captured photos (camera/gallery don't give us a File object)
+    if (base64Bytes(base64) > MAX_FILE_SIZE_BYTES) {
+      setError(FILE_TOO_LARGE_MESSAGE);
+      return;
+    }
+    setImagePreview(dataUrl);
     setImageBase64(base64);
+    setUploadMimeType(mimeType);
+    setPdfFileName(null);
     setError(null);
     setResult(null);
   };
@@ -109,7 +129,7 @@ export default function ScanMenu() {
     try {
       const photo = await takePhoto();
       if (photo) {
-        handlePhotoCapture(photo.dataUrl);
+        handlePhotoCapture(photo.dataUrl, photo.dataUrl.match(/^data:([^;]+);/)?.[1] || 'image/jpeg');
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to take photo');
@@ -121,7 +141,7 @@ export default function ScanMenu() {
     try {
       const photo = await pickFromGallery();
       if (photo) {
-        handlePhotoCapture(photo.dataUrl);
+        handlePhotoCapture(photo.dataUrl, photo.dataUrl.match(/^data:([^;]+);/)?.[1] || 'image/jpeg');
       }
     } catch (err: any) {
       setError(err?.message || 'Failed to access photos');
@@ -131,10 +151,53 @@ export default function ScanMenu() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setError(FILE_TOO_LARGE_MESSAGE);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const isPdf = file.type === 'application/pdf';
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      handlePhotoCapture(dataUrl);
+      const base64 = dataUrl.split(',')[1];
+      setImageBase64(base64);
+      setUploadMimeType(file.type || (isPdf ? 'application/pdf' : 'image/jpeg'));
+      if (isPdf) {
+        setPdfFileName(file.name);
+        setImagePreview(null);
+      } else {
+        setImagePreview(dataUrl);
+        setPdfFileName(null);
+      }
+      setError(null);
+      setResult(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setError(FILE_TOO_LARGE_MESSAGE);
+      if (pdfInputRef.current) pdfInputRef.current.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const base64 = dataUrl.split(',')[1];
+      setImageBase64(base64);
+      setUploadMimeType('application/pdf');
+      setPdfFileName(file.name);
+      setImagePreview(null);
+      setError(null);
+      setResult(null);
     };
     reader.readAsDataURL(file);
   };
@@ -142,6 +205,8 @@ export default function ScanMenu() {
   const handleReset = () => {
     setImageBase64(null);
     setImagePreview(null);
+    setUploadMimeType(null);
+    setPdfFileName(null);
     setMenuText('');
     setResult(null);
     setError(null);
@@ -151,6 +216,7 @@ export default function ScanMenu() {
     setAppliedMaxPrice(null);
     setAppliedType('All');
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (pdfInputRef.current) pdfInputRef.current.value = '';
   };
 
   const handleAnalyze = async () => {
@@ -172,6 +238,7 @@ export default function ScanMenu() {
       const { data, error: fnError } = await supabase.functions.invoke('scan-menu', {
         body: {
           image: imageBase64 || undefined,
+          mimeType: imageBase64 ? uploadMimeType || undefined : undefined,
           menuText: menuText.trim() || undefined,
           maxPrice: priceArg,
           drinkType: typeArg,
@@ -350,7 +417,7 @@ export default function ScanMenu() {
       />
 
       <main className="max-w-2xl mx-auto px-4 py-4 space-y-2">
-        {/* Image capture area */}
+        {/* Image or PDF preview */}
         {imagePreview ? (
           <div className="relative w-full rounded-xl overflow-hidden border border-border bg-muted">
             <img
@@ -358,6 +425,33 @@ export default function ScanMenu() {
               alt="Menu photo"
               className="w-full max-h-64 object-contain"
             />
+            {isAnalyzing && (
+              <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
+                <Loader2 className="w-6 h-6 animate-spin text-white" />
+                <span className="text-sm font-medium text-white">Analyzing menu...</span>
+              </div>
+            )}
+            {!isAnalyzing && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        ) : pdfFileName ? (
+          <div className="relative w-full rounded-xl overflow-hidden border border-border bg-muted">
+            <div className="flex items-center gap-3 px-4 py-6">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{pdfFileName}</p>
+                <p className="text-xs text-muted-foreground">PDF menu</p>
+              </div>
+            </div>
             {isAnalyzing && (
               <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
                 <Loader2 className="w-6 h-6 animate-spin text-white" />
@@ -383,7 +477,7 @@ export default function ScanMenu() {
               <p className="text-sm text-muted-foreground text-center">
                 Take a photo of a drink menu
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 justify-center">
                 {isNative ? (
                   <>
                     <Button
@@ -406,6 +500,16 @@ export default function ScanMenu() {
                       <ImagePlus className="w-4 h-4" />
                       Gallery
                     </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => pdfInputRef.current?.click()}
+                      className="gap-1.5"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Upload PDF
+                    </Button>
                   </>
                 ) : (
                   <Button
@@ -416,7 +520,7 @@ export default function ScanMenu() {
                     className="gap-1.5"
                   >
                     <Upload className="w-4 h-4" />
-                    Upload Photo
+                    Upload Photo or PDF
                   </Button>
                 )}
               </div>
@@ -427,8 +531,15 @@ export default function ScanMenu() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,application/pdf"
               onChange={handleFileUpload}
+              className="hidden"
+            />
+            <input
+              ref={pdfInputRef}
+              type="file"
+              accept="application/pdf"
+              onChange={handlePdfUpload}
               className="hidden"
             />
           </div>

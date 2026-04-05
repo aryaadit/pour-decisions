@@ -137,8 +137,9 @@ serve(async (req) => {
 
     // Parse body
     const body = await req.json();
-    const { image, menuText, maxPrice, drinkType: filterDrinkType } = body as {
+    const { image, mimeType, menuText, maxPrice, drinkType: filterDrinkType } = body as {
       image?: string;
+      mimeType?: string;
       menuText?: string;
       maxPrice?: number | null;
       drinkType?: string | null;
@@ -292,10 +293,10 @@ Return ONLY a JSON object with:
 
     if (image) {
       userParts.push({
-        text: "Please analyze this drink menu image and provide recommendations.",
+        text: "Please analyze this drink menu and provide recommendations.",
       });
       userParts.push({
-        inlineData: { mimeType: "image/jpeg", data: image },
+        inlineData: { mimeType: mimeType ?? "image/jpeg", data: image },
       });
     } else {
       userParts.push({
@@ -304,7 +305,7 @@ Return ONLY a JSON object with:
     }
 
     console.log(
-      `[scan-menu] Calling Gemini — hasImage: ${!!image}, drinkCount: ${drinkCount}, tasteProfileUsed: ${tasteProfileUsed}, networkDrinks: ${networkContext ? "yes" : "no"}, maxPrice: ${maxPrice ?? "none"}, drinkType: ${filterDrinkType ?? "none"}`
+      `[scan-menu] Calling Gemini — hasImage: ${!!image}, mimeType: ${mimeType ?? "none"}, drinkCount: ${drinkCount}, tasteProfileUsed: ${tasteProfileUsed}, networkDrinks: ${networkContext ? "yes" : "no"}, maxPrice: ${maxPrice ?? "none"}, drinkType: ${filterDrinkType ?? "none"}`
     );
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
