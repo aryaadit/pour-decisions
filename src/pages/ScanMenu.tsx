@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/PageHeader';
 import {
@@ -45,12 +45,40 @@ interface ScanResult {
 
 const MATCH_COLORS: Record<string, string> = {
   high: 'bg-green-500/20 text-green-400 border-green-500/30',
-  medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  medium: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   low: 'bg-muted text-muted-foreground border-border',
 };
 
+type DrinkTypeFilter = 'All' | 'Wine' | 'Whiskey' | 'Beer' | 'Cocktail' | 'Other';
+const DRINK_TYPE_FILTERS: DrinkTypeFilter[] = ['All', 'Wine', 'Whiskey', 'Beer', 'Cocktail', 'Other'];
+
+function ReasonText({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div>
+      <p
+        className={cn(
+          'text-sm text-muted-foreground leading-relaxed',
+          !expanded && 'line-clamp-2'
+        )}
+      >
+        {text}
+      </p>
+      {text.length > 120 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs text-primary mt-0.5"
+        >
+          {expanded ? 'Show less' : 'Read more'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function ScanMenu() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { impact, ImpactStyle } = useHaptics();
   const isNative = Capacitor.isNativePlatform();
@@ -63,10 +91,13 @@ export default function ScanMenu() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [maxPrice, setMaxPrice] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<DrinkTypeFilter>('All');
+  const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
+  const [appliedType, setAppliedType] = useState<DrinkTypeFilter>('All');
 
   const handlePhotoCapture = async (dataUrl: string) => {
     setImagePreview(dataUrl);
-    // Extract base64 from data URL
     const base64 = dataUrl.split(',')[1];
     setImageBase64(base64);
     setError(null);
@@ -115,6 +146,10 @@ export default function ScanMenu() {
     setResult(null);
     setError(null);
     setShowTextInput(false);
+    setMaxPrice('');
+    setSelectedType('All');
+    setAppliedMaxPrice(null);
+    setAppliedType('All');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -127,11 +162,19 @@ export default function ScanMenu() {
     setError(null);
     setResult(null);
 
+    const parsedPrice = maxPrice.trim() ? Number(maxPrice.trim()) : null;
+    const priceArg = typeof parsedPrice === 'number' && !isNaN(parsedPrice) && parsedPrice > 0
+      ? parsedPrice
+      : null;
+    const typeArg = selectedType === 'All' ? null : selectedType.toLowerCase();
+
     try {
       const { data, error: fnError } = await supabase.functions.invoke('scan-menu', {
         body: {
           image: imageBase64 || undefined,
           menuText: menuText.trim() || undefined,
+          maxPrice: priceArg,
+          drinkType: typeArg,
         },
       });
 
@@ -141,6 +184,8 @@ export default function ScanMenu() {
 
       if (data?.success && data?.data) {
         setResult(data.data as ScanResult);
+        setAppliedMaxPrice(priceArg);
+        setAppliedType(selectedType);
       } else {
         setError(data?.error || 'Failed to analyze menu');
       }
@@ -159,8 +204,21 @@ export default function ScanMenu() {
     return `Based on your ${result.drinkCount} logged drinks`;
   };
 
+  const findPrice = (recName: string): string | null => {
+    if (!result) return null;
+    const match = result.drinks.find(
+      (d) => d.name.toLowerCase() === recName.toLowerCase()
+    );
+    return match?.price || null;
+  };
+
   // Results view
   if (result) {
+    // Check if all menu drinks share the same type
+    const allTypes = result.drinks.map((d) => d.type);
+    const uniqueTypes = new Set(allTypes);
+    const showDrinkType = uniqueTypes.size > 1;
+
     return (
       <div className="min-h-screen bg-background pb-24">
         <PageHeader
@@ -176,6 +234,22 @@ export default function ScanMenu() {
             <span>{getPersonalizationLabel()}</span>
           </div>
 
+          {/* Active filters */}
+          {(appliedMaxPrice != null || appliedType !== 'All') && (
+            <div className="flex flex-wrap gap-2">
+              {appliedMaxPrice != null && (
+                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                  Under ${appliedMaxPrice}
+                </span>
+              )}
+              {appliedType !== 'All' && (
+                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                  {appliedType} only
+                </span>
+              )}
+            </div>
+          )}
+
           {result.generalNote && (
             <p className="text-xs text-muted-foreground italic">{result.generalNote}</p>
           )}
@@ -184,56 +258,64 @@ export default function ScanMenu() {
           <div className="space-y-3">
             {result.recommendations
               .sort((a, b) => a.rank - b.rank)
-              .map((rec) => (
-                <div
-                  key={rec.rank}
-                  className="rounded-xl border border-border bg-card p-4 space-y-2"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm flex-shrink-0">
-                        {rec.rank}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">{rec.name}</h3>
-                        {rec.networkRating != null && (
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <Users className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">
-                              {rec.networkRating.toFixed(1)}/5 from your network
-                            </span>
+              .map((rec) => {
+                const price = findPrice(rec.name);
+                return (
+                  <div
+                    key={rec.rank}
+                    className="rounded-xl border border-border bg-card p-4 space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm flex-shrink-0">
+                          {rec.rank}
+                        </div>
+                        <div>
+                          <div className="flex items-baseline gap-2">
+                            <h3 className="font-semibold text-foreground">{rec.name}</h3>
+                            {price && (
+                              <span className="text-sm text-muted-foreground">{price}</span>
+                            )}
                           </div>
-                        )}
+                          {rec.networkRating != null && (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <Users className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
+                                {rec.networkRating.toFixed(1)}/5 from your network
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
+                      <span
+                        className={cn(
+                          'text-xs font-medium px-2 py-0.5 rounded-full border flex-shrink-0',
+                          MATCH_COLORS[rec.matchScore]
+                        )}
+                      >
+                        {rec.matchScore}
+                      </span>
                     </div>
-                    <span
-                      className={cn(
-                        'text-xs font-medium px-2 py-0.5 rounded-full border',
-                        MATCH_COLORS[rec.matchScore]
-                      )}
-                    >
-                      {rec.matchScore}
-                    </span>
+                    <ReasonText text={rec.reason} />
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {rec.reason}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
           </div>
 
           {/* Full menu extract */}
           {result.drinks.length > 0 && (
             <div className="space-y-2 pt-2">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                Full Menu ({result.drinks.length} drinks)
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Full menu &middot; {result.drinks.length} drinks
               </h3>
               <div className="rounded-xl border border-border bg-card divide-y divide-border">
                 {result.drinks.map((drink, i) => (
                   <div key={i} className="flex items-center justify-between px-4 py-2.5">
                     <div>
                       <span className="text-sm text-foreground">{drink.name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">{drink.type}</span>
+                      {showDrinkType && (
+                        <span className="text-xs text-muted-foreground ml-2">{drink.type}</span>
+                      )}
                     </div>
                     {drink.price && (
                       <span className="text-sm text-muted-foreground">{drink.price}</span>
@@ -267,7 +349,7 @@ export default function ScanMenu() {
         showBack={true}
       />
 
-      <main className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+      <main className="max-w-2xl mx-auto px-4 py-4 space-y-2">
         {/* Image capture area */}
         {imagePreview ? (
           <div className="relative w-full rounded-xl overflow-hidden border border-border bg-muted">
@@ -385,9 +467,58 @@ export default function ScanMenu() {
           </div>
         )}
 
+        {/* Filters */}
+        <div className="space-y-3 mt-4">
+          <div className="space-y-1.5">
+            <label htmlFor="max-price" className="text-sm text-muted-foreground">
+              Max price per drink
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+              <Input
+                id="max-price"
+                type="number"
+                inputMode="numeric"
+                min="1"
+                placeholder="e.g. 50"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                className="pl-7 bg-secondary/50 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <span className="text-sm text-muted-foreground">Drink type</span>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+              {DRINK_TYPE_FILTERS.map((t) => {
+                const active = selectedType === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      impact(ImpactStyle.Light);
+                      setSelectedType(t);
+                    }}
+                    className={cn(
+                      'flex-shrink-0 px-3 py-1.5 rounded-full text-sm border transition-colors',
+                      active
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-secondary/50 text-muted-foreground border-border hover:text-foreground'
+                    )}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Error */}
         {error && (
-          <div className="flex items-start gap-2 rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+          <div className="flex items-start gap-2 rounded-lg bg-destructive/10 border border-destructive/20 p-3 mt-4">
             <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
             <p className="text-sm text-destructive">{error}</p>
           </div>
@@ -395,7 +526,7 @@ export default function ScanMenu() {
 
         {/* Analyze button */}
         <Button
-          className="w-full h-12"
+          className="w-full h-12 mt-4"
           onClick={handleAnalyze}
           disabled={isAnalyzing || (!imageBase64 && !menuText.trim())}
         >
@@ -411,6 +542,9 @@ export default function ScanMenu() {
             </>
           )}
         </Button>
+        <p className="text-xs text-muted-foreground text-center mt-3">
+          Works with wine lists, whiskey menus, cocktail menus, and bottle shop shelves
+        </p>
       </main>
     </div>
   );

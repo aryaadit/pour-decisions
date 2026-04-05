@@ -137,9 +137,11 @@ serve(async (req) => {
 
     // Parse body
     const body = await req.json();
-    const { image, menuText } = body as {
+    const { image, menuText, maxPrice, drinkType: filterDrinkType } = body as {
       image?: string;
       menuText?: string;
+      maxPrice?: number | null;
+      drinkType?: string | null;
     };
 
     if (!image && !menuText) {
@@ -239,6 +241,32 @@ serve(async (req) => {
       }
     }
 
+    // ── Build constraint block ───────────────────────────────────────────
+
+    let constraintBlock = "";
+    const constraints: string[] = [];
+
+    if (typeof maxPrice === "number" && maxPrice > 0) {
+      constraints.push(
+        `Only recommend drinks priced at $${maxPrice} or under. Do not include any drink above this price in your recommendations, even if it matches the taste profile well. If fewer than 5 drinks fall under this price, return only those that qualify.`
+      );
+    }
+
+    if (
+      typeof filterDrinkType === "string" &&
+      filterDrinkType.trim().length > 0
+    ) {
+      constraints.push(
+        `Only recommend drinks of type: ${filterDrinkType}. Ignore all other drink types on the menu entirely.`
+      );
+    }
+
+    if (constraints.length > 0) {
+      constraintBlock = `\n\n--- HARD CONSTRAINTS (MUST FOLLOW) ---\n${constraints
+        .map((c, i) => `${i + 1}. ${c}`)
+        .join("\n")}`;
+    }
+
     // ── Build Gemini prompt ──────────────────────────────────────────────
 
     const systemPrompt = `You are an expert sommelier and beverage consultant. You will be given a drink menu (either as an image or text) and optionally a user's taste profile and network recommendations.
@@ -258,7 +286,7 @@ Return ONLY a JSON object with:
   - networkRating: average rating from their network if available (null otherwise)
 - tasteProfileUsed: boolean — whether personalization was applied
 - drinkCount: integer — number of drinks in the user's log used for personalization
-- generalNote: one sentence caveat if no taste profile was available (null otherwise)${tasteContext}${networkContext}`;
+- generalNote: one sentence caveat if no taste profile was available (null otherwise)${tasteContext}${networkContext}${constraintBlock}`;
 
     const userParts: Array<Record<string, unknown>> = [];
 
@@ -276,7 +304,7 @@ Return ONLY a JSON object with:
     }
 
     console.log(
-      `[scan-menu] Calling Gemini — hasImage: ${!!image}, drinkCount: ${drinkCount}, tasteProfileUsed: ${tasteProfileUsed}, networkDrinks: ${networkContext ? "yes" : "no"}`
+      `[scan-menu] Calling Gemini — hasImage: ${!!image}, drinkCount: ${drinkCount}, tasteProfileUsed: ${tasteProfileUsed}, networkDrinks: ${networkContext ? "yes" : "no"}, maxPrice: ${maxPrice ?? "none"}, drinkType: ${filterDrinkType ?? "none"}`
     );
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
