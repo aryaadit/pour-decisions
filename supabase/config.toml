@@ -2,3 +2,6 @@ project_id = "vfveigsnfatlmiiunprc"
 
 [functions.lookup-drink]
 verify_jwt = false
+
+[functions.scan-menu]
+verify_jwt = false

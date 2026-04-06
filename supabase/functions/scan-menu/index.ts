@@ -310,17 +310,43 @@ Return ONLY a JSON object with:
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-    const response = await fetch(geminiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: "user", parts: userParts }],
-        generationConfig: {
-          responseMimeType: "application/json",
-        },
-      }),
-    });
+    const abortController = new AbortController();
+    const timeout = setTimeout(() => abortController.abort(), 45_000);
+
+    let response: Response;
+    try {
+      response = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: abortController.signal,
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: "user", parts: userParts }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            thinkingConfig: { thinkingBudget: 1024 },
+          },
+        }),
+      });
+    } catch (fetchErr: unknown) {
+      clearTimeout(timeout);
+      const isAbort =
+        fetchErr instanceof DOMException && fetchErr.name === "AbortError";
+      console.error("[scan-menu] Gemini fetch failed:", fetchErr);
+      return new Response(
+        JSON.stringify({
+          error: isAbort
+            ? "Menu too large to process. Try a photo of fewer pages."
+            : "Failed to reach AI service",
+        }),
+        {
+          status: isAbort ? 408 : 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();

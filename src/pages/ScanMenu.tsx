@@ -53,8 +53,10 @@ const MATCH_COLORS: Record<string, string> = {
 type DrinkTypeFilter = 'All' | 'Wine' | 'Whiskey' | 'Beer' | 'Cocktail' | 'Other';
 const DRINK_TYPE_FILTERS: DrinkTypeFilter[] = ['All', 'Wine', 'Whiskey', 'Beer', 'Cocktail', 'Other'];
 
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
-const FILE_TOO_LARGE_MESSAGE = 'File too large. Please use a file under 5MB.';
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
+const IMAGE_TOO_LARGE_MESSAGE = 'Image too large. Please use an image under 5MB.';
+const PDF_TOO_LARGE_MESSAGE = 'PDF too large. Please use a PDF under 2MB (roughly 10 pages).';
 
 /** Approximate raw byte size of a base64 string (ignoring padding slop). */
 function base64Bytes(base64: string): number {
@@ -111,9 +113,8 @@ export default function ScanMenu() {
 
   const handlePhotoCapture = async (dataUrl: string, mimeType: string) => {
     const base64 = dataUrl.split(',')[1];
-    // Size check on base64-captured photos (camera/gallery don't give us a File object)
-    if (base64Bytes(base64) > MAX_FILE_SIZE_BYTES) {
-      setError(FILE_TOO_LARGE_MESSAGE);
+    if (base64Bytes(base64) > MAX_IMAGE_SIZE_BYTES) {
+      setError(IMAGE_TOO_LARGE_MESSAGE);
       return;
     }
     setImagePreview(dataUrl);
@@ -152,13 +153,13 @@ export default function ScanMenu() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      setError(FILE_TOO_LARGE_MESSAGE);
+    const isPdf = file.type === 'application/pdf';
+    const limit = isPdf ? MAX_PDF_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+    if (file.size > limit) {
+      setError(isPdf ? PDF_TOO_LARGE_MESSAGE : IMAGE_TOO_LARGE_MESSAGE);
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
-
-    const isPdf = file.type === 'application/pdf';
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
@@ -182,8 +183,8 @@ export default function ScanMenu() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      setError(FILE_TOO_LARGE_MESSAGE);
+    if (file.size > MAX_PDF_SIZE_BYTES) {
+      setError(PDF_TOO_LARGE_MESSAGE);
       if (pdfInputRef.current) pdfInputRef.current.value = '';
       return;
     }
@@ -526,6 +527,9 @@ export default function ScanMenu() {
               </div>
               <p className="text-xs text-muted-foreground text-center">
                 AI will read the menu and give you personalized picks
+              </p>
+              <p className="text-xs text-muted-foreground/60 text-center">
+                PDFs under 2MB / ~10 pages work best
               </p>
             </div>
             <input
